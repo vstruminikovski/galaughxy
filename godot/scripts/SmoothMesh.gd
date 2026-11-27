@@ -56,7 +56,7 @@ static func build(f: Callable, lo: Vector3, hi: Vector3, step: float, color: Cal
 					n += 1
 				var local := Vector3(i, j, k) + acc / float(n)
 				vert_of[_cidx(i, j, k, ny - 1, nz - 1)] = pos.size()
-				pos.append(lo + local * step)
+				pos.append(_snap(f, lo + local * step, step))
 	# connect neighbouring cells across every grid edge that changes sign
 	var tris := PackedVector3Array()
 	var dims := [nx, ny, nz]
@@ -137,6 +137,27 @@ static func build(f: Callable, lo: Vector3, hi: Vector3, step: float, color: Cal
 	arrays[Mesh.ARRAY_COLOR] = out_c
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	return mesh
+
+## Moves a point exactly onto the surface (f = 0) with a few Newton steps along the gradient,
+## never further than one cell, so flat faces stay flat and curves stay round.
+static func _snap(f: Callable, p: Vector3, step: float) -> Vector3:
+	var start := p
+	var eps := step * 0.25
+	for it in 3:
+		var d: float = f.call(p)
+		if absf(d) < step * 1e-4:
+			break
+		var g := Vector3(
+			f.call(p + Vector3(eps, 0, 0)) - f.call(p - Vector3(eps, 0, 0)),
+			f.call(p + Vector3(0, eps, 0)) - f.call(p - Vector3(0, eps, 0)),
+			f.call(p + Vector3(0, 0, eps)) - f.call(p - Vector3(0, 0, eps))) / (2.0 * eps)
+		var gl := g.length_squared()
+		if gl < 1e-12:
+			break
+		p -= g * (d / gl)
+	if p.distance_to(start) > step:
+		return start
+	return p
 
 static func _idx(i: int, j: int, k: int, ny: int, nz: int) -> int:
 	return (i * ny + j) * nz + k

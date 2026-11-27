@@ -224,7 +224,7 @@ func _spawn_robo(at: Vector3) -> void:
 	var head: Node3D = null
 	for key in parts:
 		var part: Dictionary = parts[key]
-		part["step"] = 0.02
+		part["step"] = 0.012
 		var node := _smooth_part(part, 0.0045)
 		if key == "head":
 			head = node

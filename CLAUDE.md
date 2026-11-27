@@ -142,3 +142,10 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 - Frog ground follows the smooth height field. Water is a translucent plane at -0.06 m in the pond.
 
 - **Grease-pencil strokes (all objects):** every outline goes through `godot/scripts/Ink.gd` → `InkStroke.gd` + `godot/shaders/ink_stroke.gdshader`. The outline is traced where `dot(normal, camera - point)` crosses zero on each triangle, joined into continuous strokes (one line = one stroke, never overlapping), Chaikin-smoothed, and drawn as a constant-pixel-width ribbon (2.2 px at 1080p) that tapers to round blunt caps. Strokes rebuild at most 12×/s and only when the view changes. Boil = stepped noise (new seed 12×/s), sideways only, never pulsing. Frog limbs hide strokes inside the body (`FrogModel.occluders`). Any object built with `Builders.sdf_piece` or `Main._piece` gets this automatically.
+
+## 17. PERFECT STYLE — HARD RULE FOR EVERY MODEL (current, overrides anything earlier)
+- **Every model is smooth, symmetrical and perfect.** No faceting, no bumps, no jagged silhouettes, no lopsided shapes. This applies to characters, props, rooms and anything spawned later.
+- **Symmetry:** build left/right parts by mirroring one definition (`for s in [1, -1]`), and keep bounding boxes symmetric about the mirror plane so the sample grid is mirrored too.
+- **Smoothness:** all shapes come from SDFs through `SmoothMesh.build`, which snaps every vertex exactly onto the surface (`_snap`). Pick a grid step fine enough that the smallest rounding radius spans at least 5–6 cells (robo uses 0.012 m for 0.03–0.07 m radii).
+- **Clean contact:** parts never cut into the ground or each other where the cut would show. Feet and bases sit a few millimetres above the floor; joined parts blend with `Sdf.smin` instead of crossing.
+- Check every new or changed model in a close-up screenshot before committing.

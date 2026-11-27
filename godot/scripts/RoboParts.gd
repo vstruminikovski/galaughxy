@@ -13,12 +13,13 @@ const BEACON := Color("#ff3d7f")
 static func parts(body_color: Color) -> Dictionary:
 	var body_sdf := Sdf.union([
 		Sdf.rbox(Vector3(0, 0.26, 0), Vector3(0.2, 0.2, 0.15), 0.07),
-		Sdf.rbox(Vector3(-0.1, 0.03, 0.0), Vector3(0.07, 0.04, 0.1), 0.03),
-		Sdf.rbox(Vector3(0.1, 0.03, 0.0), Vector3(0.07, 0.04, 0.1), 0.03),
+		# feet: bottoms sit 5 mm above the floor so they never cut into the ground
+		Sdf.rbox(Vector3(-0.1, 0.045, 0.0), Vector3(0.07, 0.04, 0.1), 0.03),
+		Sdf.rbox(Vector3(0.1, 0.045, 0.0), Vector3(0.07, 0.04, 0.1), 0.03),
 	])
 	var body := {
 		"sdf": body_sdf, "lo": Vector3(-0.3, -0.02, -0.25), "hi": Vector3(0.3, 0.5, 0.25),
-		"color": func(p: Vector3) -> Color: return DARK if p.y < 0.07 else body_color,
+		"color": func(p: Vector3) -> Color: return DARK if p.y < 0.085 else body_color,
 		"pivot": Vector3.ZERO, "glow": false,
 	}
 	var led := {
