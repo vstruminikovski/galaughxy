@@ -301,7 +301,6 @@ func _update_fly(dt: float) -> void:
 	if keys.has("a") or keys.has("left"): fx -= 1.0
 	if keys.has("d") or keys.has("right"): fx += 1.0
 	if keys.has("space"): fy += 1.0
-	if keys.has("shift"): fy -= 1.0
 	var fwd := Vector3(-sin(fly_yaw) * cos(fly_pitch), sin(fly_pitch), -cos(fly_yaw) * cos(fly_pitch))
 	var right := Vector3(cos(fly_yaw), 0, -sin(fly_yaw))
 	var n := maxf(1.0, Vector2(fx, fz).length())
@@ -315,6 +314,16 @@ func _set_rig(r: String) -> void:
 	if r == "free" and rig != "free":
 		_capture_fly()
 	rig = r
+	_sync_fly_hud()
+
+## While flying only Map, Fly and PNG stay on screen; the other buttons are hidden.
+func _sync_fly_hud() -> void:
+	var flying := rig == "free"
+	for b in hud_buttons:
+		var keep: bool = b.text in ["🗺 Map", "🛸 Fly", "PNG"]
+		b.visible = keep or not flying
+	if flying:
+		keys.clear()
 
 func _capture_fly() -> void:
 	var dir := -cam.global_transform.basis.z
@@ -440,11 +449,16 @@ func advance_chaos() -> void:
 	set_stage(0 if stage >= 3 else stage + 1)
 
 # ── input ─────────────────────────────────────────────────────────────────────────
+## Free-fly uses Minecraft-style keys only: WASD moves along the view, Space rises, drag/touch looks.
+const FLY_KEYS := ["w", "a", "s", "d", "up", "down", "left", "right", "space", "n", "m", "p", "escape"]
+
 func _unhandled_key_input(event: InputEvent) -> void:
 	var k := event as InputEventKey
 	if k == null:
 		return
 	var name := _key_name(k)
+	if rig == "free" and not FLY_KEYS.has(name):
+		return # every other command is off while flying
 	if k.pressed and not k.echo:
 		match name:
 			"space":
