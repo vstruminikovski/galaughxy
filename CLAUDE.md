@@ -117,3 +117,10 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 - Ink: darker muted brown (`#5c5043`), pressure-tapered strokes (width varies per point, shared where strokes meet), stroke width as a share of frame height. The 16:9 thirds grid is removed; shadows are off to avoid shaded-square artifacts.
 
 - **Ink strokes (current):** silhouette edges are joined into contours (one contour = one stroke, so strokes never overlap), smoothed with Chaikin, then drawn as a ribbon that tapers from the middle to both ends (`src/engine/vectorInk.ts`, `src/engine/VoxelInk.tsx`). Width is set in screen pixels relative to frame height.
+
+## 13. GODOT PORT (in progress — `godot/`)
+- Engine: Godot 4.7 (installed via Homebrew). The Three.js app stays in the repo until the port reaches parity.
+- Voxels: `godot/scripts/VoxelMesh.gd` builds one ArrayMesh per object, emitting only exposed faces with flat normals and vertex colours. Glowing voxels are a second surface.
+- Outline: `godot/scripts/Outline.gd` is an inverted hull with smoothed corner normals. The rim is closed and rounded from every angle.
+- Done: garden room + robo slice (`Main.gd`), screenshot checked.
+- Next: cameras + free fly, scene switching + portals, kitchen, pond + frog rig, flood chaos, tapered grease-pencil strokes, Movie Maker render path, Android export.

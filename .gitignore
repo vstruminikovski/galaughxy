@@ -5,3 +5,4 @@ dist
 android
 ios
 .claude/settings.local.json
+godot/.godot/
