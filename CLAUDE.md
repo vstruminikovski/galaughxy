@@ -124,3 +124,8 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 - Outline: `godot/scripts/Outline.gd` is an inverted hull with smoothed corner normals. The rim is closed and rounded from every angle.
 - Done: garden room + robo slice (`Main.gd`), screenshot checked.
 - Next: cameras + free fly, scene switching + portals, kitchen, pond + frog rig, flood chaos, tapered grease-pencil strokes, Movie Maker render path, Android export.
+
+## 14. UPDATING THE INSTALLED APP (Android)
+- Install a new build over the old one: no uninstall, and app data is kept. Android allows this only if the package name (`com.galaughxy.studio`) and signing key match, and the new `version/code` is higher than the installed one.
+- Bump `version/code` in `godot/export_presets.cfg` every release (current: 3, version 0.3.0).
+- Keep the signing key: `~/Library/Application Support/Godot/keystores/debug.keystore`. Never delete or regenerate it, or updates will fail and the phone will need a fresh install.
