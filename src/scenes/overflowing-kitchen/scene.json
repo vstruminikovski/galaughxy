@@ -1,0 +1,18 @@
+{
+  "slug": "overflowing-kitchen",
+  "objects": [
+    { "id": "robo_1", "kind": "actor", "ref": "robo", "name": "Robo", "pos": [0, 0, 0.3], "rot": [0, 0, 0], "scale": [1, 1, 1], "visible": true, "color": "#4aa3df" },
+    { "id": "counter_1", "kind": "prop", "ref": "counter", "name": "Counter", "pos": [0.2, 0, -2.1], "rot": [0, 0, 0], "scale": [1, 1, 1], "visible": true },
+    { "id": "sink_1", "kind": "prop", "ref": "kitchen-sink", "name": "Sink", "pos": [0.2, 0.9, -2.1], "rot": [0, 0, 0], "scale": [1, 1, 1], "visible": true },
+    { "id": "stove_1", "kind": "prop", "ref": "stove", "name": "Stove", "pos": [-1.4, 0, -2.1], "rot": [0, 0, 0], "scale": [1, 1, 1], "visible": true },
+    { "id": "fridge_1", "kind": "prop", "ref": "fridge", "name": "Fridge", "pos": [-2.4, 0, -2.1], "rot": [0, 0, 0], "scale": [1, 1, 1], "visible": true },
+    { "id": "pan_1", "kind": "prop", "ref": "frying-pan", "name": "Frying Pan", "pos": [-1.75, 1.1, -2.1], "rot": [0, 0, 0], "scale": [1, 1, 1], "visible": true },
+    { "id": "mug_1", "kind": "prop", "ref": "mug", "name": "Mug", "pos": [1.0, 0.9, -2.0], "rot": [0, 0, 0], "scale": [1, 1, 1], "visible": true },
+    { "id": "plant_1", "kind": "prop", "ref": "pot-plant", "name": "Plant", "pos": [2.6, 0, -2.1], "rot": [0, 0, 0], "scale": [1, 1, 1], "visible": true },
+    { "id": "bucket_1", "kind": "prop", "ref": "bucket", "name": "Bucket", "pos": [1.9, 0, -0.6], "rot": [0, 20, 0], "scale": [1, 1, 1], "visible": true },
+    { "id": "duck_1", "kind": "prop", "ref": "robo-duck", "name": "Robo Duck", "pos": [-0.9, 0, 0.9], "rot": [0, 35, 0], "scale": [1, 1, 1], "visible": true },
+    { "id": "fish_1", "kind": "prop", "ref": "fish", "name": "Fish", "pos": [1.2, 0, 1.0], "rot": [0, -30, 0], "scale": [1, 1, 1], "visible": true },
+    { "id": "mug_2", "kind": "prop", "ref": "mug", "name": "Floor Mug", "pos": [2.3, 0, 0.6], "rot": [0, 0, 0], "scale": [1, 1, 1], "visible": true }
+  ],
+  "voxels": {}
+}
