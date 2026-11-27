@@ -44,5 +44,21 @@ func set_expansion(id: String, on: bool) -> void:
 	elif _expansions.has(id):
 		(_expansions[id] as Node3D).visible = on
 
+# Chaos hooks (GlbMap implements them; hand-built maps only flood).
+func configure(_info: Dictionary) -> void:
+	pass
+
+func chaos_set(_stage: int, _now: float, _main: Node) -> void:
+	pass
+
+func chaos_tick(_now: float, _main: Node) -> void:
+	pass
+
+func chaos_state(_now: float) -> Dictionary:
+	return {}
+
+func chaos_restore(_s: Dictionary, _now: float, _main: Node) -> void:
+	pass
+
 func expansion_on(id: String) -> bool:
 	return _expansions.has(id) and (_expansions[id] as Node3D).visible

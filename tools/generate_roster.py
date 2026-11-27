@@ -771,4 +771,5 @@ def main():
         c.export(out_dir)
 
 
-main()
+if __name__ == "__main__":
+    main()

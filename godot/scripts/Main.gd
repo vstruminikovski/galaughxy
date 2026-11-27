@@ -73,6 +73,9 @@ var actor_kind: String:
 var jaw := 0.0
 
 # chaos
+var chaos_shake := 0.0   # camera shake from the current chaos stage
+var lowgrav := false     # floaty hops (moon gravity flicker)
+var slippery := false    # characters skid and wobble (grease trap)
 var water: Water
 var flood := 0.0
 var flood_target := 0.0
@@ -177,6 +180,9 @@ func _ready() -> void:
 			place(p, Vector3(-1.6 + (i % 5) * 0.8, 0, -0.9 + int(i / 5) * 0.75), 0.0)
 		if host:
 			host.visible = false
+	if args.has("--stage"):
+		for k in range(1, int(args[args.find("--stage") + 1]) + 1):
+			set_stage(k)
 	if args.has("--rig"):
 		_set_rig(args[args.find("--rig") + 1])
 	if args.has("--cam"):
@@ -323,6 +329,7 @@ func load_scene(name: String) -> void:
 	var info: Dictionary = maps[id]
 	world = (load(String(info["scene"])) as PackedScene).instantiate() as MapBase
 	map_container.add_child(world)
+	world.configure(info)
 	_apply_lighting(info)
 	portal_nodes.clear()
 	expansions_on = {}
@@ -791,6 +798,8 @@ func _process(dt: float) -> void:
 	else:
 		look *= 0.9
 	_update_camera(dt)
+	if chaos_shake > 0.0 and rig != "free":
+		cam.position += Vector3(sin(t * 37.0) + sin(t * 23.0), sin(t * 29.0 + 1.0), sin(t * 31.0 + 2.0)) * 0.025 * chaos_shake
 	_update_portals()
 	if subtitle.visible and voice.clock > _subtitle_until:
 		subtitle.visible = false
@@ -810,6 +819,7 @@ func _step(dt: float, live: bool) -> void:
 	director.process_shot(dt)
 	_update_actors(dt, live)
 	_update_flood(dt)
+	world.chaos_tick(t, self)
 	voice.tick(dt)
 	_animate(dt)
 
@@ -846,7 +856,13 @@ func _walk(n: Node3D, m: Dictionary, dir: Vector2, dt: float, b: Rect2) -> void:
 	else:
 		m["moving"] = lerpf(m["moving"], 0.0, minf(1.0, dt * 8.0))
 	# hop: an analytic arc from its start time, so scrubbing lands on the same height
-	m["hop"] = HOP_HEIGHT * sin(PI * clampf((t - float(m["hop_start"])) / HOP_TIME, 0.0, 1.0))
+	var hop_time := HOP_TIME * (2.2 if lowgrav else 1.0)
+	var hop_h := HOP_HEIGHT * (2.6 if lowgrav else 1.0)
+	m["hop"] = hop_h * sin(PI * clampf((t - float(m["hop_start"])) / hop_time, 0.0, 1.0))
+	if lowgrav:
+		m["hop"] += 0.06 + sin(t * 1.7 + float(m["pos"].x)) * 0.04
+	if slippery and m["moving"] > 0.1:
+		m["yaw"] = float(m["yaw"]) + sin(t * 13.0 + float(m["pos"].z) * 3.0) * 0.9
 	m["bob"] = maxf(0.0, sin(t * 9.0)) * 0.13 * m["moving"] if kind == "frog" else 0.0
 	if not twos_tick:
 		return
@@ -930,6 +946,15 @@ func set_stage(s: int) -> void:
 	stage = s
 	var levels: Array = maps[scene_name].get("flood", [0, 0.1, 0.32, 0.82])
 	flood_target = float(levels[clampi(s, 0, levels.size() - 1)])
+	# the stage's liquid colour (foam, milkshake, sea...) or plain water
+	var stages: Array = maps[scene_name].get("chaos_stages", [])
+	var liquid := Style.swatch("bondi_blue", "light")
+	for k in range(s, 0, -1):
+		if k - 1 < stages.size() and stages[k - 1].has("water"):
+			liquid = Style.snap(Color(String(stages[k - 1]["water"])))
+			break
+	water.set_color(liquid)
+	world.chaos_set(s, t, self)
 	_update_hud()
 
 func advance_chaos() -> void:

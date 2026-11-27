@@ -188,6 +188,7 @@ func run() -> void:
 	await _frames(2)
 	_check("clear cast", main.cast.is_empty())
 	await _director()
+	await _maps()
 	# portal: walk the robo into the kitchen doorway; kitchen links to the pond
 	main.load_scene("kitchen")
 	await _frames(3)
@@ -311,3 +312,50 @@ func _director() -> void:
 	_check("Esc stops and takes over", not d.playing and main.hud_root.visible)
 	main.clear_cast()
 	await _frames(2)
+
+func _maps() -> void:
+	_check("16 maps registered", main.map_order.size() >= 16)
+	var generated: Array = main.map_order.filter(func(id): return String(main.maps[id]["scene"]).ends_with(id + ".tscn") and FileAccess.file_exists("res://assets/maps/%s/%s.glb" % [id, id]))
+	_check("11+ generated maps have their .glb", generated.size() >= 11)
+	for id in generated:
+		main.load_scene(id)
+		await _frames(2)
+		var w = main.world
+		var ok: bool = w is GlbMap and not (w as GlbMap).props.is_empty() and w.spawn_points().size() >= 5
+		_check("%s loads with props and spawn marks" % id, ok)
+		var stages: Array = main.maps[id].get("chaos_stages", [])
+		_check("%s has three chaos stages" % id, stages.size() == 3)
+	# chaos moves props and drain puts them back
+	main.load_scene("chaotic_supermarket")
+	await _frames(2)
+	var can: Node3D = (main.world as GlbMap).props["cans"][0]
+	var rest := can.transform
+	main.set_stage(1)
+	main.set_stage(2)
+	await _wait(1.2)
+	_check("Can Pyramid Avalanche scatters the cans", not can.transform.origin.is_equal_approx(rest.origin))
+	main.set_stage(0)
+	await _frames(2)
+	_check("drain puts every prop back", can.transform.is_equal_approx(rest))
+	main.set_expansion("bakery_deli", true)
+	await _frames(2)
+	_check("map expansion loads", main.world.expansion_on("bakery_deli"))
+	# chaos is a function of time: same elapsed time, same pose
+	main.set_stage(2)
+	var t0: float = main.t
+	main.world.chaos_tick(t0 + 0.5, main)
+	var a := can.transform
+	main.world.chaos_tick(t0 + 0.9, main)
+	main.world.chaos_tick(t0 + 0.5, main)
+	_check("chaos replays deterministically", can.transform.is_equal_approx(a))
+	main.set_stage(0)
+	main.load_scene("lunar_moon_base")
+	await _frames(2)
+	main.set_stage(1)
+	main.set_stage(2)
+	main.set_stage(3)
+	await _frames(3)
+	_check("Zero-G stage turns on low gravity", main.lowgrav)
+	main.set_stage(0)
+	await _frames(2)
+	_check("drain turns low gravity off", not main.lowgrav)

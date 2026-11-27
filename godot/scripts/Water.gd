@@ -20,6 +20,10 @@ func _ready() -> void:
 	add_child(mesh_inst)
 	visible = false
 
+func set_color(c: Color) -> void:
+	var m := mesh_inst.material_override as StandardMaterial3D
+	m.albedo_color = Color(c.r, c.g, c.b, 0.62)
+
 func set_level(height_m: float, t: float) -> void:
 	visible = height_m > 0.004
 	position.y = height_m + sin(t * 2.0) * 0.005

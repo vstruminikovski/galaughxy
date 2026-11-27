@@ -34,6 +34,7 @@ var mode := ""
 var simulating := false
 var dirty := false
 var snapshots := {}
+var _pending_chaos = null
 var _events: Array = []
 var _fired := 0
 
@@ -172,7 +173,8 @@ func _actor_ids() -> Array:
 	return ids
 
 func _capture() -> Dictionary:
-	var s := {"flood": main.flood, "flood_target": main.flood_target, "stage": main.stage, "actors": {}}
+	var s := {"flood": main.flood, "flood_target": main.flood_target, "stage": main.stage, "actors": {},
+		"chaos": main.world.chaos_state(main.t)}
 	for n in main._actors():
 		var m: Dictionary = main.motion[n]
 		s["actors"][main.id_of(n)] = {"pos": m["pos"], "yaw": m["yaw"], "expr": m["expr"], "target": m["target"]}
@@ -194,6 +196,7 @@ func _restore(s: Dictionary) -> void:
 	main.flood_target = s["flood_target"]
 	main.stage = s["stage"]
 	main.jaw = 0.0
+	_pending_chaos = s.get("chaos", {})
 
 ## Restores (or rebuilds by fast-forwarding earlier shots) the state at the start of shot i.
 func _go_to_shot(i: int) -> void:
@@ -219,7 +222,11 @@ func _enter_shot(i: int) -> void:
 	_fired = 0
 	shot_t = 0.0
 	shot_len = estimate_length(shot)
+	# chaos continues across the cut: keep each stage's elapsed time through the clock reset
+	var cs: Dictionary = _pending_chaos if _pending_chaos != null else main.world.chaos_state(main.t)
+	_pending_chaos = null
 	main.reset_clock()
+	main.world.chaos_restore(cs, 0.0, main)
 	if main.host:
 		main.host.visible = _actor_ids().has("host")
 	trauma = 0.0

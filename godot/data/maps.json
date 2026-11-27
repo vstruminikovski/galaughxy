@@ -491,6 +491,1804 @@
     "color": "#ffffff",
     "energy": 0.4
    }
+  },
+  {
+   "id": "apple_store_showroom",
+   "aliases": [],
+   "title": "The iFruit Keynote Store",
+   "tag": "glass, silver and glowing gadgets",
+   "icon": "🍏",
+   "scene": "res://scenes/maps/apple_store_showroom.tscn",
+   "sky": "#F0F1F3",
+   "host": "robo",
+   "bounds": [
+    -4.6,
+    -3.6,
+    9.2,
+    7.2
+   ],
+   "flood": [
+    0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "chaos": "Q Crowd Rush · E Display Table Collapse · 9 Giant Keynote Screen Glitch · 0 reset",
+   "chaos_stages": [
+    {
+     "key": "Q",
+     "name": "Crowd Rush",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "swarm",
+       "path": "rush",
+       "color": "#4A90E2",
+       "count": 10,
+       "center": [
+        0,
+        1.6
+       ],
+       "width": 2.4,
+       "height": 0.55,
+       "size": [
+        0.16,
+        0.42,
+        0.16
+       ],
+       "speed": 2.6
+      },
+      {
+       "type": "wobble",
+       "group": "crowd",
+       "amp": 0.25
+      }
+     ]
+    },
+    {
+     "key": "E",
+     "name": "Display Table Collapse",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "topple",
+       "group": "tables",
+       "angle": 70,
+       "time": 0.7,
+       "stagger": 0.15
+      },
+      {
+       "type": "scatter",
+       "group": "devices",
+       "spread": 1.3,
+       "height": 0.8,
+       "stagger": 0.04
+      }
+     ]
+    },
+    {
+     "key": "9",
+     "name": "Giant Keynote Screen Glitch",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "flicker",
+       "colors": [
+        "#FF5F56",
+        "#27C93F",
+        "#4A90E2",
+        "#FFBD2E",
+        "#F5F2EB"
+       ],
+       "fps": 12
+      },
+      {
+       "type": "shake",
+       "amount": 0.7
+      }
+     ]
+    }
+   ],
+   "cams": {
+    "static": [
+     [
+      0,
+      1.9,
+      7.6
+     ],
+     [
+      0,
+      0.8,
+      -0.4
+     ],
+     40
+    ],
+    "slider": [
+     [
+      -3.4,
+      1.4,
+      5.0
+     ],
+     [
+      3.4,
+      1.4,
+      5.0
+     ],
+     [
+      0,
+      -0.35,
+      -4.2
+     ],
+     40
+    ],
+    "drone": [
+     [
+      0,
+      0.3,
+      -0.4
+     ],
+     7.2,
+     4.6,
+     40
+    ]
+   },
+   "portals": [],
+   "ambient": "#FFFFFF",
+   "ambient_energy": 0.62,
+   "sun": {
+    "rot": [
+     -50,
+     35,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.4
+   },
+   "expansions": [
+    {
+     "id": "genius_repair_bar",
+     "title": "+ Genius Repair Bar",
+     "bounds": [
+      3.0,
+      -0.2,
+      1.6,
+      3.6
+     ]
+    }
+   ],
+   "host_at": [
+    0,
+    0,
+    1.9
+   ]
+  },
+  {
+   "id": "chaotic_supermarket",
+   "aliases": [],
+   "title": "aisle 7 Supermarket",
+   "tag": "cream-and-mint aisles, cans, carts",
+   "icon": "🛒",
+   "scene": "res://scenes/maps/chaotic_supermarket.tscn",
+   "sky": "#82E090",
+   "host": "robo",
+   "bounds": [
+    -4.6,
+    -3.6,
+    9.2,
+    7.2
+   ],
+   "flood": [
+    0,
+    0.0,
+    0.0,
+    0.45
+   ],
+   "chaos": "Q Conveyor Speedup · E Can Pyramid Avalanche · 9 Freezer Foam Flood · 0 reset",
+   "chaos_stages": [
+    {
+     "key": "Q",
+     "name": "Conveyor Speedup",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "conveyor",
+       "group": "belt",
+       "axis": [
+        1,
+        0
+       ],
+       "speed": 2.4,
+       "length": 2.0
+      },
+      {
+       "type": "wobble",
+       "group": "cart",
+       "amp": 0.08,
+       "speed": 14
+      }
+     ]
+    },
+    {
+     "key": "E",
+     "name": "Can Pyramid Avalanche",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "scatter",
+       "group": "cans",
+       "spread": 2.2,
+       "height": 0.7,
+       "stagger": 0.025,
+       "spin": 9
+      }
+     ]
+    },
+    {
+     "key": "9",
+     "name": "Freezer Foam Flood",
+     "flood": 0.45,
+     "fx": [
+      {
+       "type": "float",
+       "group": "cart",
+       "height": 0.3
+      },
+      {
+       "type": "shake",
+       "amount": 0.3
+      }
+     ],
+     "water": "#F5F2EB"
+    }
+   ],
+   "cams": {
+    "static": [
+     [
+      0,
+      1.9,
+      7.6
+     ],
+     [
+      0,
+      0.8,
+      -0.4
+     ],
+     40
+    ],
+    "slider": [
+     [
+      -3.4,
+      1.4,
+      5.0
+     ],
+     [
+      3.4,
+      1.4,
+      5.0
+     ],
+     [
+      0,
+      -0.35,
+      -4.2
+     ],
+     40
+    ],
+    "drone": [
+     [
+      0,
+      0.3,
+      -0.4
+     ],
+     7.2,
+     4.6,
+     40
+    ]
+   },
+   "portals": [],
+   "ambient": "#FFFFFF",
+   "ambient_energy": 0.62,
+   "sun": {
+    "rot": [
+     -50,
+     35,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.4
+   },
+   "expansions": [
+    {
+     "id": "bakery_deli",
+     "title": "+ Bakery & Deli Counter",
+     "bounds": []
+    }
+   ],
+   "host_at": [
+    0,
+    0,
+    1.9
+   ]
+  },
+  {
+   "id": "retro_diner",
+   "aliases": [],
+   "title": "Bondi Blue Diner",
+   "tag": "checker floor, booths, jukebox",
+   "icon": "🥤",
+   "scene": "res://scenes/maps/retro_diner.tscn",
+   "sky": "#96BFEE",
+   "host": "robo",
+   "bounds": [
+    -4.6,
+    -3.6,
+    9.2,
+    7.2
+   ],
+   "flood": [
+    0,
+    0.0,
+    0.12,
+    0.08
+   ],
+   "chaos": "Q Jukebox Bass Shake · E Milkshake Blender Explosion · 9 Grease-Trap Slip · 0 reset",
+   "chaos_stages": [
+    {
+     "key": "Q",
+     "name": "Jukebox Bass Shake",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "shake",
+       "amount": 0.5
+      },
+      {
+       "type": "bob",
+       "group": "shakes",
+       "amp": 0.04,
+       "speed": 14
+      },
+      {
+       "type": "flicker",
+       "colors": [
+        "#FF5F56",
+        "#27C93F",
+        "#FFBD2E"
+       ],
+       "fps": 6
+      }
+     ]
+    },
+    {
+     "key": "E",
+     "name": "Milkshake Blender Explosion",
+     "flood": 0.12,
+     "fx": [
+      {
+       "type": "spin",
+       "group": "blender",
+       "speed": 30,
+       "ramp": 0.4
+      },
+      {
+       "type": "scatter",
+       "group": "shakes",
+       "spread": 1.6,
+       "height": 1.2,
+       "stagger": 0.08
+      },
+      {
+       "type": "swarm",
+       "path": "fountain",
+       "color": "#FFA29D",
+       "count": 16,
+       "center": [
+        2.4,
+        -2.6
+       ],
+       "height": 1.2,
+       "lift": 1.4,
+       "radius": 1.4,
+       "size": [
+        0.06,
+        0.06,
+        0.06
+       ]
+      }
+     ],
+     "water": "#FFA29D"
+    },
+    {
+     "key": "9",
+     "name": "Grease-Trap Slip",
+     "flood": 0.08,
+     "fx": [
+      {
+       "type": "slip"
+      },
+      {
+       "type": "wobble",
+       "group": "shakes",
+       "amp": 0.3
+      }
+     ],
+     "water": "#FFD986"
+    }
+   ],
+   "cams": {
+    "static": [
+     [
+      0,
+      1.9,
+      7.6
+     ],
+     [
+      0,
+      0.8,
+      -0.4
+     ],
+     40
+    ],
+    "slider": [
+     [
+      -3.4,
+      1.4,
+      5.0
+     ],
+     [
+      3.4,
+      1.4,
+      5.0
+     ],
+     [
+      0,
+      -0.35,
+      -4.2
+     ],
+     40
+    ],
+    "drone": [
+     [
+      0,
+      0.3,
+      -0.4
+     ],
+     7.2,
+     4.6,
+     40
+    ]
+   },
+   "portals": [],
+   "ambient": "#FFFFFF",
+   "ambient_energy": 0.62,
+   "sun": {
+    "rot": [
+     -50,
+     35,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.4
+   },
+   "expansions": [
+    {
+     "id": "drive_thru",
+     "title": "+ Drive-Thru Parking Lot",
+     "bounds": [
+      -5.6,
+      3.6,
+      11.2,
+      5.0
+     ]
+    }
+   ],
+   "host_at": [
+    0,
+    0,
+    1.9
+   ]
+  },
+  {
+   "id": "podcast_studio",
+   "aliases": [],
+   "title": "The Hot-Take Podcast Set",
+   "tag": "foam walls, neon, boom mics",
+   "icon": "🎙",
+   "scene": "res://scenes/maps/podcast_studio.tscn",
+   "sky": "#858689",
+   "host": "robo",
+   "bounds": [
+    -4.6,
+    -3.6,
+    9.2,
+    7.2
+   ],
+   "flood": [
+    0,
+    0.0,
+    0.06,
+    0.0
+   ],
+   "chaos": "Q Mic Feedback Screech · E Coffee Spill on Mixer · 9 Roof Light Rig Drop · 0 reset",
+   "chaos_stages": [
+    {
+     "key": "Q",
+     "name": "Mic Feedback Screech",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "shake",
+       "amount": 0.6
+      },
+      {
+       "type": "wobble",
+       "group": "mics",
+       "amp": 0.25,
+       "speed": 22
+      },
+      {
+       "type": "flicker",
+       "colors": [
+        "#FF5F56",
+        "#F5F2EB"
+       ],
+       "fps": 12
+      }
+     ]
+    },
+    {
+     "key": "E",
+     "name": "Coffee Spill on Mixer",
+     "flood": 0.06,
+     "fx": [
+      {
+       "type": "topple",
+       "group": "mugs",
+       "angle": 88,
+       "time": 0.5,
+       "stagger": 0.12
+      }
+     ],
+     "water": "#AD811F"
+    },
+    {
+     "key": "9",
+     "name": "Roof Light Rig Drop",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "drop",
+       "group": "lights",
+       "time": 0.8,
+       "stagger": 0.18,
+       "floor": 0.75
+      },
+      {
+       "type": "shake",
+       "amount": 0.9
+      }
+     ]
+    }
+   ],
+   "cams": {
+    "static": [
+     [
+      0,
+      1.9,
+      7.6
+     ],
+     [
+      0,
+      0.8,
+      -0.4
+     ],
+     40
+    ],
+    "slider": [
+     [
+      -3.4,
+      1.4,
+      5.0
+     ],
+     [
+      3.4,
+      1.4,
+      5.0
+     ],
+     [
+      0,
+      -0.35,
+      -4.2
+     ],
+     40
+    ],
+    "drone": [
+     [
+      0,
+      0.3,
+      -0.4
+     ],
+     7.2,
+     4.6,
+     40
+    ]
+   },
+   "portals": [],
+   "ambient": "#FFFFFF",
+   "ambient_energy": 0.62,
+   "sun": {
+    "rot": [
+     -50,
+     35,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.4
+   },
+   "expansions": [
+    {
+     "id": "green_screen",
+     "title": "+ Green-Screen Control Room",
+     "bounds": []
+    }
+   ],
+   "idle": [
+    {
+     "type": "bob",
+     "group": "lights",
+     "amp": 0.01,
+     "speed": 1.2
+    }
+   ],
+   "host_at": [
+    0,
+    0,
+    1.9
+   ]
+  },
+  {
+   "id": "lunar_moon_base",
+   "aliases": [],
+   "title": "Tranquility Mac Base",
+   "tag": "low gravity, dome, airlock",
+   "icon": "🌙",
+   "scene": "res://scenes/maps/lunar_moon_base.tscn",
+   "sky": "#2C2E33",
+   "host": "robo",
+   "bounds": [
+    -6.5,
+    -4.5,
+    13,
+    9.5
+   ],
+   "flood": [
+    0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "chaos": "Q Gravity Flicker · E Airlock Vent Gust · 9 Zero-G Prop Float · 0 reset",
+   "chaos_stages": [
+    {
+     "key": "Q",
+     "name": "Gravity Flicker",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "lowgrav",
+       "flicker": 0.5
+      },
+      {
+       "type": "bob",
+       "group": "crates",
+       "amp": 0.12,
+       "speed": 3
+      }
+     ]
+    },
+    {
+     "key": "E",
+     "name": "Airlock Vent Gust",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "gust",
+       "group": "crates",
+       "dir": [
+        0.4,
+        1
+       ],
+       "strength": 2.6,
+       "time": 1.0
+      },
+      {
+       "type": "wobble",
+       "group": "flag",
+       "amp": 0.5,
+       "speed": 16
+      },
+      {
+       "type": "shake",
+       "amount": 0.35
+      }
+     ]
+    },
+    {
+     "key": "9",
+     "name": "Zero-G Prop Float",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "float",
+       "group": "*",
+       "height": 1.4,
+       "rise": 2.0
+      },
+      {
+       "type": "lowgrav"
+      }
+     ]
+    }
+   ],
+   "cams": {
+    "static": [
+     [
+      0,
+      2.6,
+      10.2
+     ],
+     [
+      0,
+      0.8,
+      -0.8
+     ],
+     42
+    ],
+    "slider": [
+     [
+      -4.5,
+      1.6,
+      6.6
+     ],
+     [
+      4.5,
+      1.6,
+      6.6
+     ],
+     [
+      0,
+      -0.4,
+      -5.0
+     ],
+     42
+    ],
+    "drone": [
+     [
+      0,
+      0.3,
+      -0.5
+     ],
+     9.5,
+     6.0,
+     42
+    ]
+   },
+   "portals": [],
+   "ambient": "#FFFFFF",
+   "ambient_energy": 0.62,
+   "sun": {
+    "rot": [
+     -35,
+     60,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.55
+   },
+   "expansions": [
+    {
+     "id": "rover_pad",
+     "title": "+ Rover Landing Pad",
+     "bounds": []
+    }
+   ],
+   "host_at": [
+    0,
+    0,
+    1.9
+   ]
+  },
+  {
+   "id": "suburban_cul_de_sac",
+   "aliases": [],
+   "title": "Maple Street Cul-de-Sac",
+   "tag": "pastel houses, picket fences",
+   "icon": "🏡",
+   "scene": "res://scenes/maps/suburban_cul_de_sac.tscn",
+   "sky": "#96BFEE",
+   "host": "robo",
+   "bounds": [
+    -6.5,
+    -4.5,
+    13,
+    9.5
+   ],
+   "flood": [
+    0,
+    0.04,
+    0.0,
+    0.22
+   ],
+   "chaos": "Q Lawn Sprinkler Haywire · E Rogue Lawnmower Chase · 9 Hydrant Geyser · 0 reset",
+   "chaos_stages": [
+    {
+     "key": "Q",
+     "name": "Lawn Sprinkler Haywire",
+     "flood": 0.04,
+     "fx": [
+      {
+       "type": "spin",
+       "group": "sprinklers",
+       "speed": 18,
+       "ramp": 0.5
+      },
+      {
+       "type": "swarm",
+       "path": "fountain",
+       "color": "#96BFEE",
+       "count": 18,
+       "center": [
+        -3.0,
+        0.8
+       ],
+       "height": 0.2,
+       "lift": 1.0,
+       "radius": 1.6,
+       "size": [
+        0.05,
+        0.05,
+        0.05
+       ]
+      }
+     ]
+    },
+    {
+     "key": "E",
+     "name": "Rogue Lawnmower Chase",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "orbit",
+       "group": "mower",
+       "radius": 2.2,
+       "speed": 1.6,
+       "center": [
+        0,
+        1.4
+       ]
+      },
+      {
+       "type": "wobble",
+       "group": "mailbox",
+       "amp": 0.2
+      }
+     ]
+    },
+    {
+     "key": "9",
+     "name": "Hydrant Geyser",
+     "flood": 0.22,
+     "fx": [
+      {
+       "type": "show",
+       "group": "geyser",
+       "time": 0.35
+      },
+      {
+       "type": "wobble",
+       "group": "hydrant",
+       "amp": 0.12,
+       "speed": 30
+      },
+      {
+       "type": "shake",
+       "amount": 0.4
+      }
+     ]
+    }
+   ],
+   "cams": {
+    "static": [
+     [
+      0,
+      2.6,
+      10.2
+     ],
+     [
+      0,
+      0.8,
+      -0.8
+     ],
+     42
+    ],
+    "slider": [
+     [
+      -4.5,
+      1.6,
+      6.6
+     ],
+     [
+      4.5,
+      1.6,
+      6.6
+     ],
+     [
+      0,
+      -0.4,
+      -5.0
+     ],
+     42
+    ],
+    "drone": [
+     [
+      0,
+      0.3,
+      -0.5
+     ],
+     9.5,
+     6.0,
+     42
+    ]
+   },
+   "portals": [],
+   "ambient": "#FFFFFF",
+   "ambient_energy": 0.62,
+   "sun": {
+    "rot": [
+     -50,
+     35,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.4
+   },
+   "expansions": [
+    {
+     "id": "treehouse",
+     "title": "+ Treehouse Backyard",
+     "bounds": []
+    }
+   ],
+   "hidden": [
+    "geyser"
+   ],
+   "host_at": [
+    0,
+    0,
+    1.9
+   ]
+  },
+  {
+   "id": "cozy_living_room",
+   "aliases": [],
+   "title": "Sunday Living Room",
+   "tag": "sofa, flat-screen, bookshelves",
+   "icon": "🛋",
+   "scene": "res://scenes/maps/cozy_living_room.tscn",
+   "sky": "#FFD986",
+   "host": "robo",
+   "bounds": [
+    -4.6,
+    -3.6,
+    9.2,
+    7.2
+   ],
+   "flood": [
+    0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "chaos": "Q Roomba Rampage · E Popcorn Bowl Eruption · 9 Ceiling Fan Helicopter · 0 reset",
+   "chaos_stages": [
+    {
+     "key": "Q",
+     "name": "Roomba Rampage",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "orbit",
+       "group": "roomba",
+       "radius": 1.6,
+       "speed": 2.4,
+       "center": [
+        0,
+        0.3
+       ]
+      }
+     ]
+    },
+    {
+     "key": "E",
+     "name": "Popcorn Bowl Eruption",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "scatter",
+       "group": "popcorn",
+       "spread": 1.8,
+       "height": 1.6,
+       "stagger": 0.02
+      },
+      {
+       "type": "swarm",
+       "path": "fountain",
+       "color": "#F5F2EB",
+       "count": 22,
+       "center": [
+        0,
+        -0.7
+       ],
+       "height": 0.6,
+       "lift": 1.8,
+       "radius": 1.8,
+       "size": [
+        0.045,
+        0.04,
+        0.045
+       ]
+      }
+     ]
+    },
+    {
+     "key": "9",
+     "name": "Ceiling Fan Helicopter",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "spin",
+       "group": "fan",
+       "speed": 40,
+       "ramp": 1.2,
+       "lift": -1.6
+      },
+      {
+       "type": "shake",
+       "amount": 0.45
+      }
+     ]
+    }
+   ],
+   "cams": {
+    "static": [
+     [
+      0,
+      1.9,
+      7.6
+     ],
+     [
+      0,
+      0.8,
+      -0.4
+     ],
+     40
+    ],
+    "slider": [
+     [
+      -3.4,
+      1.4,
+      5.0
+     ],
+     [
+      3.4,
+      1.4,
+      5.0
+     ],
+     [
+      0,
+      -0.35,
+      -4.2
+     ],
+     40
+    ],
+    "drone": [
+     [
+      0,
+      0.3,
+      -0.4
+     ],
+     7.2,
+     4.6,
+     40
+    ]
+   },
+   "portals": [],
+   "ambient": "#FFFFFF",
+   "ambient_energy": 0.62,
+   "sun": {
+    "rot": [
+     -50,
+     35,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.4
+   },
+   "expansions": [
+    {
+     "id": "sunroom",
+     "title": "+ Sunroom Balcony",
+     "bounds": []
+    }
+   ],
+   "idle": [
+    {
+     "type": "spin",
+     "group": "fan",
+     "speed": 2.0,
+     "ramp": 0.1
+    }
+   ],
+   "host_at": [
+    0,
+    0,
+    1.9
+   ]
+  },
+  {
+   "id": "mad_science_hospital",
+   "aliases": [],
+   "title": "St. Glitch Clinic",
+   "tag": "exam table, X-ray, gurney",
+   "icon": "🩻",
+   "scene": "res://scenes/maps/mad_science_hospital.tscn",
+   "sky": "#82E090",
+   "host": "robo",
+   "bounds": [
+    -4.6,
+    -3.6,
+    9.2,
+    7.2
+   ],
+   "flood": [
+    0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "chaos": "Q X-Ray Disco Flash · E Runaway Gurney · 9 Laughing-Gas Fog · 0 reset",
+   "chaos_stages": [
+    {
+     "key": "Q",
+     "name": "X-Ray Disco Flash",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "flicker",
+       "colors": [
+        "#4A90E2",
+        "#FF5F56",
+        "#27C93F",
+        "#F5F2EB"
+       ],
+       "fps": 8
+      }
+     ]
+    },
+    {
+     "key": "E",
+     "name": "Runaway Gurney",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "orbit",
+       "group": "gurney",
+       "radius": 2.0,
+       "speed": 1.3,
+       "center": [
+        0,
+        0.6
+       ]
+      }
+     ]
+    },
+    {
+     "key": "9",
+     "name": "Laughing-Gas Fog",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "fog",
+       "color": "#82E090",
+       "density": 0.12
+      },
+      {
+       "type": "wobble",
+       "group": "tanks",
+       "amp": 0.2,
+       "speed": 7
+      },
+      {
+       "type": "slip"
+      }
+     ]
+    }
+   ],
+   "cams": {
+    "static": [
+     [
+      0,
+      1.9,
+      7.6
+     ],
+     [
+      0,
+      0.8,
+      -0.4
+     ],
+     40
+    ],
+    "slider": [
+     [
+      -3.4,
+      1.4,
+      5.0
+     ],
+     [
+      3.4,
+      1.4,
+      5.0
+     ],
+     [
+      0,
+      -0.35,
+      -4.2
+     ],
+     40
+    ],
+    "drone": [
+     [
+      0,
+      0.3,
+      -0.4
+     ],
+     7.2,
+     4.6,
+     40
+    ]
+   },
+   "portals": [],
+   "ambient": "#FFFFFF",
+   "ambient_energy": 0.62,
+   "sun": {
+    "rot": [
+     -50,
+     35,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.4
+   },
+   "expansions": [
+    {
+     "id": "mri_room",
+     "title": "+ MRI Magnet Room",
+     "bounds": []
+    }
+   ],
+   "host_at": [
+    0,
+    0,
+    1.9
+   ]
+  },
+  {
+   "id": "corporate_office",
+   "aliases": [],
+   "title": "Cubicle Farm 9-to-5",
+   "tag": "cubicles, copier, watercooler",
+   "icon": "💼",
+   "scene": "res://scenes/maps/corporate_office.tscn",
+   "sky": "#E5E7EB",
+   "host": "robo",
+   "bounds": [
+    -4.6,
+    -3.6,
+    9.2,
+    7.2
+   ],
+   "flood": [
+    0,
+    0.0,
+    0.18,
+    0.0
+   ],
+   "chaos": "Q Printer Paper Tornado · E Watercooler Bubble Overflow · 9 Boss Alarm Lockdown · 0 reset",
+   "chaos_stages": [
+    {
+     "key": "Q",
+     "name": "Printer Paper Tornado",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "swarm",
+       "path": "tornado",
+       "color": "#F5F2EB",
+       "count": 24,
+       "center": [
+        -0.6,
+        1.4
+       ],
+       "radius": 1.6,
+       "height": 2.6,
+       "speed": 5,
+       "size": [
+        0.12,
+        0.01,
+        0.09
+       ]
+      },
+      {
+       "type": "wobble",
+       "group": "copier",
+       "amp": 0.06,
+       "speed": 30
+      }
+     ]
+    },
+    {
+     "key": "E",
+     "name": "Watercooler Bubble Overflow",
+     "flood": 0.18,
+     "fx": [
+      {
+       "type": "wobble",
+       "group": "cooler",
+       "amp": 0.12,
+       "speed": 12
+      },
+      {
+       "type": "swarm",
+       "path": "fountain",
+       "color": "#96BFEE",
+       "count": 18,
+       "center": [
+        0.8,
+        1.4
+       ],
+       "height": 1.4,
+       "lift": 1.2,
+       "radius": 1.6,
+       "size": [
+        0.08,
+        0.08,
+        0.08
+       ]
+      }
+     ]
+    },
+    {
+     "key": "9",
+     "name": "Boss Alarm Lockdown",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "flicker",
+       "colors": [
+        "#FF5F56",
+        "#2C2E33"
+       ],
+       "fps": 4
+      },
+      {
+       "type": "shake",
+       "amount": 0.4
+      },
+      {
+       "type": "scatter",
+       "group": "papers",
+       "spread": 1.0,
+       "height": 0.6
+      }
+     ]
+    }
+   ],
+   "cams": {
+    "static": [
+     [
+      0,
+      1.9,
+      7.6
+     ],
+     [
+      0,
+      0.8,
+      -0.4
+     ],
+     40
+    ],
+    "slider": [
+     [
+      -3.4,
+      1.4,
+      5.0
+     ],
+     [
+      3.4,
+      1.4,
+      5.0
+     ],
+     [
+      0,
+      -0.35,
+      -4.2
+     ],
+     40
+    ],
+    "drone": [
+     [
+      0,
+      0.3,
+      -0.4
+     ],
+     7.2,
+     4.6,
+     40
+    ]
+   },
+   "portals": [],
+   "ambient": "#FFFFFF",
+   "ambient_energy": 0.62,
+   "sun": {
+    "rot": [
+     -50,
+     35,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.4
+   },
+   "expansions": [
+    {
+     "id": "boardroom",
+     "title": "+ Glass Boardroom",
+     "bounds": []
+    }
+   ],
+   "host_at": [
+    0,
+    0,
+    1.9
+   ]
+  },
+  {
+   "id": "beach_boardwalk",
+   "aliases": [],
+   "title": "Pixel-Smooth Pier",
+   "tag": "boardwalk, umbrellas, ice cream",
+   "icon": "🏖",
+   "scene": "res://scenes/maps/beach_boardwalk.tscn",
+   "sky": "#96BFEE",
+   "host": "robo",
+   "bounds": [
+    -6.5,
+    -2.6,
+    13,
+    5.4
+   ],
+   "flood": [
+    0,
+    0.0,
+    0.05,
+    0.55
+   ],
+   "chaos": "Q Seagull Swarm · E Ice-Cream Cart Meltdown · 9 Tidal Wave Splash · 0 reset",
+   "chaos_stages": [
+    {
+     "key": "Q",
+     "name": "Seagull Swarm",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "swarm",
+       "path": "circle",
+       "color": "#F5F2EB",
+       "count": 12,
+       "center": [
+        0,
+        -0.6
+       ],
+       "radius": 2.6,
+       "height": 2.2,
+       "speed": 1.6,
+       "size": [
+        0.16,
+        0.05,
+        0.07
+       ]
+      }
+     ]
+    },
+    {
+     "key": "E",
+     "name": "Ice-Cream Cart Meltdown",
+     "flood": 0.05,
+     "fx": [
+      {
+       "type": "melt",
+       "group": "scoops",
+       "time": 2.5
+      }
+     ],
+     "water": "#FFA29D"
+    },
+    {
+     "key": "9",
+     "name": "Tidal Wave Splash",
+     "flood": 0.55,
+     "fx": [
+      {
+       "type": "bob",
+       "group": "waves",
+       "amp": 0.6,
+       "speed": 2.2
+      },
+      {
+       "type": "shake",
+       "amount": 0.6
+      }
+     ],
+     "water": "#9CC3EF"
+    }
+   ],
+   "cams": {
+    "static": [
+     [
+      0,
+      2.6,
+      10.2
+     ],
+     [
+      0,
+      0.8,
+      -0.8
+     ],
+     42
+    ],
+    "slider": [
+     [
+      -4.5,
+      1.6,
+      6.6
+     ],
+     [
+      4.5,
+      1.6,
+      6.6
+     ],
+     [
+      0,
+      -0.4,
+      -5.0
+     ],
+     42
+    ],
+    "drone": [
+     [
+      0,
+      0.3,
+      -0.5
+     ],
+     9.5,
+     6.0,
+     42
+    ]
+   },
+   "portals": [],
+   "ambient": "#FFFFFF",
+   "ambient_energy": 0.62,
+   "sun": {
+    "rot": [
+     -45,
+     30,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.45
+   },
+   "expansions": [
+    {
+     "id": "arcade_shack",
+     "title": "+ Arcade Pier Shack",
+     "bounds": []
+    }
+   ],
+   "idle": [
+    {
+     "type": "bob",
+     "group": "waves",
+     "amp": 0.08,
+     "speed": 1.1
+    }
+   ],
+   "host_at": [
+    0,
+    0,
+    1.9
+   ]
+  },
+  {
+   "id": "retro_arcade",
+   "aliases": [],
+   "title": "8-Bit Vinyl Arcade",
+   "tag": "cabinets, claw machine, tickets",
+   "icon": "🕹",
+   "scene": "res://scenes/maps/retro_arcade.tscn",
+   "sky": "#858689",
+   "host": "robo",
+   "bounds": [
+    -4.6,
+    -3.6,
+    9.2,
+    7.2
+   ],
+   "flood": [
+    0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "chaos": "Q Claw Machine Goes Rogue · E Ticket Storm · 9 Cabinet Domino · 0 reset",
+   "chaos_stages": [
+    {
+     "key": "Q",
+     "name": "Claw Machine Goes Rogue",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "spin",
+       "group": "claw",
+       "speed": 14,
+       "ramp": 0.6
+      },
+      {
+       "type": "scatter",
+       "group": "plush",
+       "spread": 1.6,
+       "height": 1.0,
+       "stagger": 0.12
+      }
+     ]
+    },
+    {
+     "key": "E",
+     "name": "Ticket Storm",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "swarm",
+       "path": "tornado",
+       "color": "#FFA29D",
+       "count": 20,
+       "center": [
+        2.6,
+        0.4
+       ],
+       "radius": 1.2,
+       "height": 2.2,
+       "speed": 6,
+       "size": [
+        0.08,
+        0.01,
+        0.04
+       ]
+      },
+      {
+       "type": "scatter",
+       "group": "tickets",
+       "spread": 1.4,
+       "height": 0.9
+      }
+     ]
+    },
+    {
+     "key": "9",
+     "name": "Cabinet Domino",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "topple",
+       "group": "cabinets",
+       "angle": 80,
+       "time": 0.6,
+       "stagger": 0.12,
+       "dir": 90
+      },
+      {
+       "type": "shake",
+       "amount": 0.6
+      }
+     ]
+    }
+   ],
+   "cams": {
+    "static": [
+     [
+      0,
+      1.9,
+      7.6
+     ],
+     [
+      0,
+      0.8,
+      -0.4
+     ],
+     40
+    ],
+    "slider": [
+     [
+      -3.4,
+      1.4,
+      5.0
+     ],
+     [
+      3.4,
+      1.4,
+      5.0
+     ],
+     [
+      0,
+      -0.35,
+      -4.2
+     ],
+     40
+    ],
+    "drone": [
+     [
+      0,
+      0.3,
+      -0.4
+     ],
+     7.2,
+     4.6,
+     40
+    ]
+   },
+   "portals": [],
+   "ambient": "#FFFFFF",
+   "ambient_energy": 0.62,
+   "sun": {
+    "rot": [
+     -50,
+     35,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.4
+   },
+   "expansions": [
+    {
+     "id": "prize_lounge",
+     "title": "+ Prize Lounge",
+     "bounds": []
+    }
+   ],
+   "idle": [
+    {
+     "type": "flicker",
+     "colors": [
+      "#FF5F56",
+      "#4A90E2",
+      "#27C93F",
+      "#FFBD2E"
+     ],
+     "fps": 2
+    }
+   ],
+   "host_at": [
+    0,
+    0,
+    1.9
+   ]
   }
  ]
 }
