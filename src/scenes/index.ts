@@ -1,6 +1,7 @@
 import type { Episode } from '../types';
+import { garden } from './garden/episode';
 import { overflowingKitchen } from './overflowing-kitchen/episode';
 import { pondLife } from './pond-life/episode';
 
-/** Episode registry. Each room is self-contained so Phase 2 can stitch them via <ScenePortal />. */
-export const EPISODES: Episode[] = [pondLife, overflowingKitchen];
+/** The world: every scene is one node on the world map, linked by portals. */
+export const EPISODES: Episode[] = [overflowingKitchen, pondLife, garden];

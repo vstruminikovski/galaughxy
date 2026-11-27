@@ -2,7 +2,7 @@ import type { ThreeEvent } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import type { Voxel } from '../types';
-import { capacityFor, cullHidden, fillInstances, glowVoxelMaterial, litVoxelMaterial, voxelGeometry } from './voxels';
+import { capacityFor, cullHidden, fillInstances, glowVoxelMaterial, litVoxelMaterial, VOXEL_SIZE } from './voxels';
 
 export interface VoxelHit {
   voxel: Voxel;
@@ -11,19 +11,22 @@ export interface VoxelHit {
 
 /**
  * Renders any voxel list as 2 draw calls max (lit + glowing), with hidden-voxel culling.
- * `onVoxelClick` reports which voxel + face was tapped, for in-world editing.
+ * `size` = metres per cell (0.1 for rooms, smaller for detailed characters).
  */
 export function VoxelModelMesh({
   voxels,
   onVoxelClick,
   castShadow = true,
+  size = VOXEL_SIZE,
 }: {
   voxels: Voxel[];
   onVoxelClick?: (hit: VoxelHit, e: ThreeEvent<MouseEvent>) => void;
   castShadow?: boolean;
+  size?: number;
 }) {
   const litRef = useRef<THREE.InstancedMesh>(null);
   const glowRef = useRef<THREE.InstancedMesh>(null);
+  const geo = useMemo(() => new THREE.BoxGeometry(size, size, size), [size]);
 
   const { lit, glow } = useMemo(() => {
     const visible = cullHidden(voxels);
@@ -34,9 +37,9 @@ export function VoxelModelMesh({
   const glowCap = capacityFor(glow.length);
 
   useLayoutEffect(() => {
-    if (litRef.current) fillInstances(litRef.current, lit);
-    if (glowRef.current) fillInstances(glowRef.current, glow);
-  }, [lit, glow, litCap, glowCap]);
+    if (litRef.current) fillInstances(litRef.current, lit, size);
+    if (glowRef.current) fillInstances(glowRef.current, glow, size);
+  }, [lit, glow, litCap, glowCap, size]);
 
   const handler = (list: Voxel[]) =>
     onVoxelClick
@@ -50,18 +53,18 @@ export function VoxelModelMesh({
   return (
     <>
       <instancedMesh
-        key={`l${litCap}`}
+        key={`l${litCap}-${size}`}
         ref={litRef}
-        args={[voxelGeometry, litVoxelMaterial, litCap]}
+        args={[geo, litVoxelMaterial, litCap]}
         castShadow={castShadow}
         receiveShadow
         onClick={handler(lit)}
       />
       {glow.length > 0 && (
         <instancedMesh
-          key={`g${glowCap}`}
+          key={`g${glowCap}-${size}`}
           ref={glowRef}
-          args={[voxelGeometry, glowVoxelMaterial, glowCap]}
+          args={[geo, glowVoxelMaterial, glowCap]}
           onClick={handler(glow)}
         />
       )}

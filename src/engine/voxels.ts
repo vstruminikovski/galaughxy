@@ -57,9 +57,13 @@ const _c = new THREE.Color();
  * Writes voxels into an InstancedMesh. `index` maps instanceId -> voxel so editors can raycast.
  * Positions are voxel centres, so voxel (0,0,0) spans 0..0.1 on every axis.
  */
-export function fillInstances(mesh: THREE.InstancedMesh, voxels: { x: number; y: number; z: number; c: string }[]) {
+export function fillInstances(
+  mesh: THREE.InstancedMesh,
+  voxels: { x: number; y: number; z: number; c: string }[],
+  size = VOXEL_SIZE,
+) {
   voxels.forEach((v, i) => {
-    _m.makeTranslation((v.x + 0.5) * VOXEL_SIZE, (v.y + 0.5) * VOXEL_SIZE, (v.z + 0.5) * VOXEL_SIZE);
+    _m.makeTranslation((v.x + 0.5) * size, (v.y + 0.5) * size, (v.z + 0.5) * size);
     mesh.setMatrixAt(i, _m);
     mesh.setColorAt(i, _c.set(v.c));
   });

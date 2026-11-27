@@ -1,8 +1,7 @@
 import { dualRecorder } from '../engine/DualRecorder';
+import { toggleFly } from '../engine/freeCam';
 import { exportPNG } from '../engine/FrameExport';
 import { useStudioStore } from '../store/useStudioStore';
-import { EPISODES } from '../scenes';
-import { loadEpisode } from '../scenes/loadEpisode';
 import type { AspectMode, CamRig } from '../types';
 
 const ASPECTS: AspectMode[] = ['16:9', '9:16', 'dual'];
@@ -31,14 +30,8 @@ export function TopClaws() {
         <button className="claw" onClick={() => s.set({ aspect: ASPECTS[(ASPECTS.indexOf(s.aspect) + 1) % 3] })}>
           {s.aspect === 'dual' ? 'Dual' : s.aspect}
         </button>
-        <button
-          className="claw"
-          onClick={() => {
-            const i = EPISODES.findIndex((e) => e.slug === s.episodeSlug);
-            loadEpisode(EPISODES[(i + 1) % EPISODES.length].slug);
-          }}
-        >
-          🎞 {EPISODES.find((e) => e.slug === s.episodeSlug)?.title ?? 'Episode'}
+        <button className={`claw ${s.map ? 'on' : ''}`} onClick={() => s.set({ map: !s.map })} title="M">
+          🗺 Map
         </button>
         <button className={`claw ${s.drawn ? 'on' : ''}`} onClick={() => s.set({ drawn: !s.drawn })} title="L">
           ✏️ Drawn
@@ -61,6 +54,9 @@ export function TopClaws() {
         ))}
         <button className="claw" onClick={() => void exportPNG(2)} title="P">
           PNG
+        </button>
+        <button className={`claw ${s.camRig === 'free' ? 'on' : ''}`} onClick={toggleFly} title="N">
+          🛸 Fly
         </button>
         <button className={`claw rec ${s.recording ? 'on' : ''}`} onClick={() => dualRecorder.toggle()}>
           {s.recording ? '■ Stop' : '● Rec'}

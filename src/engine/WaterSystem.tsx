@@ -94,7 +94,7 @@ export function WaterSystem({ episode, perform }: { episode: Episode; perform: b
     // Flood body + rippling surface
     const surf = surfRef.current!;
     const body = bodyRef.current!;
-    const on = pond || level > 0.004;
+    const on = level > rest + 0.004;
     surf.visible = on;
     body.visible = on && !pond;
     if (on) {

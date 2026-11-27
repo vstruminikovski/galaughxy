@@ -1,21 +1,21 @@
-import { useGLTF } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
 import { useFrame } from '@react-three/fiber';
 import gsap from 'gsap';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { getActorMark, runtime } from '../engine/runtime';
+import { VoxelModelMesh } from '../engine/VoxelModelMesh';
 import { voiceFX } from '../engine/VoiceFXEngine';
 import { useStudioStore } from '../store/useStudioStore';
 import type { Episode, Expression, SceneObject } from '../types';
+import { buildFrogParts, FROG_VOXEL } from './frogModel';
 
-const URL_FROG = `${import.meta.env.BASE_URL}models/frog.glb`;
 const D2R = Math.PI / 180;
 const HOP_SPEED = 1.1;
 const TALK_THRESHOLD = 0.035;
 const TWOS_FPS = 12;
 
-/** Upper-lid angle per expression (0 = upper half covered, + closes, − opens) and eye bulge. */
+/** Lid angle per expression (0 = upper half covered, + closes, − opens), tilt and eye bulge. */
 const LIDS: Record<Expression, { l: number; r: number; tilt: number; bulge: number }> = {
   DEADPAN: { l: -0.3, r: -0.3, tilt: 0, bulge: 1 },
   SMIRK: { l: -0.2, r: -1.0, tilt: 0.15, bulge: 1 },
@@ -25,9 +25,7 @@ const LIDS: Record<Expression, { l: number; r: number; tilt: number; bulge: numb
   SHOCKED: { l: -1.55, r: -1.55, tilt: 0, bulge: 1.3 },
 };
 
-type Part = THREE.Object3D;
-
-/** Bog: Blender-sculpted pond frog. Segmented rig (no skeleton), every beat deterministic. */
+/** Bog: a voxel hybrid frog (organic body, robot LEDs and antenna). Animation is deterministic. */
 export function FrogActor({
   obj,
   perform,
@@ -39,44 +37,19 @@ export function FrogActor({
   episode: Episode;
   onSelect?: (e: ThreeEvent<MouseEvent>) => void;
 }) {
-  const { scene } = useGLTF(URL_FROG);
+  const parts = useMemo(() => buildFrogParts(), []);
   const root = useRef<THREE.Group>(null);
   const rig = useRef<THREE.Group>(null);
-
-  const parts = useMemo(() => {
-    const s = scene.clone(true);
-    const get = (n: string) => s.getObjectByName(n) as Part;
-    s.traverse((o) => {
-      const m = o as THREE.Mesh;
-      if (m.isMesh) {
-        m.castShadow = true;
-        m.receiveShadow = true;
-        const mat = (m.material as THREE.MeshStandardMaterial).clone();
-        mat.vertexColors = !!m.geometry.attributes.color;
-        mat.metalness = 0;
-        m.material = mat;
-      }
-    });
-    const p = {
-      scene: s,
-      body: get('Frog_Body'),
-      jaw: get('Frog_Jaw'),
-      mouth: get('Frog_Mouth'),
-      eyeL: get('Frog_Eye_L'),
-      eyeR: get('Frog_Eye_R'),
-      lidL: get('Frog_Lid_L'),
-      lidR: get('Frog_Lid_R'),
-      armL: get('Frog_Arm_L'),
-      armR: get('Frog_Arm_R'),
-      legL: get('Frog_Leg_L'),
-      legR: get('Frog_Leg_R'),
-    };
-    // remember rest transforms
-    Object.values(p).forEach((o) => {
-      if (o && (o as THREE.Object3D).isObject3D) (o as THREE.Object3D).userData.rest = (o as THREE.Object3D).position.clone();
-    });
-    return p;
-  }, [scene]);
+  const body = useRef<THREE.Group>(null);
+  const jaw = useRef<THREE.Group>(null);
+  const eyeL = useRef<THREE.Group>(null);
+  const eyeR = useRef<THREE.Group>(null);
+  const lidL = useRef<THREE.Group>(null);
+  const lidR = useRef<THREE.Group>(null);
+  const armL = useRef<THREE.Group>(null);
+  const armR = useRef<THREE.Group>(null);
+  const legL = useRef<THREE.Group>(null);
+  const legR = useRef<THREE.Group>(null);
 
   const sim = useRef({ yaw: 0, yawVel: 0, lastStep: -1, phase: 0, expr: 'DEADPAN' as Expression, jaw: 0 });
 
@@ -105,7 +78,7 @@ export function FrogActor({
 
     // ── locomotion: frogs hop, they don't walk ──
     let moving = 0;
-    if (perform && isActive) {
+    if (perform && isActive && st.camRig !== 'free') {
       let mx = runtime.stick.x;
       let mz = runtime.stick.z;
       const k = runtime.keys;
@@ -117,7 +90,6 @@ export function FrogActor({
       if (len > 0.08) {
         const n = Math.max(1, len);
         const b = episode.bounds;
-        // forward progress only while airborne → reads as distinct hops
         const air = Math.max(0, Math.sin(s.phase));
         const sp = HOP_SPEED * (0.3 + air * 1.6);
         mark.pos.x = THREE.MathUtils.clamp(mark.pos.x + (mx / n) * sp * dt, b.minX + 0.3, b.maxX - 0.3);
@@ -167,7 +139,7 @@ export function FrogActor({
     if (expr === 'SHOCKED') jawTarget = Math.max(jawTarget, 0.28);
     if (expr === 'PANIC') jawTarget = Math.max(jawTarget, 0.12 + Math.abs(Math.sin(tq * 9)) * 0.1);
     s.jaw = st.onTwos ? jawTarget : THREE.MathUtils.damp(s.jaw, jawTarget, 25, dt);
-    parts.jaw.rotation.x = s.jaw;
+    jaw.current!.rotation.x = s.jaw;
 
     if (expr !== s.expr) {
       s.expr = expr;
@@ -177,17 +149,15 @@ export function FrogActor({
     // ── eyes + lids (the expression lives here) ──
     const L = LIDS[expr];
     const blink = tq % 3.7 < 0.12 ? 1.5 : 0;
-    parts.lidL.rotation.set(Math.max(L.l, blink), 0, L.tilt);
-    parts.lidR.rotation.set(Math.max(L.r, blink), 0, -L.tilt);
+    lidL.current!.rotation.set(Math.max(L.l, blink), 0, L.tilt);
+    lidR.current!.rotation.set(Math.max(L.r, blink), 0, -L.tilt);
     const bulge = L.bulge + (expr === 'PANIC' ? Math.sin(tq * 25) * 0.04 : 0);
-    parts.eyeL.scale.setScalar(bulge);
-    parts.eyeR.scale.setScalar(bulge);
-    parts.lidL.scale.setScalar(bulge);
-    parts.lidR.scale.setScalar(bulge);
+    eyeL.current!.scale.setScalar(bulge);
+    eyeR.current!.scale.setScalar(bulge);
 
     // ── body: breathing throat, angry puff, talk bob ──
     const puff = expr === 'ANGRY' ? 1.12 + Math.sin(tq * 3) * 0.02 : 1 + Math.sin(tq * 2.4) * 0.012;
-    parts.body.scale.set(puff, 1 + (puff - 1) * 0.6, puff);
+    body.current!.scale.set(puff, 1 + (puff - 1) * 0.6, puff);
     rig.current!.rotation.x = (talking ? -Math.abs(Math.sin(tq * 8)) * 0.05 : 0) - hopY * 1.2;
     rig.current!.position.y = expr === 'HAPPY' ? Math.abs(Math.sin(tq * 5)) * 0.04 : 0;
     rig.current!.position.x = expr === 'PANIC' ? Math.sin(tq * 30) * 0.008 : 0;
@@ -195,8 +165,8 @@ export function FrogActor({
     // ── limbs ──
     const air = Math.max(0, Math.sin(s.phase)) * mark.moving;
     const kick = swimming ? Math.sin(tq * 6) * 0.6 : 0;
-    parts.legL.rotation.x = -air * 1.1 + kick;
-    parts.legR.rotation.x = -air * 1.1 - kick;
+    legL.current!.rotation.x = -air * 1.1 + kick;
+    legR.current!.rotation.x = -air * 1.1 - kick;
     let armX = air * 0.7;
     let armZ = 0;
     if (expr === 'PANIC') {
@@ -204,9 +174,12 @@ export function FrogActor({
       armZ = 0.6;
     } else if (expr === 'HAPPY') armX = -0.5 + Math.sin(tq * 5) * 0.3;
     else if (talking) armX = -0.25 + Math.sin(tq * 4) * 0.2;
-    parts.armL.rotation.set(armX, 0, armZ);
-    parts.armR.rotation.set(expr === 'PANIC' ? -1.2 - Math.sin(tq * 16) * 0.5 : armX, 0, -armZ);
+    armL.current!.rotation.set(armX, 0, armZ);
+    armR.current!.rotation.set(expr === 'PANIC' ? -1.2 - Math.sin(tq * 16) * 0.5 : armX, 0, -armZ);
   });
+
+  const at = (p: [number, number, number]) =>
+    [p[0] * FROG_VOXEL, p[1] * FROG_VOXEL, p[2] * FROG_VOXEL] as [number, number, number];
 
   return (
     <group
@@ -219,10 +192,37 @@ export function FrogActor({
       onClick={onSelect}
     >
       <group ref={rig}>
-        <primitive object={parts.scene} />
+        <group ref={body}>
+          <VoxelModelMesh voxels={parts.body.voxels} size={FROG_VOXEL} />
+        </group>
+        <group ref={jaw} position={at(parts.jaw.pivot)}>
+          <VoxelModelMesh voxels={parts.jaw.voxels} size={FROG_VOXEL} />
+        </group>
+        <group ref={eyeL} position={at(parts.eyeL.pivot)}>
+          <VoxelModelMesh voxels={parts.eyeL.voxels} size={FROG_VOXEL} />
+        </group>
+        <group ref={eyeR} position={at(parts.eyeR.pivot)}>
+          <VoxelModelMesh voxels={parts.eyeR.voxels} size={FROG_VOXEL} />
+        </group>
+        <group ref={lidL} position={at(parts.lidL.pivot)}>
+          <VoxelModelMesh voxels={parts.lidL.voxels} size={FROG_VOXEL} />
+        </group>
+        <group ref={lidR} position={at(parts.lidR.pivot)}>
+          <VoxelModelMesh voxels={parts.lidR.voxels} size={FROG_VOXEL} />
+        </group>
+        <group ref={armL} position={at(parts.armL.pivot)}>
+          <VoxelModelMesh voxels={parts.armL.voxels} size={FROG_VOXEL} />
+        </group>
+        <group ref={armR} position={at(parts.armR.pivot)}>
+          <VoxelModelMesh voxels={parts.armR.voxels} size={FROG_VOXEL} />
+        </group>
+        <group ref={legL} position={at(parts.legL.pivot)}>
+          <VoxelModelMesh voxels={parts.legL.voxels} size={FROG_VOXEL} />
+        </group>
+        <group ref={legR} position={at(parts.legR.pivot)}>
+          <VoxelModelMesh voxels={parts.legR.voxels} size={FROG_VOXEL} />
+        </group>
       </group>
     </group>
   );
 }
-
-useGLTF.preload(URL_FROG);

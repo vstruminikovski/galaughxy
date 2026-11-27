@@ -29,6 +29,8 @@ interface StudioState extends Doc {
   future: Doc[];
 
   mode: Mode;
+  /** World map overlay open. */
+  map: boolean;
   drawer: Drawer | null;
   aspect: AspectMode;
   uiHidden: boolean;
@@ -96,6 +98,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   future: [],
 
   mode: 'game',
+  map: false,
   drawer: null,
   aspect: '16:9',
   uiHidden: false,

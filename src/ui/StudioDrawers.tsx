@@ -7,6 +7,7 @@ import { SFX_PADS, VOICE_PRESETS, voiceFX } from '../engine/VoiceFXEngine';
 import { LOCAL_LIBRARY_KEY } from '../props/library';
 import { useStudioStore, type BrushMode } from '../store/useStudioStore';
 import { sceneKey } from '../scenes/loadEpisode';
+import { applyPose, loadViews, saveView, toggleFly } from '../engine/freeCam';
 import type { Drawer, SceneDoc, VoxelModel } from '../types';
 
 const DRAWERS: { id: Drawer; icon: string; label: string }[] = [
@@ -275,6 +276,8 @@ function VoiceDrawer() {
 
 function CamerasDrawer() {
   const s = useStudioStore();
+  const [views, setViews] = useState(() => loadViews(s.episodeSlug));
+  useEffect(() => setViews(loadViews(s.episodeSlug)), [s.episodeSlug]);
   const sliderRef = useRef<HTMLInputElement>(null);
   // Mirror runtime.sliderT into the range input without React re-renders.
   useEffect(() => {
@@ -309,6 +312,22 @@ function CamerasDrawer() {
         </button>
         <span className="hint">speed</span>
         <input type="range" min={0.02} max={0.4} step={0.01} value={s.glideSpeed} onChange={(e) => s.set({ glideSpeed: +e.target.value })} />
+      </Row>
+      <h4>Free camera</h4>
+      <Row>
+        <button className={s.camRig === 'free' ? 'on' : ''} onClick={toggleFly}>🛸 Fly (N)</button>
+        <span className="hint">WASD move · Space up · Shift down · drag to look</span>
+      </Row>
+      <h4>Saved views (this scene)</h4>
+      <Row>
+        {[0, 1, 2].map((i) => (
+          <button key={`s${i}`} onClick={() => setViews(saveView(s.episodeSlug, i))}>Save {i + 1}</button>
+        ))}
+      </Row>
+      <Row>
+        {[0, 1, 2].map((i) => (
+          <button key={`g${i}`} disabled={!views[i]} onClick={() => views[i] && applyPose(views[i]!)}>Go {i + 1}</button>
+        ))}
       </Row>
       <h4>Framing (38° lens)</h4>
       <Seg value={s.aspect} onChange={(a) => s.set({ aspect: a })} options={[{ id: '16:9', label: '16:9' }, { id: '9:16', label: '9:16' }, { id: 'dual', label: 'Dual' }]} />

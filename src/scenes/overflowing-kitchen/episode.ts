@@ -6,7 +6,8 @@ export const overflowingKitchen: Episode = {
   slug: 'overflowing-kitchen',
   title: 'The Overflowing Kitchen',
   tagline: 'flood the kitchen!',
-  look: 'studio',
+  mapPos: [24, 62],
+  mapIcon: '🍳',
   skyColor: '#8fc4e8',
   bounds: { minX: -3, maxX: 3, minZ: -2.5, maxZ: 2.5 },
   cameras: {
@@ -15,8 +16,8 @@ export const overflowingKitchen: Episode = {
     drone: { center: [0, 0.4, 0], radius: 6.5, height: 5.5, orbitSpeed: 0.08, fov: 38 },
   },
   buildBaseVoxels: buildKitchenRoom,
+  portals: [{ to: 'pond-life', position: [-2.95, 0, 0.9], rotationY: Math.PI / 2 }],
   scene: sceneJson as SceneDoc,
 };
 
-// Saving the scene rewrites scene.json; accept the update so the live session isn't reloaded.
 if (import.meta.hot) import.meta.hot.accept();

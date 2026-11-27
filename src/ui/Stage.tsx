@@ -1,4 +1,4 @@
-import { Sky, TransformControls } from '@react-three/drei';
+import { TransformControls } from '@react-three/drei';
 import { Canvas, type ThreeEvent } from '@react-three/fiber';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
@@ -123,9 +123,7 @@ export function Stage({ episode, dpr }: { episode: Episode; dpr: number }) {
   const cinematic = useStudioStore((s) => s.cinematic);
   const drawn = useStudioStore((s) => s.drawn);
   const studio = mode === 'studio';
-  const nature = episode.look === 'nature';
   const base = useMemo(() => episode.buildBaseVoxels?.(), [episode]);
-  const Env = episode.Environment;
   const c = episode.cameras.static;
 
   return (
@@ -141,49 +139,23 @@ export function Stage({ episode, dpr }: { episode: Episode; dpr: number }) {
       onPointerMissed={() => studio && brush === 'off' && useStudioStore.getState().set({ selectedId: null })}
     >
       <color attach="background" args={[episode.skyColor]} />
-      {nature ? (
-        <>
-          <Sky sunPosition={[-6, 3.5, 6]} turbidity={7} rayleigh={1.6} mieCoefficient={0.006} mieDirectionalG={0.85} />
-          <fog attach="fog" args={['#c3d2c2', 9, 34]} />
-          <ProceduralEnv intensity={0.35} />
-          <hemisphereLight args={['#cfe2ff', '#4b5a2c', 0.75]} />
-          <directionalLight
-            position={[-4.5, 5, 4.5]}
-            color="#ffe1b3"
-            intensity={2.8}
-            castShadow
-            shadow-mapSize={[2048, 2048]}
-            shadow-camera-left={-7}
-            shadow-camera-right={7}
-            shadow-camera-top={7}
-            shadow-camera-bottom={-7}
-            shadow-bias={-0.0004}
-            shadow-normalBias={0.02}
-          />
-          <directionalLight position={[3, 2.5, -5]} color="#fff0d6" intensity={1.4} />
-        </>
-      ) : (
-        <>
-          <fog attach="fog" args={[episode.skyColor, 14, 40]} />
-          <ProceduralEnv />
-          <hemisphereLight args={['#dff1ff', '#8a6d4a', 0.9]} />
-          <directionalLight
-            position={[4, 8, 6]}
-            intensity={2.1}
-            castShadow
-            shadow-mapSize={[1024, 1024]}
-            shadow-camera-left={-5}
-            shadow-camera-right={5}
-            shadow-camera-top={5}
-            shadow-camera-bottom={-5}
-            shadow-bias={-0.0005}
-          />
-        </>
-      )}
+      <fog attach="fog" args={[episode.skyColor, 14, 40]} />
+      <ProceduralEnv />
+      <hemisphereLight args={['#dff1ff', '#8a6d4a', 0.9]} />
+      <directionalLight
+        position={[4, 8, 6]}
+        intensity={2.1}
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-camera-left={-5}
+        shadow-camera-right={5}
+        shadow-camera-top={5}
+        shadow-camera-bottom={-5}
+        shadow-bias={-0.0005}
+      />
 
       {base && <MicroVoxelWorld base={base} editable={studio && brush !== 'off'} />}
       <Suspense fallback={null}>
-        {Env && <Env />}
       {objects.map((o) => {
         if (o.kind === 'actor') {
           const Actor = ACTOR_TYPES[o.ref as keyof typeof ACTOR_TYPES] ?? ACTOR_TYPES.robo;
@@ -209,10 +181,12 @@ export function Stage({ episode, dpr }: { episode: Episode; dpr: number }) {
       </Suspense>
 
       <WaterSystem episode={episode} perform={!studio || !selectedId} />
-      {!nature && <ScenePortal to="pond-life" position={[-2.95, 0, 0.9]} rotationY={Math.PI / 2} />}
+      {(episode.portals ?? []).map((p) => (
+        <ScenePortal key={p.to} to={p.to} position={p.position} rotationY={p.rotationY ?? 0} active />
+      ))}
       <CameraRigs config={episode.cameras} />
       {studio && <SelectionGizmo />}
-      {(cinematic || drawn) && <CinematicFX nature={nature} cinematic={cinematic} drawn={drawn} />}
+      {(cinematic || drawn) && <CinematicFX nature={false} cinematic={cinematic} drawn={drawn} />}
     </Canvas>
   );
 }

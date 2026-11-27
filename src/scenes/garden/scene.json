@@ -1,0 +1,7 @@
+{
+  "slug": "garden",
+  "objects": [
+    { "id": "robo_1", "kind": "actor", "ref": "robo", "name": "Robo", "pos": [0, 0, 0.3], "rot": [0, 0, 0], "scale": [1, 1, 1], "visible": true, "color": "#4aa3df" }
+  ],
+  "voxels": {}
+}

@@ -71,8 +71,14 @@ function LookZone() {
   const move = (e: RPE) => {
     const l = last.current;
     if (!l || l.id !== e.pointerId) return;
-    runtime.look.yaw = Math.max(-0.9, Math.min(0.9, runtime.look.yaw - (e.clientX - l.x) * 0.005));
-    runtime.look.pitch = Math.max(-0.35, Math.min(0.35, runtime.look.pitch - (e.clientY - l.y) * 0.004));
+    if (useStudioStore.getState().camRig === 'free') {
+      // free-fly: drag turns the camera directly
+      runtime.fly.yaw -= (e.clientX - l.x) * 0.005;
+      runtime.fly.pitch = Math.max(-1.3, Math.min(1.3, runtime.fly.pitch - (e.clientY - l.y) * 0.004));
+    } else {
+      runtime.look.yaw = Math.max(-0.9, Math.min(0.9, runtime.look.yaw - (e.clientX - l.x) * 0.005));
+      runtime.look.pitch = Math.max(-0.35, Math.min(0.35, runtime.look.pitch - (e.clientY - l.y) * 0.004));
+    }
     l.x = e.clientX;
     l.y = e.clientY;
   };

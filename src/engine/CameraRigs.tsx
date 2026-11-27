@@ -7,6 +7,8 @@ import { runtime } from './runtime';
 
 const tmpPos = new THREE.Vector3();
 const tmpTarget = new THREE.Vector3();
+const FLY_FWD = new THREE.Vector3();
+const FLY_RIGHT = new THREE.Vector3();
 
 /**
  * Deterministic Static / Slider / Drone rigs. Switching rigs is an instant cut;
@@ -31,6 +33,34 @@ export function CameraRigs({ config }: { config: CameraConfig }) {
   useFrame((state, dt) => {
     const st = useStudioStore.getState();
     const t = state.clock.elapsedTime;
+
+    // ── free-fly: WASD/stick move, Space up, Shift down, drag to look ──
+    if (st.camRig === 'free') {
+      const f = runtime.fly;
+      const k = runtime.keys;
+      let fx = runtime.stick.x;
+      let fz = runtime.stick.z;
+      let fy = 0;
+      if (k.has('w') || k.has('arrowup')) fz -= 1;
+      if (k.has('s') || k.has('arrowdown')) fz += 1;
+      if (k.has('a') || k.has('arrowleft')) fx -= 1;
+      if (k.has('d') || k.has('arrowright')) fx += 1;
+      if (k.has(' ')) fy += 1;
+      if (k.has('shift')) fy -= 1;
+      const n = Math.max(1, Math.hypot(fx, fz));
+      const fwd = FLY_FWD.set(-Math.sin(f.yaw) * Math.cos(f.pitch), Math.sin(f.pitch), -Math.cos(f.yaw) * Math.cos(f.pitch));
+      const right = FLY_RIGHT.set(Math.cos(f.yaw), 0, -Math.sin(f.yaw));
+      const speed = 3.2 * dt;
+      f.pos.addScaledVector(fwd, (-fz / n) * speed).addScaledVector(right, (fx / n) * speed);
+      f.pos.y += fy * speed;
+      camera.position.copy(f.pos);
+      camera.lookAt(f.pos.x + fwd.x, f.pos.y + fwd.y, f.pos.z + fwd.z);
+      if (Math.abs(camera.fov - 38) > 0.01) {
+        camera.fov = 38;
+        camera.updateProjectionMatrix();
+      }
+      return;
+    }
     const cut = lastRig.current !== st.camRig;
     lastRig.current = st.camRig;
     let targetFov = 38;

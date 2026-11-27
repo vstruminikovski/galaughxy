@@ -8,6 +8,7 @@ import { Stage } from './ui/Stage';
 import { loadEpisode } from './scenes/loadEpisode';
 import { StudioDrawers } from './ui/StudioDrawers';
 import { TopClaws } from './ui/TopClaws';
+import { WorldMap } from './ui/WorldMap';
 
 /** Pixel-identical letterboxed frame: same framing on Galaxy S25 and desktop. */
 function useFrameBox(aspect: number) {
@@ -33,6 +34,7 @@ export default function App() {
   const mode = useStudioStore((s) => s.mode);
   const uiHidden = useStudioStore((s) => s.uiHidden);
   const recording = useStudioStore((s) => s.recording);
+  const mapOpen = useStudioStore((s) => s.map);
   const set = useStudioStore((s) => s.set);
   const episodeSlug = useStudioStore((s) => s.episodeSlug);
   const episode = EPISODES.find((e) => e.slug === episodeSlug) ?? EPISODES[0];
@@ -60,6 +62,7 @@ export default function App() {
           <GameHUD />
           <TopClaws />
           {mode === 'studio' && <StudioDrawers />}
+          {mapOpen && <WorldMap />}
           <div className="title-tag">
             {episode.title} · <span>{mode === 'game' ? episode.tagline : 'studio'}</span>
           </div>

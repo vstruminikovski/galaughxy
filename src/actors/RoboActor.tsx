@@ -105,7 +105,7 @@ export function RoboActor({
 
     // ── simulation (always smooth) ──
     let moving = 0;
-    if (perform && isActive) {
+    if (perform && isActive && st.camRig !== 'free') {
       let mx = runtime.stick.x;
       let mz = runtime.stick.z;
       const k = runtime.keys;

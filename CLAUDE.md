@@ -88,3 +88,11 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
   - Actors follow the ground via `public/models/pond_height.json`. The grass uses `uv.y` as blade height for the vertex-shader wind.
 - `CinematicFX` (depth of field auto-focused on the active actor, bloom, AgX tone mapping, vignette, grain) can be toggled under Studio → Timing → Look. The `@react-three/postprocessing` wrapper copies the DOF `target` only once, so the live effect's `target` is updated every frame.
 - **Drawn look** (`src/engine/DrawnLookEffect.ts`, toggled with `L` or the ✏️ claw): a grease-pencil-style screen pass. It draws ink outlines where depth and color change sharply, makes them wobble with a 12fps line boil so they read as hand-redrawn, adds hatching in the shadows, slightly flattens the colors, and overlays paper grain. Ink, hatching and boil sliders are in Studio → Timing.
+
+## 10. ART DIRECTION (current — supersedes earlier notes)
+- **One aesthetic everywhere: square voxels.** Every scene and character is built from square cells (`src/engine/sdf.ts` shapes sampled into voxels). No imported meshes. `public/models` and the Blender pipeline are retired; `tools/blender/` is kept for reference only.
+- **Hybrid characters:** organic silhouettes made of squares, with robot parts (glowing LED strips, antennas, glowing lenses). Bog the frog (`src/actors/frogModel.ts`) and the robo both follow this.
+- **Adjustable:** each part is a list of cells with a pivot, so you can resize or recolour any part in code. Character voxels use a finer size (`FROG_VOXEL = 0.03`) than rooms (`0.1`).
+- Scenes: The Overflowing Kitchen, Pond Life, Backyard Garden. Each is one node on the world map (`M`); doorways (portals) connect neighbouring scenes.
+- **Camera:** `N` or 🛸 Fly = free-fly (WASD, Space up, Shift down, drag to look). Studio → Cameras → Saved views stores three views per scene.
+- Deploy: `scripts/deploy.sh` builds the site and publishes to GitHub Pages (`gh-pages`, public).

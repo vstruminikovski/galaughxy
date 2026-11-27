@@ -48,7 +48,7 @@ export interface SceneDoc {
 export type Expression = 'DEADPAN' | 'SMIRK' | 'PANIC' | 'ANGRY' | 'HAPPY' | 'SHOCKED';
 export const EXPRESSIONS: Expression[] = ['DEADPAN', 'SMIRK', 'PANIC', 'ANGRY', 'HAPPY', 'SHOCKED'];
 
-export type CamRig = 'static' | 'slider' | 'drone';
+export type CamRig = 'static' | 'slider' | 'drone' | 'free';
 export type AspectMode = '16:9' | '9:16' | 'dual';
 export type VoicePreset = 'normal' | 'radio' | 'phone' | 'scary' | 'squeaky';
 export type Mode = 'game' | 'studio';
@@ -64,19 +64,21 @@ export interface Episode {
   slug: string;
   title: string;
   tagline: string;
+  /** Position on the world map, in percent of the map (x, y from top-left). */
+  mapPos: [number, number];
+  mapIcon: string;
   cameras: CameraConfig;
   bounds: { minX: number; maxX: number; minZ: number; maxZ: number };
-  /** Voxel episodes: procedural base room. */
-  buildBaseVoxels?: () => Map<string, string>;
-  /** Sculpted episodes: environment component (loads Blender-sculpted .glb). */
-  Environment?: import('react').ComponentType;
-  /** Ground height under (x, z) for actors. */
+  /** The room, built from square voxels. */
+  buildBaseVoxels: () => Map<string, string>;
+  /** Ground height under (x, z) for actors, where it differs from y = 0. */
   ground?: (x: number, z: number) => number;
   /** Resting water surface height; undefined = dry room that floods from 0. */
   waterRest?: number;
-  /** Multiplier on chaos flood heights (outdoor sets rise less). */
+  /** Multiplier on chaos flood heights. */
   floodScale?: number;
-  look: 'studio' | 'nature';
+  /** Doorways to other scenes (walk up and tap to go). */
+  portals?: { to: string; position: Vec3; rotationY?: number }[];
   scene: SceneDoc;
   skyColor: string;
 }

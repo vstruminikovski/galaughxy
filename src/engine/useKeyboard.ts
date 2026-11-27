@@ -4,10 +4,11 @@ import { useStudioStore } from '../store/useStudioStore';
 import { EXPRESSIONS } from '../types';
 import { advanceChaos, setWaterStage } from './ChaosDirector';
 import { exportPNG } from './FrameExport';
+import { toggleFly } from './freeCam';
 import { runtime } from './runtime';
 import { SFX_PADS, voiceFX } from './VoiceFXEngine';
 
-const MOVE_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright']);
+const MOVE_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'shift']);
 
 /** Desktop keyboard parity: every key hits the same store actions the touch HUD uses. */
 export function useKeyboard() {
@@ -33,6 +34,7 @@ export function useKeyboard() {
 
       if (k === ' ') {
         e.preventDefault();
+        runtime.keys.add(' '); // Space also lifts the free camera
         if (!e.repeat) st.set({ talkHeld: true });
         return;
       }
@@ -59,6 +61,12 @@ export function useKeyboard() {
           break;
         case 'h':
           st.set({ uiHidden: !st.uiHidden });
+          break;
+        case 'm':
+          st.set({ map: !st.map });
+          break;
+        case 'n':
+          toggleFly();
           break;
         case 'l':
           st.set({ drawn: !st.drawn });
@@ -97,7 +105,7 @@ export function useKeyboard() {
           advanceChaos();
           break;
         case 'escape':
-          st.set({ selectedId: null, brush: 'off', drawer: null });
+          st.set({ selectedId: null, brush: 'off', drawer: null, map: false });
           break;
         case 'delete':
         case 'backspace':

@@ -27,6 +27,8 @@ export const runtime = {
   objects: new Map<string, THREE.Object3D>(),
   /** Right-zone look drag: orbit offset applied on top of the active camera rig. */
   look: { yaw: 0, pitch: 0 },
+  /** Free-fly camera pose (used when camRig === 'free'). */
+  fly: { pos: new THREE.Vector3(0, 1.2, 4), yaw: 0, pitch: -0.2 },
   /** Renderer handles for PNG export. */
   three: null as { gl: THREE.WebGLRenderer; scene: THREE.Scene; camera: THREE.Camera } | null,
   /** Canvas used by the recorder. */
