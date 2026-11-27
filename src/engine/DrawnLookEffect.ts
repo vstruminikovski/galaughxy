@@ -5,13 +5,11 @@ import * as THREE from 'three';
  * "Grease Pencil" hand-drawn look as a single screen pass:
  *  - ink outlines from depth discontinuities + colour edges (Sobel)
  *  - line boil: the sampling jitters with noise that re-rolls 12×/sec (on twos)
- *  - gentle paint posterize (no hatching)
  */
 const frag = /* glsl */ `
 uniform float uTime;
 uniform float uInk;
 uniform float uThickness;
-uniform float uPaper;
 uniform float uBoil;
 uniform vec3 uInkColor;
 uniform float uBlocks;
@@ -54,25 +52,15 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
   // silhouettes always; block (colour-seam) lines only when uBlocks is on
   float ink = clamp(max(depthEdge, colorEdge * 0.7 * uBlocks) * pressure, 0.0, 1.0) * uInk;
 
-  // paint: soft posterize toward flat cel fills
+  // colour is untouched: the effect only inks outlines
   vec3 col = inputColor.rgb;
-  float L = lum(col);
-  float steps = 5.0;
-  float Lq = floor(L * steps + 0.5) / steps;
-  col *= mix(1.0, Lq / max(L, 0.001), 0.45);
-
-  // paper tooth
-  float paper = vnoise(uv * resolution * 0.35) * 0.6 + vnoise(uv * resolution * 0.9) * 0.4;
-  col *= 1.0 - (paper - 0.5) * 0.12 * uPaper;
-  col = mix(col, col * 0.94 + vec3(0.03, 0.025, 0.0), uPaper * 0.5);  // warm paper cast
-
   col = mix(col, uInkColor, ink);
   outputColor = vec4(col, inputColor.a);
 }
 `;
 
 export class DrawnLookEffect extends Effect {
-  constructor({ ink = 1, thickness = 1.2, paper = 0, boil = 1, blocks = 0, inkColor = '#1c1712' } = {}) {
+  constructor({ ink = 1, thickness = 1.2, boil = 1, blocks = 0, inkColor = '#1c1712' } = {}) {
     super('DrawnLookEffect', frag, {
       blendFunction: BlendFunction.NORMAL,
       attributes: EffectAttribute.DEPTH,
@@ -80,7 +68,6 @@ export class DrawnLookEffect extends Effect {
         ['uTime', new THREE.Uniform(0)],
         ['uInk', new THREE.Uniform(ink)],
         ['uThickness', new THREE.Uniform(thickness)],
-        ['uPaper', new THREE.Uniform(paper)],
         ['uBoil', new THREE.Uniform(boil)],
         ['uBlocks', new THREE.Uniform(blocks)],
         ['uInkColor', new THREE.Uniform(new THREE.Color(inkColor))],

@@ -105,3 +105,5 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 - **Shots:** "+ Shot from this camera" freezes the current camera. "+ Slider" / "+ Drone" add moving-rig shots. Shots are saved per scene.
 - **How it works:** the render steps time by exactly 1/fps per frame (R3F frame loop set to manual), draws each frame at the chosen size with the full post-processing stack, and encodes H.264 MP4 with WebCodecs + mp4-muxer. Output sharpness comes from the chosen resolution, not the device screen.
 - Requires Chrome/Edge (WebCodecs) and HTTPS for the live site.
+
+- **Grease pencil is outline-only.** The drawn pass inks silhouettes and boils them. It never changes fill colours, adds paper tint, or adds grain. The project contains no bitmap assets (no PNG/JPG/GLB); every surface is procedural geometry and colour.
