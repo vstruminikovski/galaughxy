@@ -55,6 +55,9 @@ func _wait(sec: float) -> void:
 func run() -> void:
 	print("[test] start")
 	await _frames(5)
+	# InputMap
+	var missing := Controls.BINDINGS.keys().filter(func(a): return not InputMap.has_action(a))
+	_check("every control is an InputMap action", missing.is_empty())
 	main.load_scene("kitchen")
 	await _frames(3)
 	_check("alias loads the kitchen map", main.scene_name == "overflowing_kitchen")
@@ -80,10 +83,10 @@ func run() -> void:
 	_check("key 3 sets PANIC", main.EXPRS[main.expr_i] == "PANIC")
 	await _tap(KEY_Q)
 	_check("Q raises flood stage 1", main.stage == 1)
-	await _tap(KEY_R)
-	_check("R raises flood stage 3", main.stage == 3)
-	await _tap(KEY_T)
-	_check("T drains", main.stage == 0)
+	await _tap(KEY_9)
+	_check("9 raises flood stage 3", main.stage == 3)
+	await _tap(KEY_0)
+	_check("0 drains", main.stage == 0)
 	await _tap(KEY_O)
 	_check("O turns on 12fps On Twos", main.on_twos)
 	await _tap(KEY_O)
@@ -95,10 +98,11 @@ func run() -> void:
 	_check("maps drawer lists every map", main.maps_list.get_child_count() == main.map_order.size())
 	await _tap(KEY_ESCAPE)
 	_check("Escape closes the drawer", not main.map_open)
-	# buttons
+	# touch buttons go through the InputMap
 	var face_btn: Button = main.hud_buttons[main.hud_buttons.size() - 3]
 	var before: int = main.expr_i
 	face_btn.emit_signal("pressed")
+	await _frames(4)
 	_check("FACE button cycles expression", main.expr_i == (before + 1) % 6)
 	# cast drawer: spawn, control, move, switch
 	await _tap(KEY_I)
@@ -126,6 +130,39 @@ func run() -> void:
 	_key(KEY_D, false)
 	await _frames(2)
 	_check("D walks the controlled character", main.actor_pos.x > a0.x + 0.05)
+	# emotes through keys and touch buttons
+	await _tap(KEY_F)
+	_check("F waves", (main.actor as Puppet).emote_playing() == "emote_wave")
+	var palm: Button = main.hud_buttons.filter(func(b): return (b as Button).text == "PALM")[0]
+	palm.emit_signal("pressed")
+	await _frames(4)
+	_check("PALM button facepalms", (main.actor as Puppet).emote_playing() == "emote_facepalm")
+	await _tap(KEY_J)
+	await _wait(0.12)
+	_check("J hops", main.motion[main.actor]["hop"] > 0.02)
+	# voice: hold Talk -> live voice through the character's preset
+	_key(KEY_SPACE, true)
+	await _frames(3)
+	_check("holding Space talks", main.voice.is_talking(main.actor))
+	var pitch := AudioServer.get_bus_effect(main.voice.bus_idx, Voice.FX_PITCH) as AudioEffectPitchShift
+	_check("talk applies the character's pitch preset", is_equal_approx(pitch.pitch_scale, float(main.voice_of(main.actor)["pitch"])))
+	_key(KEY_SPACE, false)
+	await _frames(3)
+	_check("releasing Space stops talking", not main.voice.is_talking(main.actor))
+	# a recorded clip: its length times the line, and (with real audio output) its spectrum moves the mouth
+	var clip_len: float = main.voice.line_length("_selftest/babble.wav", "x")
+	_check("clip length comes from the audio file", absf(clip_len - 1.6) < 0.05)
+	main.say(main.actor, "_selftest/babble.wav", "")
+	var peak := 0.0
+	for i in 20:
+		await _wait(0.05)
+		peak = maxf(peak, main.voice.level(main.actor))
+	if DisplayServer.get_name() != "headless":
+		_check("spectrum lip-sync opens the mouth (real audio)", peak > 0.15)
+	else:
+		print("SKIP spectrum lip-sync (headless audio is silent; run without --headless to check)")
+	main.voice.stop(main.actor)
+	_check("text fallback is 0.065 s per character", is_equal_approx(main.voice.line_length("missing/none.wav", "x".repeat(40)), 2.6))
 	(main.cast_cards[7]["button"] as Button).emit_signal("pressed")
 	await _frames(3)
 	_check("second spawn", main.cast.size() == 2)
@@ -144,15 +181,13 @@ func run() -> void:
 	_check("expansion builds", main.world.expansion_on("basement_server_room"))
 	main.set_expansion("basement_server_room", false)
 	_check("expansion toggles off", not main.world.expansion_on("basement_server_room"))
-	main.load_scene("rooftop_terrace")
-	await _frames(3)
-	_check("rooftop loads", main.scene_name == "rooftop_terrace")
 	main.despawn_selected()
 	await _frames(2)
 	_check("despawn selected", main.cast.size() == 1 and main.actor == main.host)
 	main.clear_cast()
 	await _frames(2)
 	_check("clear cast", main.cast.is_empty())
+	await _director()
 	# portal: walk the robo into the kitchen doorway; kitchen links to the pond
 	main.load_scene("kitchen")
 	await _frames(3)
@@ -171,7 +206,6 @@ func run() -> void:
 	_touch(0, start, true)
 	await _frames(2)
 	_drag(0, start + Vector2(60, 0))
-
 	await _wait(0.3)
 	_check("left-thumb joystick tilts", main.joy_vec.x > 0.5)
 	_touch(0, start + Vector2(60, 0), false)
@@ -189,3 +223,91 @@ func run() -> void:
 	_check("right-side drag turns the camera", main.look.x != 0.0 or main.fly_yaw != yaw0)
 	print("RESULT: %s" % ("ALL PASS" if fails == 0 else "%d FAIL" % fails))
 	main.get_tree().quit(1 if fails else 0)
+
+func _director() -> void:
+	var d: DirectorController = main.director
+	_check("ep01 is loaded", d.episodes.has("ep01_kitchen_disaster"))
+	var ep: Dictionary = d.episodes["ep01_kitchen_disaster"]
+	var shot0: Dictionary = ep["shots"][0]
+	# auto-timing: 0.3 s + 27 chars x 0.065 for the bear, 2.3 s + 29 chars for the frog
+	_check("shot length fits its dialogue", d.estimate_length(shot0) >= 2.3 + 29 * 0.065)
+	await _tap(KEY_P)
+	_check("P opens the director drawer", main.director_open)
+	await _tap(KEY_ESCAPE)
+	d.play_shot("ep01_kitchen_disaster", 0, false)
+	await _frames(3)
+	_check("director loads the episode map", main.scene_name == "overflowing_kitchen")
+	_check("director spawns the episode cast", main.find_actor("robo_bear") != null and main.find_actor("chaotic_frog") != null)
+	_check("director drives the camera", d.drives_camera())
+	await _tap(KEY_N)
+	_check("free fly is off while the director plays", main.rig != "free")
+	await _wait(0.6)
+	_check("timed events fire (bear talks)", main.voice.is_talking(main.find_actor("robo_bear")))
+	_check("subtitle shows the line", main.subtitle.visible and main.subtitle.text.contains("toaster"))
+	# deterministic scrubbing
+	d.seek(2.0)
+	var frog: Node3D = main.find_actor("chaotic_frog")
+	var pose1: Transform3D = frog.global_transform
+	var arm1: Transform3D = ((frog as Puppet)._j["Arm_L"] as Node3D).transform
+	d.seek(0.5)
+	d.seek(2.0)
+	_check("scrubbing is deterministic (position)", frog.global_transform.is_equal_approx(pose1))
+	_check("scrubbing is deterministic (pose)", ((frog as Puppet)._j["Arm_L"] as Node3D).transform.is_equal_approx(arm1))
+	_check("scrub lands on the exact second", is_equal_approx(d.shot_t, 2.0))
+	_check("scrub pauses playback", d.paused)
+	# jump to a later shot: earlier shots are fast-forwarded to rebuild its starting state
+	d.play_shot("ep01_kitchen_disaster", 3, false)
+	await _frames(3)
+	_check("jump to shot 4", d.shot_i == 3 and d.cam_preset == "follow_shoulder")
+	await _wait(0.5)
+	var bear: Node3D = main.find_actor("robo_bear")
+	_check("move events walk the character", main.motion[bear]["target"] != null or bear.position.x > 0.0)
+	# cameras
+	for preset in ["wide_static", "closeup_actor", "slider_push", "follow_shoulder", "drone_intro"]:
+		d.cam_cut(preset, "chaotic_frog", 0.0)
+		d.update_camera(main.cam, 0.016)
+		_check("camera %s frames a valid shot" % preset, main.cam.position.is_finite() and main.cam.fov > 10.0)
+	d.cam_cut("closeup_actor", "chaotic_frog", 0.0)
+	d.update_camera(main.cam, 0.016)
+	_check("closeup uses a 42 degree lens", is_equal_approx(main.cam.fov, 42.0))
+	# overdub: record live input into the shot, replacing only that actor's channel
+	d.play_shot("ep01_kitchen_disaster", 0, false)
+	await _frames(3)
+	main._take_control(main.find_actor("chaotic_frog"))
+	await _tap(KEY_R)
+	_check("R arms overdub", d.overdub)
+	await _wait(0.4)
+	await _tap(KEY_5)
+	await _tap(KEY_G)
+	await _wait(0.2)
+	await _tap(KEY_R)
+	_check("R ends overdub", not d.overdub)
+	var evs: Array = ep["shots"][0]["events"]
+	var rec_expr := evs.filter(func(e): return e.get("actor", "") == "chaotic_frog" and e["action"] == "expr" and e.get("value", "") == "HAPPY")
+	var rec_emote := evs.filter(func(e): return e.get("actor", "") == "chaotic_frog" and e["action"] == "emote" and e.get("value", "") == "emote_point")
+	_check("overdub records the expression at its time", rec_expr.size() == 1 and float(rec_expr[0]["t"]) > 0.3)
+	_check("overdub records the emote", rec_emote.size() == 1)
+	var bear_talk := evs.filter(func(e): return e.get("actor", "") == "robo_bear" and e["action"] == "talk")
+	_check("overdub keeps other actors' events", bear_talk.size() == 1)
+	var shrug := evs.filter(func(e): return e.get("actor", "") == "chaotic_frog" and e.get("value", "") == "emote_shrug")
+	_check("overdub keeps events outside the recorded range", shrug.size() == 1)
+	# save
+	d.ep_id = "selftest_copy"
+	var paths: Array = d.save()
+	_check("save writes user://episodes", FileAccess.file_exists("user://episodes/selftest_copy.json"))
+	DirAccess.remove_absolute("user://episodes/selftest_copy.json")
+	if not OS.has_feature("standalone"):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("res://data/episodes/selftest_copy.json"))
+	_check("save also syncs into the project on desktop", paths.size() == (1 if OS.has_feature("standalone") else 2))
+	d.reload()
+	d.stop(true)
+	await _frames(2)
+	_check("stop hands control back", not d.playing and not main.hud_clean)
+	# play episode: clean HUD, tap takes over
+	d.play_episode("ep01_kitchen_disaster")
+	await _frames(3)
+	_check("play episode hides the HUD", main.hud_clean and not main.hud_root.visible)
+	await _tap(KEY_ESCAPE)
+	_check("Esc stops and takes over", not d.playing and main.hud_root.visible)
+	main.clear_cast()
+	await _frames(2)

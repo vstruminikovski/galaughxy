@@ -9,7 +9,11 @@
    "color": "#4A90E2",
    "icon": "🐻",
    "gag": "CRT-screen head, antenna bobble",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 1.0,
+    "filter": "radio"
+   }
   },
   {
    "id": "robo_fish",
@@ -22,7 +26,11 @@
    "gag": "Wind-up fish on a spring",
    "flags": [
     "flop"
-   ]
+   ],
+   "voice": {
+    "pitch": 1.25,
+    "filter": "radio"
+   }
   },
   {
    "id": "toaster_bot",
@@ -33,7 +41,11 @@
    "color": "#E5E7EB",
    "icon": "🍞",
    "gag": "Pops toast when SHOCKED",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 1.1,
+    "filter": "deep_bot"
+   }
   },
   {
    "id": "coffee_bot",
@@ -44,7 +56,11 @@
    "color": "#C9A27E",
    "icon": "☕",
    "gag": "Boils over with steam when ANGRY",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 0.9,
+    "filter": "radio"
+   }
   },
   {
    "id": "roomba_dog",
@@ -57,7 +73,11 @@
    "gag": "Spins wildly in floods",
    "flags": [
     "spin_in_flood"
-   ]
+   ],
+   "voice": {
+    "pitch": 1.35,
+    "filter": "tiny_squeak"
+   }
   },
   {
    "id": "tv_head",
@@ -68,7 +88,11 @@
    "color": "#F5F2EB",
    "icon": "📺",
    "gag": "Beige monitor head, rabbit ears",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 0.95,
+    "filter": "radio"
+   }
   },
   {
    "id": "gumball_bot",
@@ -79,7 +103,11 @@
    "color": "#FF5F56",
    "icon": "🍬",
    "gag": "Dome full of bouncing gumballs",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 1.3,
+    "filter": "radio"
+   }
   },
   {
    "id": "chaotic_frog",
@@ -90,7 +118,11 @@
    "color": "#9BCB3C",
    "icon": "🐸",
    "gag": "Giant dome eyes, hinge jaw",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 0.8,
+    "filter": "none"
+   }
   },
   {
    "id": "grumpy_duck",
@@ -101,7 +133,11 @@
    "color": "#FFBD2E",
    "icon": "🦆",
    "gag": "Amber beak, tiny beret",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 1.15,
+    "filter": "none"
+   }
   },
   {
    "id": "chonk_cat",
@@ -114,7 +150,11 @@
    "gag": "Flattens like a pancake when hopping",
    "flags": [
     "squash_hop"
-   ]
+   ],
+   "voice": {
+    "pitch": 1.05,
+    "filter": "none"
+   }
   },
   {
    "id": "pigeon_chef",
@@ -125,7 +165,11 @@
    "color": "#6B7A8F",
    "icon": "🐦",
    "gag": "Crooked chef toque",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 1.2,
+    "filter": "none"
+   }
   },
   {
    "id": "panic_hamster",
@@ -136,7 +180,11 @@
    "color": "#E0A060",
    "icon": "🐹",
    "gag": "Cheeks puff on Talk",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 1.7,
+    "filter": "tiny_squeak"
+   }
   },
   {
    "id": "long_dachshund",
@@ -149,7 +197,11 @@
    "gag": "Stretches when turning fast",
    "flags": [
     "stretch_turn"
-   ]
+   ],
+   "voice": {
+    "pitch": 0.95,
+    "filter": "none"
+   }
   },
   {
    "id": "grumpy_landlord",
@@ -160,7 +212,11 @@
    "color": "#A47551",
    "icon": "🦭",
    "gag": "Twitching mustache, noodle legs",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 0.65,
+    "filter": "none"
+   }
   },
   {
    "id": "cyber_penguin",
@@ -171,7 +227,11 @@
    "color": "#4A90E2",
    "icon": "🐧",
    "gag": "Glowing visor, jetpack",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 1.1,
+    "filter": "radio"
+   }
   },
   {
    "id": "mecha_bunny",
@@ -182,7 +242,11 @@
    "color": "#27C93F",
    "icon": "🐰",
    "gag": "Spring-coil ears, battery pack",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 1.45,
+    "filter": "tiny_squeak"
+   }
   },
   {
    "id": "bot_octopus",
@@ -193,7 +257,11 @@
    "color": "#FF5F56",
    "icon": "🐙",
    "gag": "Six claw-tentacles",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 0.85,
+    "filter": "deep_bot"
+   }
   },
   {
    "id": "turbo_turtle",
@@ -204,7 +272,11 @@
    "color": "#E5E7EB",
    "icon": "🐢",
    "gag": "Wheels pop out when moving",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 0.7,
+    "filter": "deep_bot"
+   }
   },
   {
    "id": "owl_drone",
@@ -215,7 +287,11 @@
    "color": "#B07A4A",
    "icon": "🦉",
    "gag": "Lens eyes, rotor blades",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 1.0,
+    "filter": "radio"
+   }
   },
   {
    "id": "dino_mech",
@@ -226,7 +302,11 @@
    "color": "#4FBF5C",
    "icon": "🦖",
    "gag": "Clamp arms, LED belly",
-   "flags": []
+   "flags": [],
+   "voice": {
+    "pitch": 0.75,
+    "filter": "deep_bot"
+   }
   }
  ]
 }

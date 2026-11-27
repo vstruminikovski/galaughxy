@@ -18,6 +18,12 @@ var talk := false
 var moving := 0.0
 var hop := 0.0
 var flood_over := false
+## Mouth level from the dialogue spectrum (0..1), or -1 to use the procedural talk bounce.
+var talk_level := -1.0
+
+const EMOTE_TIME := {"emote_wave": 1.6, "emote_point": 1.4, "emote_facepalm": 1.6, "emote_shrug": 1.4}
+var _emote := ""
+var _emote_t := 0.0
 
 var _j := {}
 var _rest := {}
@@ -42,6 +48,33 @@ static func create(data: Dictionary) -> Puppet:
 	p._index(p.model)
 	p._ink(p.model)
 	return p
+
+## Plays an upper-body emote (emote_wave, emote_point, emote_facepalm, emote_shrug).
+func emote(action: String) -> void:
+	if EMOTE_TIME.has(action):
+		_emote = action
+		_emote_t = 0.0
+
+## Clears every animation memory, so a scrub or retake replays exactly the same poses.
+func reset_state() -> void:
+	_talk_amt = 0.0
+	_toast = 0.0
+	_spin = 0.0
+	_wheel = 0.0
+	_rotor = 0.0
+	_prev_yaw = rotation.y
+	_turn = 0.0
+	_emote = ""
+	_emote_t = 0.0
+	talk = false
+	talk_level = -1.0
+	moving = 0.0
+	hop = 0.0
+	if model:
+		model.rotation.y = 0.0
+
+func emote_playing() -> String:
+	return _emote
 
 func display_name() -> String:
 	return String(info.get("name", name))
@@ -92,8 +125,21 @@ func animate(ta: float, dt: float) -> void:
 	var expr: String = EXPRS[expr_i]
 	var panic := expr == "PANIC" or expr == "SHOCKED"
 	var k := minf(1.0, dt * 18.0)
-	var target := maxf(0.0, sin(ta * 14.0) + sin(ta * 21.0) * 0.5) * 0.65 if talk else 0.0
-	_talk_amt = lerpf(_talk_amt, target, k)
+	var target := 0.0
+	if talk and talk_level >= 0.0:
+		target = talk_level * 0.9
+	elif talk:
+		target = maxf(0.0, sin(ta * 14.0) + sin(ta * 21.0) * 0.5) * 0.65
+	_talk_amt = lerpf(_talk_amt, target, k if talk_level < 0.0 else 1.0)
+	# emote weight: ease in, hold, ease out
+	var ew := 0.0
+	if _emote != "":
+		_emote_t += dt
+		var dur: float = EMOTE_TIME[_emote]
+		ew = clampf(_emote_t / 0.15, 0.0, 1.0) * clampf((dur - _emote_t) / 0.2, 0.0, 1.0)
+		ew = ew * ew * (3.0 - 2.0 * ew)
+		if _emote_t >= dur:
+			_emote = ""
 	var walk := sin(ta * 9.0) * moving
 	var bounce := absf(sin(ta * 9.0)) * moving
 	# turn rate (for the dachshund stretch)
@@ -103,7 +149,8 @@ func animate(ta: float, dt: float) -> void:
 
 	# body
 	var shake := sin(ta * 41.0) * 0.006 if panic else 0.0
-	_pose("Hips", Vector3(shake, bounce * 0.025 + sin(ta * 2.2) * 0.004, 0))
+	var shrug_lift := 0.012 * ew if _emote == "emote_shrug" else 0.0
+	_pose("Hips", Vector3(shake, bounce * 0.025 + sin(ta * 2.2) * 0.004 + shrug_lift, 0))
 	var sway := sin(ta * 9.0) * 0.06 * moving + (sin(ta * 23.0) * 0.07 if panic else 0.0)
 	if _flags.has("flop"):
 		sway += sin(ta * 13.0) * 0.32 * maxf(moving, 1.0 if sin(ta * 1.3) > 0.55 else 0.0)
@@ -113,7 +160,8 @@ func animate(ta: float, dt: float) -> void:
 	var hx := _talk_amt * 0.08 + (0.12 if expr == "ANGRY" else 0.0) - (0.06 if expr == "HAPPY" else 0.0)
 	var hy := sin(ta * 30.0) * 0.12 if expr == "PANIC" else 0.0
 	var hz := 0.14 if expr == "SMIRK" else (sin(ta * 6.0) * 0.05 if expr == "HAPPY" else 0.0)
-	_pose("Head", Vector3(0, 0.012 if expr == "SHOCKED" else 0.0, 0), Vector3(hx, hy, hz))
+	var head_rot := Vector3(hx, hy, hz).lerp(_emote_head(ta), ew)
+	_pose("Head", Vector3(0, 0.012 if expr == "SHOCKED" else 0.0, 0), head_rot)
 
 	# arms and legs: waddle, flail, wave
 	for s in [1.0, -1.0]:
@@ -125,7 +173,7 @@ func animate(ta: float, dt: float) -> void:
 			arm.z = 0.9 + sin(ta * 8.0) * 0.4
 		elif expr == "ANGRY":
 			arm.z = s * 0.25
-		_pose("Arm_" + side, Vector3.ZERO, arm)
+		_pose("Arm_" + side, Vector3.ZERO, arm.lerp(_emote_arm(s, ta, arm), ew))
 		_pose("Leg_" + side, Vector3.ZERO, Vector3(-walk * 0.7 * s, 0, 0))
 
 	# face
@@ -205,3 +253,26 @@ func animate(ta: float, dt: float) -> void:
 		for s in ["L", "R"]:
 			_pose("Arm_" + s, Vector3(0, 0, st * 0.17), Vector3(walk * 0.6, 0, 0))
 			_pose("Leg_" + s, Vector3(0, 0, -st * 0.17), Vector3(-walk * 0.7, 0, 0))
+
+
+## Arm rotation for the current emote (s = +1 left arm, -1 right arm). Godot axes: +X is the
+## character's left, +Z forward; rotating an arm about Z raises it sideways, about X swings it forward.
+func _emote_arm(s: float, ta: float, base: Vector3) -> Vector3:
+	match _emote:
+		"emote_wave":
+			return Vector3(0, 0, -2.5 + sin(ta * 14.0) * 0.35) if s < 0 else base
+		"emote_point":
+			return Vector3(-1.5, 0, -0.12) if s < 0 else base
+		"emote_facepalm":
+			return Vector3(-2.15, 0, 0.55) if s < 0 else base
+		"emote_shrug":
+			return Vector3(-0.55, 0, s * 0.95)
+	return base
+
+func _emote_head(ta: float) -> Vector3:
+	match _emote:
+		"emote_wave": return Vector3(0, 0, -0.1)
+		"emote_point": return Vector3(0, -0.35, 0)
+		"emote_facepalm": return Vector3(0.34, 0, 0)
+		"emote_shrug": return Vector3(0, 0, 0.18 + sin(ta * 3.0) * 0.03)
+	return Vector3.ZERO

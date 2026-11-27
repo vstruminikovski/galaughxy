@@ -1,11 +1,17 @@
 extends Node3D
 
-## Galaughxy studio root. Persistent across maps: camera rig, HUD, cast and the On Twos clock.
-## Maps are .tscn scenes listed in res://data/maps.json and loaded into MapContainer; the cast
-## (res://data/characters.json) lives in CastRoot, so spawned characters survive map changes and
-## are moved to the new map's spawn points. Each map also has a host actor (the robo or the frog).
-## Controls work on keyboard and touch: WASD / left thumb moves whoever you control, Tab or a tap on
-## a character switches control, 1-6 expressions, Space talk, F hop, Q/E/R/T chaos, I cast, M maps.
+## Galaughxy studio root. Persistent across maps: camera rig, HUD, cast, voice, director and the
+## On Twos clock. Maps are .tscn scenes listed in res://data/maps.json and load into MapContainer;
+## the cast (res://data/characters.json) lives in CastRoot and follows you between maps.
+##
+## Every control is an InputMap action (Controls.gd). Human input (keys, touch HUD) and the AI
+## Director both end up in act() / walk_to() / say(), so they drive identical movement, sound and
+## stepped animation. Each character keeps its own motion state, so the Director can move several
+## at once while you puppet another.
+##
+## One simulation step (_step) moves the director, characters, flood, voice clock and poses.
+## Live play calls it every frame; scrubbing and retakes call it at a fixed 1/60 s to fast-forward
+## deterministically from a shot's starting snapshot.
 
 const EXPRS := ["DEADPAN", "SMIRK", "PANIC", "ANGRY", "HAPPY", "SHOCKED"]
 const LIDS := {
@@ -14,7 +20,11 @@ const LIDS := {
 }
 const WALK := 1.7
 const HOP := 1.1
+const HOP_TIME := 0.44
+const HOP_HEIGHT := 0.2
 const CATEGORIES := [["All", "All"], ["Robo", "Robos"], ["Animal", "Animals"], ["Hybrid", "Hybrids"]]
+const HOST_VOICE := {"robo": {"pitch": 1.0, "filter": "radio"}, "frog": {"pitch": 0.85, "filter": "none"}}
+const CAM_KEYS := {"cam_static": "wide_static", "cam_slider": "slider_push", "cam_drone": "drone_intro"}
 
 # registries
 var maps := {}
@@ -30,6 +40,8 @@ var world: MapBase
 var env: Environment
 var sun: DirectionalLight3D
 var cam: Camera3D
+var voice: Voice
+var director: DirectorController
 
 var scene_name := ""
 var rig := "static"
@@ -39,21 +51,26 @@ var fly_yaw := 0.0
 var fly_pitch := 0.0
 var look := Vector2.ZERO
 
-# who is being controlled: the map's host (robo / frog) or a cast puppet
+# characters: the map's host (robo / frog) and the cast puppets, each with its own motion state
 var host: Node3D
 var host_kind := ""
-var host_expr_i := 0
 var cast: Array = []
 var actor: Node3D
-var actor_kind := ""
-var actor_pos := Vector3.ZERO
-var actor_yaw := 0.0
-var actor_moving := 0.0
-var actor_hop := 0.0
-var hop_lift := 0.0
+var motion := {}
+
+## The controlled character's position / movement / expression (kept per character in `motion`).
+var actor_pos: Vector3:
+	get: return _m(actor).get("pos", Vector3.ZERO)
+	set(v): if _has(actor): motion[actor]["pos"] = v
+var actor_moving: float:
+	get: return _m(actor).get("moving", 0.0)
+var expr_i: int:
+	get: return _m(actor).get("expr", 0)
+	set(v): if _has(actor): motion[actor]["expr"] = v
+var actor_kind: String:
+	get: return _kind(actor) if _has(actor) else ""
+
 var jaw := 0.0
-var expr_i := 0
-var talk := false
 
 # chaos
 var water: Water
@@ -75,9 +92,16 @@ var robo_parts := {}
 var portal_nodes := []
 
 # HUD and input
+var hud_layer: CanvasLayer
+var hud_root: Control
+var hud_clean := false
 var hud_label: Label
+var subtitle: Label
 var map_panel: Panel
 var cast_panel: Panel
+var director_panel: Panel
+var director_list: VBoxContainer
+var director_status: Label
 var maps_list: VBoxContainer
 var cast_grid: GridContainer
 var cast_cards: Array = []
@@ -86,9 +110,18 @@ var cast_search: LineEdit
 var cast_status: Label
 var twos_button: Button
 var fade: ColorRect
+var timeline: PanelContainer
+var tl_pills: HBoxContainer
+var tl_slider: HSlider
+var tl_time: Label
+var tl_play: Button
+var tl_loop: Button
+var tl_overdub: Button
+var tl_save: Button
+var _tl_episode := ""
 var map_open := false
 var cast_open := false
-var keys := {}
+var director_open := false
 var joy_id := -1
 var joy_origin := Vector2.ZERO
 var joy_vec := Vector2.ZERO
@@ -101,8 +134,11 @@ var test_runner: SelfTest
 var joy_pad: JoyPad
 var hud_buttons: Array[Control] = []
 var expansions_on := {}
+var _subtitle_until := 0.0
+var _talk_held := false
 
 func _ready() -> void:
+	Controls.setup()
 	_load_registries()
 	_setup_environment()
 	_setup_camera()
@@ -114,6 +150,13 @@ func _ready() -> void:
 	add_child(cast_root)
 	water = Water.new()
 	add_child(water)
+	voice = Voice.new()
+	voice.name = "Voice"
+	add_child(voice)
+	director = DirectorController.new(self)
+	director.name = "Director"
+	add_child(director)
+	director.changed.connect(_on_director_changed)
 	_setup_hud()
 	var args := OS.get_cmdline_user_args()
 	var start := "backyard_garden"
@@ -127,7 +170,7 @@ func _ready() -> void:
 		for i in char_order.size():
 			var p := spawn_character(String(char_order[i]))
 			p.scale = Vector3.ONE
-			p.position = Vector3(-1.6 + (i % 5) * 0.8, 0, -0.9 + int(i / 5) * 0.75)
+			place(p, Vector3(-1.6 + (i % 5) * 0.8, 0, -0.9 + int(i / 5) * 0.75), 0.0)
 		if host:
 			host.visible = false
 	if args.has("--rig"):
@@ -135,19 +178,27 @@ func _ready() -> void:
 	if args.has("--cam"):
 		custom_cam = Array(String(args[args.find("--cam") + 1]).split(",")).map(func(v): return float(v))
 		rig = "custom"
+	if args.has("--episode"):
+		var shot := String(args[args.find("--at-shot") + 1]) if args.has("--at-shot") else ""
+		director.play_episode(String(args[args.find("--episode") + 1]), shot)
+		if args.has("--quit-after-episode"):
+			director.finished.connect(func(): get_tree().quit())
 	if args.has("--open"):
 		match String(args[args.find("--open") + 1]):
 			"cast": _toggle_cast()
 			"maps": _toggle_map()
+			"director": _toggle_director()
+			"timeline": _toggle_timeline()
 	if args.has("--shot"):
-		_shot_and_quit(args[args.find("--shot") + 1])
+		var wait := float(args[args.find("--wait") + 1]) if args.has("--wait") else 1.5
+		_shot_and_quit(String(args[args.find("--shot") + 1]), wait)
 	if args.has("--test"):
 		test_runner = SelfTest.new(self)
 		test_runner.run()
 
-func _shot_and_quit(path: String) -> void:
-	for i in 90:
-		await get_tree().process_frame
+func _shot_and_quit(path: String, wait: float) -> void:
+	await get_tree().create_timer(wait).timeout
+	await get_tree().process_frame
 	get_viewport().get_texture().get_image().save_png(path)
 	print("[shot] ", path)
 	print("[ink] builds %d, avg %.2f ms" % [InkStroke.builds, InkStroke.build_ms / maxi(1, InkStroke.builds)])
@@ -170,6 +221,51 @@ func _load_registries() -> void:
 
 static func v3(a: Array) -> Vector3:
 	return Vector3(float(a[0]), float(a[1]), float(a[2]))
+
+# ── motion state ──────────────────────────────────────────────────────────────────
+func _has(n: Node3D) -> bool:
+	return n != null and is_instance_valid(n) and motion.has(n)
+
+func _m(n: Node3D) -> Dictionary:
+	return motion[n] if _has(n) else {}
+
+func _kind(n: Node3D) -> String:
+	return "puppet" if n is Puppet else host_kind
+
+func _register(n: Node3D) -> void:
+	motion[n] = {"pos": Vector3(n.position.x, 0, n.position.z), "yaw": n.rotation.y, "moving": 0.0,
+		"hop": 0.0, "hop_start": -100.0, "bob": 0.0, "expr": 0, "target": null}
+
+func _actors() -> Array:
+	var out: Array = []
+	if host and is_instance_valid(host):
+		out.append(host)
+	for p in cast:
+		if is_instance_valid(p):
+			out.append(p)
+	return out
+
+## Roster id of a character ("host" for the map's robo / frog).
+func id_of(n: Node3D) -> String:
+	if n is Puppet:
+		return String((n as Puppet).info["id"])
+	return "host" if n == host and n != null else ""
+
+func voice_of(n: Node3D) -> Dictionary:
+	if n is Puppet:
+		return (n as Puppet).info.get("voice", {})
+	return HOST_VOICE.get(host_kind, {})
+
+## Rough standing height, for camera framing.
+func height_of(n: Node3D) -> float:
+	if n is Puppet and (n as Puppet)._j.has("Head"):
+		return maxf(0.25, ((n as Puppet)._j["Head"] as Node3D).global_position.y - n.global_position.y + 0.12)
+	return 0.95 if host_kind == "robo" else 0.4
+
+func head_pos(n: Node3D) -> Vector3:
+	if n is Puppet and (n as Puppet)._j.has("Head"):
+		return ((n as Puppet)._j["Head"] as Node3D).global_position + Vector3(0, 0.05, 0)
+	return n.global_position + Vector3(0, height_of(n) * 0.8, 0)
 
 # ── environment ───────────────────────────────────────────────────────────────────
 func _setup_environment() -> void:
@@ -208,6 +304,9 @@ func load_scene(name: String) -> void:
 		push_warning("unknown map: " + name)
 		return
 	var was_host := actor == null or actor == host
+	if host:
+		motion.erase(host)
+		voice.stop(host)
 	if world:
 		map_container.remove_child(world)
 		world.queue_free()
@@ -230,21 +329,20 @@ func load_scene(name: String) -> void:
 	match String(info.get("host", "")):
 		"robo": _spawn_robo(at)
 		"frog": _spawn_frog(at)
+	if host:
+		_register(host)
 	for p in info.get("portals", []):
 		_portal(v3(p["at"]), float(p["yaw"]), String(p["to"]))
 	# the cast follows you to the new map's spawn points
 	var spots := world.spawn_points()
 	for i in cast.size():
-		var pup: Puppet = cast[i]
 		var spot: Vector3 = spots[i % spots.size()] if spots.size() > 0 else Vector3(0, 0, 1)
 		spot += Vector3(0.45 * int(i / maxi(1, spots.size())), 0, 0)
-		pup.position = Vector3(spot.x, world.ground(spot.x, spot.z), spot.z)
+		place(cast[i], spot, 0.0)
 	if was_host or not (actor is Puppet):
 		actor = null
 		if host:
 			_take_control(host)
-	else:
-		actor_pos = Vector3(actor.position.x, 0, actor.position.z)
 	_update_hud()
 	_refresh_maps_drawer()
 
@@ -372,7 +470,7 @@ func _name_of(n: Node3D) -> String:
 	return "Bog" if host_kind == "frog" else "Robo"
 
 # ── cast ──────────────────────────────────────────────────────────────────────────
-func spawn_character(id: String) -> Puppet:
+func spawn_character(id: String, control := true) -> Puppet:
 	var p := Puppet.create(chars[id])
 	cast_root.add_child(p)
 	var spots := world.spawn_points()
@@ -380,18 +478,54 @@ func spawn_character(id: String) -> Puppet:
 	var spot: Vector3 = spots[n % spots.size()] if spots.size() > 0 else Vector3(0, 0, 1)
 	spot += Vector3(0.45 * int(n / maxi(1, spots.size())), 0, 0)
 	p.position = Vector3(spot.x, world.ground(spot.x, spot.z), spot.z)
+	_register(p)
 	p.scale = Vector3.ONE * 0.01
 	var tw := create_tween()
 	tw.tween_property(p, "scale", Vector3.ONE, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	cast.append(p)
-	_take_control(p)
+	if control:
+		_take_control(p)
+	_update_hud()
 	return p
+
+## A character by roster id ("host" for the map's robo / frog), or null. Never spawns.
+func find_actor(id: String) -> Node3D:
+	if id == "host" or (id != "" and id == host_kind):
+		return host
+	for p in cast:
+		if is_instance_valid(p) and String((p as Puppet).info["id"]) == id:
+			return p
+	return null
+
+## Finds a character by roster id; spawns it if the cast does not have it yet.
+func actor_for(id: String) -> Node3D:
+	var n := find_actor(id)
+	if n == null and chars.has(id):
+		n = spawn_character(id, false)
+		n.scale = Vector3.ONE
+	return n
+
+## Puts a character at a spot (x, z) facing yaw, on the ground, with no walk target.
+func place(n: Node3D, at: Vector3, yaw: float) -> void:
+	if not _has(n):
+		_register(n)
+	var m: Dictionary = motion[n]
+	m["pos"] = Vector3(at.x, 0, at.z)
+	m["yaw"] = yaw
+	m["target"] = null
+	m["moving"] = 0.0
+	m["hop"] = 0.0
+	m["hop_start"] = -100.0
+	n.position = Vector3(at.x, world.ground(at.x, at.z), at.z)
+	n.rotation.y = yaw
 
 func despawn_selected() -> void:
 	if not (actor is Puppet):
 		return
 	var p: Puppet = actor
 	cast.erase(p)
+	motion.erase(p)
+	voice.stop(p)
 	p.queue_free()
 	actor = null
 	if host:
@@ -400,6 +534,8 @@ func despawn_selected() -> void:
 
 func clear_cast() -> void:
 	for p in cast:
+		motion.erase(p)
+		voice.stop(p)
 		(p as Node).queue_free()
 	cast.clear()
 	actor = null
@@ -410,25 +546,16 @@ func clear_cast() -> void:
 func _take_control(n: Node3D) -> void:
 	if n == null or n == actor:
 		return
-	if actor is Puppet and is_instance_valid(actor):
-		(actor as Puppet).expr_i = expr_i
-		(actor as Puppet).moving = 0.0
-		(actor as Puppet).talk = false
-	elif actor != null and actor == host:
-		host_expr_i = expr_i
+	if _has(actor):
+		motion[actor]["moving"] = 0.0
+	voice.live(null, {})
 	actor = n
-	actor_kind = "puppet" if n is Puppet else host_kind
-	actor_pos = Vector3(n.position.x, 0, n.position.z)
-	actor_yaw = n.rotation.y
-	actor_moving = 0.0
-	expr_i = (n as Puppet).expr_i if n is Puppet else host_expr_i
+	if not _has(n):
+		_register(n)
 	_update_hud()
 
 func cycle_control() -> void:
-	var list: Array = []
-	if host:
-		list.append(host)
-	list.append_array(cast)
+	var list := _actors()
 	if list.is_empty():
 		return
 	var i := list.find(actor)
@@ -438,10 +565,9 @@ func cycle_control() -> void:
 func _pick(screen: Vector2) -> bool:
 	var best: Node3D = null
 	var best_d := 90.0
-	var list: Array = cast.duplicate()
-	if host:
-		list.append(host)
-	for n in list:
+	for n in _actors():
+		if not (n as Node3D).visible:
+			continue
 		var wp: Vector3 = (n as Node3D).global_position + Vector3(0, 0.25, 0)
 		if cam.is_position_behind(wp):
 			continue
@@ -454,50 +580,138 @@ func _pick(screen: Vector2) -> bool:
 		return true
 	return false
 
+# ── actions: the one entry point for humans and the Director ─────────────────────
+## Character actions: hop, expr_1..expr_6, emote_wave/point/facepalm/shrug.
+func act(n: Node3D, action: String) -> void:
+	if not _has(n):
+		return
+	if action == "hop":
+		motion[n]["hop_start"] = t
+	elif action.begins_with("expr_"):
+		motion[n]["expr"] = clampi(int(action.substr(5)) - 1, 0, EXPRS.size() - 1)
+		_update_hud()
+	elif action.begins_with("emote_"):
+		if n is Puppet:
+			(n as Puppet).emote(action)
+		else:
+			motion[n]["hop_start"] = t # hosts have no arms: they bounce instead
+
+func walk_to(n: Node3D, at: Vector3) -> void:
+	if _has(n):
+		motion[n]["target"] = Vector3(at.x, 0, at.z)
+
+func face(n: Node3D, yaw: float) -> void:
+	if _has(n):
+		motion[n]["yaw"] = yaw
+
+## Speaks a line with the character's voice preset; shows the subtitle; returns the duration.
+func say(n: Node3D, audio: String, text: String, duration := -1.0) -> float:
+	if not _has(n):
+		return 0.0
+	var d := voice.say(n, voice_of(n), audio, text, duration)
+	if text != "":
+		subtitle.text = "%s: %s" % [_name_of(n), text]
+		subtitle.visible = true
+		_subtitle_until = voice.clock + d + 0.3
+	return d
+
+func _trigger(action: String) -> void:
+	match action:
+		"cam_static", "cam_slider", "cam_drone":
+			if director.drives_camera():
+				director.cam_cut_live(CAM_KEYS[action])
+			else:
+				_set_rig({"cam_static": "static", "cam_slider": "slider", "cam_drone": "drone"}[action])
+		"fly":
+			if not director.playing: # free fly is studio-only: recording cameras never drift
+				_toggle_fly()
+		"maps": _toggle_map()
+		"cast": _toggle_cast()
+		"director": _toggle_director()
+		"timeline": _toggle_timeline()
+		"play_pause": director.toggle_pause()
+		"overdub": director.toggle_overdub()
+		"next_actor": cycle_control()
+		"twos": _toggle_twos()
+		"chaos_1", "chaos_2", "chaos_3", "chaos_drain", "chaos_next":
+			var s := {"chaos_1": 1, "chaos_2": 2, "chaos_3": 3, "chaos_drain": 0}.get(action, 0 if stage >= 3 else stage + 1) as int
+			set_stage(s)
+			if director.overdub:
+				director.record_chaos(s)
+		"png": _save_png()
+		"cancel":
+			if director.playing and hud_clean:
+				director.stop(true)
+			_close_drawers()
+		_:
+			act(actor, action)
+			if director.overdub:
+				director.record_action(action)
+
+## Polls the InputMap once per frame.
+func _handle_input() -> void:
+	var focus := get_viewport().gui_get_focus_owner()
+	var typing := focus is LineEdit
+	var flying := rig == "free"
+	for action in Controls.TRIGGERS:
+		if not Input.is_action_just_pressed(action):
+			continue
+		if typing and action != "cancel":
+			continue
+		if flying and not Controls.FLY_OK.has(action):
+			continue # every other command is off while flying
+		if _drawer_open() and not Controls.DRAWER_OK.has(action):
+			continue
+		_trigger(action)
+	# hold Talk: live test voice through the character's preset (Space rises instead while flying)
+	var talking := Input.is_action_pressed("talk") and not flying and not typing and not _drawer_open()
+	if talking != _talk_held:
+		_talk_held = talking
+		if talking:
+			director.talk_begin()
+		else:
+			director.talk_end()
+	voice.live(actor if talking and _has(actor) else null, voice_of(actor) if _has(actor) else {})
+
 # ── cameras ───────────────────────────────────────────────────────────────────────
+## Pose of a map rig: [position, target, fov].
+func rig_pose(r: String) -> Array:
+	var c: Dictionary = maps[scene_name]["cams"]
+	match r:
+		"slider":
+			var s: Array = c["slider"]
+			var pos := v3(s[0]).lerp(v3(s[1]), smoothstep(0.0, 1.0, slider_t))
+			return [pos, pos + v3(s[2]), float(s[3])]
+		"drone":
+			var d: Array = c["drone"]
+			var a := t * 0.07
+			var pos := v3(d[0]) + Vector3(sin(a) * float(d[1]), float(d[2]) + sin(t * 1.3) * 0.06, cos(a) * float(d[1]))
+			return [pos, v3(d[0]), float(d[3])]
+	var st: Array = c["static"]
+	return [v3(st[0]), v3(st[1]), float(st[2])]
+
 func _update_camera(dt: float) -> void:
 	if rig == "free":
 		_update_fly(dt)
+		return
+	if director.drives_camera():
+		director.update_camera(cam, dt)
 		return
 	if rig == "custom" and custom_cam.size() >= 7:
 		cam.position = Vector3(custom_cam[0], custom_cam[1], custom_cam[2])
 		cam.look_at(Vector3(custom_cam[3], custom_cam[4], custom_cam[5]), Vector3.UP)
 		cam.fov = custom_cam[6]
 		return
-	var c: Dictionary = maps[scene_name]["cams"]
-	var pos: Vector3
-	var target: Vector3
-	var fov: float
-	match rig:
-		"slider":
-			var s: Array = c["slider"]
-			pos = v3(s[0]).lerp(v3(s[1]), smoothstep(0.0, 1.0, slider_t))
-			target = pos + v3(s[2])
-			fov = float(s[3])
-		"drone":
-			var d: Array = c["drone"]
-			var a := t * 0.07
-			pos = v3(d[0]) + Vector3(sin(a) * float(d[1]), float(d[2]) + sin(t * 1.3) * 0.06, cos(a) * float(d[1]))
-			target = v3(d[0])
-			fov = float(d[3])
-		_:
-			var st: Array = c["static"]
-			pos = v3(st[0])
-			target = v3(st[1])
-			fov = float(st[2])
-	cam.position = pos
-	cam.look_at(target, Vector3.UP)
-	cam.fov = fov
+	var p := rig_pose(rig)
+	cam.position = p[0]
+	cam.look_at(p[1], Vector3.UP)
+	cam.fov = p[2]
 
 func _update_fly(dt: float) -> void:
-	var fx := joy_vec.x
-	var fz := joy_vec.y
-	var fy := 0.0
-	if keys.has("w") or keys.has("up"): fz -= 1.0
-	if keys.has("s") or keys.has("down"): fz += 1.0
-	if keys.has("a") or keys.has("left"): fx -= 1.0
-	if keys.has("d") or keys.has("right"): fx += 1.0
-	if keys.has("space"): fy += 1.0
+	var mv := Input.get_vector("move_left", "move_right", "move_forward", "move_back") + joy_vec
+	var fx := mv.x
+	var fz := mv.y
+	var fy := 1.0 if Input.is_action_pressed("talk") else 0.0
 	var fwd := Vector3(-sin(fly_yaw) * cos(fly_pitch), sin(fly_pitch), -cos(fly_yaw) * cos(fly_pitch))
 	var right := Vector3(cos(fly_yaw), 0, -sin(fly_yaw))
 	var n := maxf(1.0, Vector2(fx, fz).length())
@@ -514,14 +728,12 @@ func _set_rig(r: String) -> void:
 	_sync_fly_hud()
 	_update_hud()
 
-## While flying only Maps, Cast, Fly and PNG stay on screen; the other buttons are hidden.
+## While flying only Maps, Cast, Director, Fly and PNG stay on screen; the other buttons hide.
 func _sync_fly_hud() -> void:
 	var flying := rig == "free"
 	for b in hud_buttons:
-		var keep: bool = (b as Button).text in ["🗺 Maps", "🎭 Cast", "🛸 Fly", "PNG"]
+		var keep: bool = (b as Button).text in ["🗺 Maps", "🎭 Cast", "🎬 Director", "🛸 Fly", "PNG"]
 		b.visible = keep or not flying
-	if flying:
-		keys.clear()
 
 func _capture_fly() -> void:
 	var dir := -cam.global_transform.basis.z
@@ -529,8 +741,58 @@ func _capture_fly() -> void:
 	fly_yaw = atan2(-dir.x, -dir.z)
 	fly_pitch = asin(clampf(dir.y, -1.0, 1.0))
 
+# ── director hooks ────────────────────────────────────────────────────────────────
+## Resets the animation clock at the start of a shot, so every shot replays identically.
+func reset_clock() -> void:
+	t = 0.0
+	_twos_last = -1
+	_last_anim_t = 0.0
+	slider_t = 0.0
+	for m in motion.values():
+		m["hop_start"] = -100.0
+		m["hop"] = 0.0
+
+func on_director_start(clean: bool) -> void:
+	if rig == "free":
+		_set_rig("static")
+	_close_drawers()
+	set_clean_hud(clean)
+
+func on_director_stop(_take_over: bool) -> void:
+	set_clean_hud(false)
+	if host:
+		host.visible = true
+	_update_hud()
+
+## Clean HUD hides every overlay except subtitles, for recording. A tap or Esc takes over.
+func set_clean_hud(on: bool) -> void:
+	hud_clean = on
+	hud_root.visible = not on
+	joy_pad.active = false
+
+func _on_director_changed() -> void:
+	_refresh_timeline()
+	update_director_status()
+	_update_hud()
+
 # ── per frame ─────────────────────────────────────────────────────────────────────
 func _process(dt: float) -> void:
+	_handle_input()
+	_step(dt, true)
+	if rig == "free":
+		fly_yaw -= look.x * 0.004
+		fly_pitch = clampf(fly_pitch - look.y * 0.004, -1.3, 1.3)
+		look = Vector2.ZERO
+	else:
+		look *= 0.9
+	_update_camera(dt)
+	_update_portals()
+	if subtitle.visible and voice.clock > _subtitle_until:
+		subtitle.visible = false
+	_sync_timeline()
+
+## One simulation step. live = false while fast-forwarding (no human input, no sound).
+func _step(dt: float, live: bool) -> void:
 	t += dt
 	# On Twos: character poses and positions update 12 times a second; the camera stays smooth
 	if on_twos:
@@ -540,62 +802,64 @@ func _process(dt: float) -> void:
 			_twos_last = f
 	else:
 		twos_tick = true
-	if rig == "free":
-		fly_yaw -= look.x * 0.004
-		fly_pitch = clampf(fly_pitch - look.y * 0.004, -1.3, 1.3)
-		look = Vector2.ZERO
-	else:
-		look *= 0.9
-	_update_actor(dt)
+	director.process_shot(dt)
+	_update_actors(dt, live)
 	_update_flood(dt)
-	_update_camera(dt)
-	_update_portals()
+	voice.tick(dt)
 	_animate(dt)
 
-func _update_actor(dt: float) -> void:
-	if actor == null or not is_instance_valid(actor) or rig == "free" or _drawer_open():
-		actor_moving = lerpf(actor_moving, 0.0, minf(1.0, dt * 8.0))
-		return
-	var mx := joy_vec.x
-	var mz := joy_vec.y
-	if keys.has("w") or keys.has("up"): mz -= 1.0
-	if keys.has("s") or keys.has("down"): mz += 1.0
-	if keys.has("a") or keys.has("left"): mx -= 1.0
-	if keys.has("d") or keys.has("right"): mx += 1.0
-	var len := Vector2(mx, mz).length()
+func _update_actors(dt: float, live: bool) -> void:
+	var mv := Vector2.ZERO
+	if live and rig != "free" and not _drawer_open() and not hud_clean:
+		mv = (Input.get_vector("move_left", "move_right", "move_forward", "move_back") + joy_vec).limit_length(1.0)
 	var b := _bounds()
+	for n in _actors():
+		var m: Dictionary = motion[n]
+		var dir := mv if n == actor else Vector2.ZERO
+		# a walk target (from the Director) steers the character until it arrives
+		if m["target"] != null:
+			var to: Vector3 = m["target"] - m["pos"]
+			if Vector2(to.x, to.z).length() < 0.06:
+				m["target"] = null
+			else:
+				dir = Vector2(to.x, to.z).normalized()
+		_walk(n, m, dir, dt, b)
+
+func _walk(n: Node3D, m: Dictionary, dir: Vector2, dt: float, b: Rect2) -> void:
+	var kind := _kind(n)
+	var len := dir.length()
 	if len > 0.08:
-		var n := maxf(1.0, len)
 		var sp := WALK * dt
-		if actor_kind == "frog":
-			var air := maxf(0.0, sin(t * 9.0))
-			sp = HOP * dt * (0.3 + air * 1.6)
-		actor_pos.x = clampf(actor_pos.x + (mx / n) * sp, b.position.x + 0.3, b.end.x - 0.3)
-		actor_pos.z = clampf(actor_pos.z + (mz / n) * sp, b.position.y + 0.3, b.end.y - 0.3)
-		actor_yaw = atan2(mx, mz)
-		actor_moving = minf(1.0, len)
+		if kind == "frog":
+			sp = HOP * dt * (0.3 + maxf(0.0, sin(t * 9.0)) * 1.6)
+		var p: Vector3 = m["pos"]
+		p.x = clampf(p.x + dir.x * sp, b.position.x + 0.3, b.end.x - 0.3)
+		p.z = clampf(p.z + dir.y * sp, b.position.y + 0.3, b.end.y - 0.3)
+		m["pos"] = p
+		m["yaw"] = atan2(dir.x, dir.y)
+		m["moving"] = minf(1.0, len)
 	else:
-		actor_moving = lerpf(actor_moving, 0.0, minf(1.0, dt * 8.0))
-	if actor_kind == "frog":
-		actor_hop = maxf(0.0, sin(t * 9.0)) * 0.13 * actor_moving + hop_lift
-	else:
-		actor_hop = hop_lift
+		m["moving"] = lerpf(m["moving"], 0.0, minf(1.0, dt * 8.0))
+	# hop: an analytic arc from its start time, so scrubbing lands on the same height
+	m["hop"] = HOP_HEIGHT * sin(PI * clampf((t - float(m["hop_start"])) / HOP_TIME, 0.0, 1.0))
+	m["bob"] = maxf(0.0, sin(t * 9.0)) * 0.13 * m["moving"] if kind == "frog" else 0.0
 	if not twos_tick:
 		return
-	var ground := world.ground(actor_pos.x, actor_pos.z)
-	actor.position = Vector3(actor_pos.x, ground + actor_hop, actor_pos.z)
-	var turn_k := 1.0 if on_twos else minf(1.0, dt * 10.0)
-	actor.rotation.y = lerp_angle(actor.rotation.y, actor_yaw, turn_k)
+	var pos: Vector3 = m["pos"]
+	var ground := world.ground(pos.x, pos.z)
+	n.position = Vector3(pos.x, ground + m["hop"] + m["bob"], pos.z)
+	n.rotation.y = lerp_angle(n.rotation.y, m["yaw"], 1.0 if on_twos else minf(1.0, dt * 10.0))
 	# the frog and the cast float when the flood is deep; the robo stays on the floor
-	if actor_kind != "robo" and flood > ground + 0.12:
-		actor.position.y = flood - (0.17 if actor_kind == "frog" else 0.06) + sin(t * 2.0) * 0.01
+	if kind != "robo" and flood > ground + 0.12:
+		n.position.y = flood - (0.17 if kind == "frog" else 0.06) + sin(t * 2.0 + pos.x) * 0.01
 
 func _update_portals() -> void:
-	if actor == null or not is_instance_valid(actor):
+	if not _has(actor) or director.playing:
 		return
-	for p in portal_nodes:
-		if Vector2(actor_pos.x - p["at"].x, actor_pos.z - p["at"].z).length() < 0.9:
-			load_scene(p["to"])
+	var p: Vector3 = actor_pos
+	for portal in portal_nodes:
+		if Vector2(p.x - portal["at"].x, p.z - portal["at"].z).length() < 0.9:
+			load_scene(portal["to"])
 			return
 
 func _animate(dt: float) -> void:
@@ -604,25 +868,24 @@ func _animate(dt: float) -> void:
 	var ta: float = floor(t * 12.0) / 12.0 if on_twos else t
 	var ad: float = t - _last_anim_t if on_twos else dt
 	_last_anim_t = t
-	if host:
-		var ctrl := actor == host
-		_animate_host(ta, ad, EXPRS[expr_i if ctrl else host_expr_i], talk and ctrl, actor_moving if ctrl else 0.0)
+	if _has(host):
+		var hm: Dictionary = motion[host]
+		_animate_host(ta, ad, EXPRS[hm["expr"]], voice.is_talking(host), hm["moving"])
 	for p in cast:
+		if not _has(p):
+			continue
 		var pup: Puppet = p
-		var ctrl := pup == actor
-		pup.talk = talk and ctrl
-		pup.moving = actor_moving if ctrl else lerpf(pup.moving, 0.0, minf(1.0, ad * 8.0))
-		if ctrl:
-			pup.expr_i = expr_i
-			pup.hop = hop_lift
-		else:
-			pup.hop = 0.0
-			var g := world.ground(pup.position.x, pup.position.z)
-			pup.position.y = (flood - 0.06 + sin(ta * 2.0 + pup.position.x) * 0.01) if flood > g + 0.12 else g
+		var m: Dictionary = motion[pup]
+		pup.talk = voice.is_talking(pup)
+		pup.talk_level = voice.level(pup)
+		pup.moving = m["moving"]
+		pup.expr_i = m["expr"]
+		pup.hop = m["hop"]
 		pup.flood_over = flood > world.ground(pup.position.x, pup.position.z) + 0.03
 		pup.animate(ta, ad)
 
 func _animate_host(ta: float, dt: float, expr: String, talking: bool, mv: float) -> void:
+	var lvl := voice.level(host)
 	if host_kind == "frog" and not frog_parts.is_empty():
 		var L: Array = LIDS[expr]
 		var blink := 1.5 if fmod(ta, 3.7) < 0.12 else 0.0
@@ -632,7 +895,7 @@ func _animate_host(ta: float, dt: float, expr: String, talking: bool, mv: float)
 		frog_parts["eyeR"].scale = Vector3.ONE * L[3]
 		var target := 0.0
 		if talking:
-			target = maxf(0.0, sin(ta * 14.0) + sin(ta * 21.0) * 0.5) * 0.24
+			target = lvl * 0.3 if lvl >= 0.0 else maxf(0.0, sin(ta * 14.0) + sin(ta * 21.0) * 0.5) * 0.24
 		if expr == "SHOCKED": target = maxf(target, 0.28)
 		if expr == "PANIC": target = maxf(target, 0.12 + absf(sin(ta * 9.0)) * 0.1)
 		jaw = lerpf(jaw, target, minf(1.0, dt * 25.0))
@@ -647,7 +910,10 @@ func _animate_host(ta: float, dt: float, expr: String, talking: bool, mv: float)
 			(m as ShaderMaterial).set_shader_parameter("to_body", to_body)
 	elif host_kind == "robo" and robo_parts.has("head"):
 		var head: Node3D = robo_parts["head"]
-		head.position.y = 0.5 + (absf(sin(ta * 9.0)) * 0.02 if talking else 0.0)
+		var bounce := 0.0
+		if talking:
+			bounce = lvl * 0.03 if lvl >= 0.0 else absf(sin(ta * 9.0)) * 0.02
+		head.position.y = 0.5 + bounce
 		head.rotation.z = 0.12 if expr == "SMIRK" else 0.0
 
 # ── flood ─────────────────────────────────────────────────────────────────────────
@@ -664,67 +930,19 @@ func set_stage(s: int) -> void:
 func advance_chaos() -> void:
 	set_stage(0 if stage >= 3 else stage + 1)
 
-# ── input ─────────────────────────────────────────────────────────────────────────
-## Free-fly uses Minecraft-style keys only: WASD moves along the view, Space rises, drag/touch looks.
-const FLY_KEYS := ["w", "a", "s", "d", "up", "down", "left", "right", "space", "n", "m", "i", "p", "escape"]
-
-func _unhandled_key_input(event: InputEvent) -> void:
-	var k := event as InputEventKey
-	if k == null:
-		return
-	var name := _key_name(k)
-	if rig == "free" and not FLY_KEYS.has(name):
-		return # every other command is off while flying
-	if _drawer_open() and not name in ["escape", "m", "i"]:
-		return
-	if k.pressed and not k.echo:
-		match name:
-			"space":
-				talk = true
-			"1", "2", "3", "4", "5", "6":
-				expr_i = int(name) - 1
-				_update_hud()
-			"z": _set_rig("static")
-			"x": _set_rig("slider")
-			"c": _set_rig("drone")
-			"n": _toggle_fly()
-			"m": _toggle_map()
-			"i": _toggle_cast()
-			"tab": cycle_control()
-			"o": _toggle_twos()
-			"q": set_stage(1)
-			"e": set_stage(2)
-			"r": set_stage(3)
-			"t": set_stage(0)
-			"g": advance_chaos()
-			"f": _hop()
-			"p": _save_png()
-			"escape": _close_drawers()
-	if k.pressed:
-		keys[name] = true
-	else:
-		keys.erase(name)
-		if name == "space":
-			talk = false
-
-func _key_name(k: InputEventKey) -> String:
-	match k.keycode:
-		KEY_SPACE: return "space"
-		KEY_SHIFT: return "shift"
-		KEY_UP: return "up"
-		KEY_DOWN: return "down"
-		KEY_LEFT: return "left"
-		KEY_RIGHT: return "right"
-		KEY_ESCAPE: return "escape"
-		KEY_TAB: return "tab"
-	return k.as_text_keycode().to_lower()
-
+# ── touch ─────────────────────────────────────────────────────────────────────────
 func _input(event: InputEvent) -> void:
 	var vp := get_viewport().get_visible_rect().size
 	if event is InputEventScreenTouch or (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT):
 		var pressed: bool = event.pressed
 		var pos: Vector2 = event.position
 		var idx: int = event.index if event is InputEventScreenTouch else 0
+		if pressed and hud_clean:
+			# clean recording: any tap stops the director and lets you take over a character
+			director.stop(true)
+			_pick(pos)
+			get_viewport().set_input_as_handled()
+			return
 		if pressed:
 			if _drawer_open() or _over_button(pos):
 				return
@@ -746,11 +964,11 @@ func _input(event: InputEvent) -> void:
 				joy_id = -1
 				joy_vec = Vector2.ZERO
 				joy_pad.active = false
-				if pos.distance_to(joy_origin) < 12.0 and t - joy_down_t < 0.35:
+				if pos.distance_to(joy_origin) < 12.0 and absf(t - joy_down_t) < 0.35:
 					_pick(pos)
 			if idx == look_id:
 				look_id = -1
-				if pos.distance_to(look_origin) < 12.0 and t - look_down_t < 0.35:
+				if pos.distance_to(look_origin) < 12.0 and absf(t - look_down_t) < 0.35:
 					_pick(pos)
 	elif event is InputEventScreenDrag or (event is InputEventMouseMotion and (look_id != -1 or joy_id != -1)):
 		var idx: int = event.index if event is InputEventScreenDrag else 0
@@ -767,6 +985,8 @@ func _over_button(pos: Vector2) -> bool:
 	for b in hud_buttons:
 		if b.is_visible_in_tree() and b.get_global_rect().has_point(pos):
 			return true
+	if timeline and timeline.is_visible_in_tree() and timeline.get_global_rect().has_point(pos):
+		return true
 	return false
 
 func _toggle_fly() -> void:
@@ -776,11 +996,6 @@ func _toggle_twos() -> void:
 	on_twos = not on_twos
 	_update_hud()
 
-func _hop() -> void:
-	var tw := create_tween()
-	tw.tween_property(self, "hop_lift", 0.2, 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
-	tw.tween_property(self, "hop_lift", 0.0, 0.24).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
-
 func _save_png() -> void:
 	var img := get_viewport().get_texture().get_image()
 	var path := "user://galaughxy-%d.png" % Time.get_unix_time_from_system()
@@ -789,65 +1004,101 @@ func _save_png() -> void:
 
 # ── HUD ───────────────────────────────────────────────────────────────────────────
 func _setup_hud() -> void:
-	var layer := CanvasLayer.new()
-	add_child(layer)
+	hud_layer = CanvasLayer.new()
+	add_child(hud_layer)
+	hud_root = Control.new()
+	hud_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hud_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud_layer.add_child(hud_root)
 	hud_label = Label.new()
 	hud_label.position = Vector2(12, 8)
 	hud_label.add_theme_font_size_override("font_size", 14)
-	layer.add_child(hud_label)
+	hud_root.add_child(hud_label)
 	joy_pad = JoyPad.new()
 	joy_pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	joy_pad.set_anchors_preset(Control.PRESET_FULL_RECT)
-	layer.add_child(joy_pad)
-	# top-left claws
+	hud_root.add_child(joy_pad)
+	# top-left claws: every button taps an InputMap action
 	var row := HBoxContainer.new()
 	row.position = Vector2(12, 34)
 	row.add_theme_constant_override("separation", 8)
-	layer.add_child(row)
-	for entry in [["🗺 Maps", "m"], ["🎭 Cast", "i"], ["🛸 Fly", "n"], ["Static", "z"], ["Slider", "x"], ["Drone", "c"], ["12fps", "o"], ["PNG", "p"]]:
+	hud_root.add_child(row)
+	for entry in [["🗺 Maps", "maps"], ["🎭 Cast", "cast"], ["🎬 Director", "director"], ["⏱ Timeline", "timeline"], ["🛸 Fly", "fly"],
+			["Static", "cam_static"], ["Slider", "cam_slider"], ["Drone", "cam_drone"], ["12fps", "twos"], ["PNG", "png"]]:
 		var b := _button(entry[0], Vector2(88, 44))
-		b.pressed.connect(func(): _key_pressed(entry[1]))
-		if entry[1] == "o":
+		b.pressed.connect(func(): Controls.tap(get_tree(), entry[1]))
+		if entry[1] == "twos":
 			b.toggle_mode = true
 			twos_button = b
 		row.add_child(b)
 		hud_buttons.append(b)
-	# bottom-right: action buttons
+	# emote column, left of the action column
+	var emotes := VBoxContainer.new()
+	emotes.add_theme_constant_override("separation", 10)
+	_anchor_bottom_right(emotes, -330, -212)
+	hud_root.add_child(emotes)
+	for entry in [["WAVE", "emote_wave"], ["POINT", "emote_point"], ["PALM", "emote_facepalm"], ["SHRUG", "emote_shrug"]]:
+		var b := _button(entry[0], Vector2(118, 0))
+		b.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		b.pressed.connect(func(): Controls.tap(get_tree(), entry[1]))
+		emotes.add_child(b)
+		hud_buttons.append(b)
+	# bottom-right action column
 	var acts := VBoxContainer.new()
 	acts.add_theme_constant_override("separation", 10)
-	acts.anchor_left = 1.0
-	acts.anchor_top = 1.0
-	acts.anchor_right = 1.0
-	acts.anchor_bottom = 1.0
-	acts.offset_left = -200
-	acts.offset_top = -330
-	acts.offset_right = -12
-	acts.offset_bottom = -12
-	layer.add_child(acts)
+	_anchor_bottom_right(acts, -200, -12)
+	hud_root.add_child(acts)
 	var talk_b := _button("TALK (hold)", Vector2(180, 64))
-	talk_b.button_down.connect(func(): talk = true)
-	talk_b.button_up.connect(func(): talk = false)
+	talk_b.button_down.connect(func(): Input.action_press("talk"))
+	talk_b.button_up.connect(func(): Input.action_release("talk"))
 	acts.add_child(talk_b)
 	hud_buttons.append(talk_b)
-	var face := _button("FACE", Vector2.ZERO)
-	face.pressed.connect(func(): expr_i = (expr_i + 1) % 6; _update_hud())
-	acts.add_child(face)
-	hud_buttons.append(face)
-	var hop := _button("HOP", Vector2.ZERO)
-	hop.pressed.connect(_hop)
-	acts.add_child(hop)
-	hud_buttons.append(hop)
-	var chaos := _button("CHAOS", Vector2.ZERO)
-	chaos.pressed.connect(advance_chaos)
-	acts.add_child(chaos)
-	hud_buttons.append(chaos)
-	_build_cast_drawer(layer)
-	_build_maps_drawer(layer)
+	var face_b := _button("FACE", Vector2.ZERO)
+	face_b.pressed.connect(func(): Controls.tap(get_tree(), "expr_%d" % ((expr_i + 1) % EXPRS.size() + 1)))
+	acts.add_child(face_b)
+	hud_buttons.append(face_b)
+	var hop_b := _button("HOP", Vector2.ZERO)
+	hop_b.pressed.connect(func(): Controls.tap(get_tree(), "hop"))
+	acts.add_child(hop_b)
+	hud_buttons.append(hop_b)
+	var chaos_b := _button("CHAOS", Vector2.ZERO)
+	chaos_b.pressed.connect(func(): Controls.tap(get_tree(), "chaos_next"))
+	acts.add_child(chaos_b)
+	hud_buttons.append(chaos_b)
+	_build_timeline()
+	_build_cast_drawer()
+	_build_maps_drawer()
+	_build_director_drawer()
+	# subtitles and the fade live outside hud_root, so they stay visible in clean recording
+	subtitle = Label.new()
+	subtitle.anchor_left = 0.12
+	subtitle.anchor_right = 0.88
+	subtitle.anchor_top = 0.84
+	subtitle.anchor_bottom = 0.95
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	subtitle.add_theme_font_size_override("font_size", 24)
+	subtitle.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	subtitle.add_theme_constant_override("outline_size", 7)
+	subtitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	subtitle.visible = false
+	hud_layer.add_child(subtitle)
 	fade = ColorRect.new()
 	fade.color = Color(0, 0, 0, 0)
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
-	layer.add_child(fade)
+	hud_layer.add_child(fade)
+
+func _anchor_bottom_right(c: Control, left: float, right: float) -> void:
+	c.anchor_left = 1.0
+	c.anchor_top = 1.0
+	c.anchor_right = 1.0
+	c.anchor_bottom = 1.0
+	c.offset_left = left
+	c.offset_top = -330
+	c.offset_right = right
+	c.offset_bottom = -12
 
 ## HUD buttons never take keyboard focus, so Space and Tab always reach the studio.
 func _button(text: String, min_size: Vector2) -> Button:
@@ -876,6 +1127,7 @@ func _drawer_panel() -> Array:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 10)
 	margin.add_child(v)
+	hud_root.add_child(p)
 	return [p, v]
 
 func _drawer_header(v: VBoxContainer, title: String, close: Callable) -> void:
@@ -890,11 +1142,19 @@ func _drawer_header(v: VBoxContainer, title: String, close: Callable) -> void:
 	h.add_child(x)
 	v.add_child(h)
 
-func _build_cast_drawer(layer: CanvasLayer) -> void:
+func _card() -> Array:
+	var card := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.17, 0.18, 0.22, 0.9)
+	sb.set_corner_radius_all(14)
+	sb.set_content_margin_all(12)
+	card.add_theme_stylebox_override("panel", sb)
+	return [card, sb]
+
+func _build_cast_drawer() -> void:
 	var pv := _drawer_panel()
 	cast_panel = pv[0]
 	var v: VBoxContainer = pv[1]
-	layer.add_child(cast_panel)
 	_drawer_header(v, "🎭 Cast · tap a card to spawn", _close_drawers)
 	var filters := HBoxContainer.new()
 	filters.add_theme_constant_override("separation", 8)
@@ -968,11 +1228,10 @@ func _filter_cast() -> void:
 		var text := ("%s %s %s %s" % [d["name"], d["id"], d["category"], d["gag"]]).to_lower()
 		(c["button"] as Button).visible = cat_ok and (q == "" or text.contains(q))
 
-func _build_maps_drawer(layer: CanvasLayer) -> void:
+func _build_maps_drawer() -> void:
 	var pv := _drawer_panel()
 	map_panel = pv[0]
 	var v: VBoxContainer = pv[1]
-	layer.add_child(map_panel)
 	_drawer_header(v, "🗺 Maps & Expansions", _close_drawers)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -991,12 +1250,10 @@ func _refresh_maps_drawer() -> void:
 	for id in map_order:
 		var info: Dictionary = maps[id]
 		var current: bool = id == scene_name
-		var card := PanelContainer.new()
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(0.2, 0.3, 0.45, 0.9) if current else Color(0.17, 0.18, 0.22, 0.9)
-		sb.set_corner_radius_all(14)
-		sb.set_content_margin_all(12)
-		card.add_theme_stylebox_override("panel", sb)
+		var cs := _card()
+		var card: PanelContainer = cs[0]
+		if current:
+			(cs[1] as StyleBoxFlat).bg_color = Color(0.2, 0.3, 0.45, 0.9)
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 12)
 		card.add_child(row)
@@ -1026,18 +1283,193 @@ func _refresh_maps_drawer() -> void:
 		row.add_child(load_b)
 		maps_list.add_child(card)
 
-func _key_pressed(k: String) -> void:
-	var ev := InputEventKey.new()
-	ev.keycode = OS.find_keycode_from_string(k)
-	ev.pressed = true
-	Input.parse_input_event(ev)
-	var rel := InputEventKey.new()
-	rel.keycode = ev.keycode
-	rel.pressed = false
-	Input.parse_input_event(rel)
+func _build_director_drawer() -> void:
+	var pv := _drawer_panel()
+	director_panel = pv[0]
+	var v: VBoxContainer = pv[1]
+	_drawer_header(v, "🎬 Director", _close_drawers)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 8)
+	director_status = Label.new()
+	director_status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	director_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	top.add_child(director_status)
+	var retake := _button("⟲ Retake", Vector2(120, 44))
+	retake.pressed.connect(func(): _close_drawers(); director.retake())
+	top.add_child(retake)
+	var stop := _button("■ Stop / Take Over", Vector2(190, 44))
+	stop.pressed.connect(func(): director.stop(true))
+	top.add_child(stop)
+	var save := _button("💾 Save Episode", Vector2(160, 44))
+	save.pressed.connect(_save_episode)
+	top.add_child(save)
+	v.add_child(top)
+	var hint := Label.new()
+	hint.text = "Play Episode hides the HUD for clean recording: tap the screen or press Esc to stop and take over."
+	hint.add_theme_font_size_override("font_size", 13)
+	hint.modulate = Color(1, 1, 1, 0.7)
+	v.add_child(hint)
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	v.add_child(scroll)
+	director_list = VBoxContainer.new()
+	director_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	director_list.add_theme_constant_override("separation", 10)
+	scroll.add_child(director_list)
+	_refresh_director_drawer()
 
+func _refresh_director_drawer() -> void:
+	if director_list == null:
+		return
+	for c in director_list.get_children():
+		c.queue_free()
+	for ep_id in director.order:
+		var ep: Dictionary = director.episodes[ep_id]
+		var cs := _card()
+		var card: PanelContainer = cs[0]
+		if ep_id == _timeline_episode():
+			(cs[1] as StyleBoxFlat).bg_color = Color(0.2, 0.3, 0.45, 0.9)
+		var v := VBoxContainer.new()
+		card.add_child(v)
+		var head := HBoxContainer.new()
+		var title := Label.new()
+		var map_id: String = map_alias.get(String(ep.get("map", "")), "")
+		title.text = "%s  ·  %s  ·  %d shots" % [ep.get("title", ep_id), maps[map_id]["title"] if map_id != "" else "?", ep["shots"].size()]
+		title.add_theme_font_size_override("font_size", 19)
+		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		head.add_child(title)
+		var sel := _button("Select", Vector2(100, 48))
+		sel.pressed.connect(func(): _tl_episode = ep_id; _refresh_timeline(); _refresh_director_drawer())
+		head.add_child(sel)
+		var play := _button("▶ Play Episode", Vector2(160, 48))
+		play.pressed.connect(func(): _tl_episode = ep_id; director.play_episode(ep_id))
+		head.add_child(play)
+		v.add_child(head)
+		for i in ep["shots"].size():
+			var shot: Dictionary = ep["shots"][i]
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 8)
+			var name := Label.new()
+			name.text = "%d. %s   ·  %s  ·  %.1f s" % [i + 1, shot.get("name", shot["id"]), shot.get("cam", "wide_static"), director.estimate_length(shot)]
+			name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.add_child(name)
+			var p := _button("▶ Shot", Vector2(100, 44))
+			p.pressed.connect(func(): _tl_episode = ep_id; director.play_shot(ep_id, i, false))
+			row.add_child(p)
+			var l := _button("🔁 Loop", Vector2(100, 44))
+			l.pressed.connect(func(): _tl_episode = ep_id; director.play_shot(ep_id, i, true))
+			row.add_child(l)
+			v.add_child(row)
+		director_list.add_child(card)
+
+# ── timeline bar ──────────────────────────────────────────────────────────────────
+func _timeline_episode() -> String:
+	if director.ep_id != "":
+		return director.ep_id
+	if _tl_episode == "" and not director.order.is_empty():
+		_tl_episode = director.order[0]
+	return _tl_episode
+
+func _build_timeline() -> void:
+	timeline = PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.1, 0.11, 0.14, 0.9)
+	sb.set_corner_radius_all(14)
+	sb.set_content_margin_all(10)
+	timeline.add_theme_stylebox_override("panel", sb)
+	timeline.anchor_top = 1.0
+	timeline.anchor_bottom = 1.0
+	timeline.anchor_right = 1.0
+	timeline.offset_left = 12
+	timeline.offset_right = -342
+	timeline.offset_top = -126
+	timeline.offset_bottom = -12
+	timeline.visible = false
+	hud_root.add_child(timeline)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
+	timeline.add_child(v)
+	tl_pills = HBoxContainer.new()
+	tl_pills.add_theme_constant_override("separation", 6)
+	v.add_child(tl_pills)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	v.add_child(row)
+	tl_play = _button("▶", Vector2(48, 40))
+	tl_play.pressed.connect(func(): Controls.tap(get_tree(), "play_pause"))
+	row.add_child(tl_play)
+	tl_slider = HSlider.new()
+	tl_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tl_slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	tl_slider.step = 0.01
+	tl_slider.focus_mode = Control.FOCUS_NONE
+	tl_slider.value_changed.connect(func(v: float): director.seek(v))
+	row.add_child(tl_slider)
+	tl_time = Label.new()
+	tl_time.custom_minimum_size = Vector2(110, 0)
+	row.add_child(tl_time)
+	tl_loop = _button("🔁", Vector2(48, 40))
+	tl_loop.toggle_mode = true
+	row.add_child(tl_loop)
+	tl_overdub = _button("● OVERDUB", Vector2(120, 40))
+	tl_overdub.toggle_mode = true
+	tl_overdub.pressed.connect(func(): Controls.tap(get_tree(), "overdub"))
+	row.add_child(tl_overdub)
+	tl_save = _button("Save Episode", Vector2(120, 40))
+	tl_save.pressed.connect(_save_episode)
+	row.add_child(tl_save)
+
+func _refresh_timeline() -> void:
+	if tl_pills == null:
+		return
+	for c in tl_pills.get_children():
+		c.queue_free()
+	var id := _timeline_episode()
+	if id == "" or not director.episodes.has(id):
+		return
+	var shots: Array = director.episodes[id]["shots"]
+	for i in shots.size():
+		var b := _button("Shot %d" % (i + 1), Vector2(76, 34))
+		b.toggle_mode = true
+		b.button_pressed = director.ep_id == id and director.shot_i == i
+		b.tooltip_text = String(shots[i].get("name", ""))
+		b.pressed.connect(func(): director.play_shot(id, i, tl_loop.button_pressed))
+		tl_pills.add_child(b)
+	var all := _button("Play All", Vector2(90, 34))
+	all.pressed.connect(func(): director.play_episode(id))
+	tl_pills.add_child(all)
+
+func _sync_timeline() -> void:
+	if timeline == null or not timeline.visible:
+		return
+	tl_slider.max_value = maxf(0.01, director.shot_len)
+	tl_slider.set_value_no_signal(director.shot_t)
+	tl_time.text = "%.2f / %.2f s" % [director.shot_t, director.shot_len]
+	tl_play.text = "⏸" if director.playing and not director.paused else "▶"
+	tl_overdub.set_pressed_no_signal(director.overdub)
+	if director.loop != tl_loop.button_pressed and director.playing and director.mode == "shot":
+		director.loop = tl_loop.button_pressed
+
+func _toggle_timeline() -> void:
+	timeline.visible = not timeline.visible
+	if timeline.visible:
+		_refresh_timeline()
+
+func _save_episode() -> void:
+	if director.ep.is_empty() and _timeline_episode() != "":
+		director.ep_id = _timeline_episode()
+		director.ep = director.episodes[director.ep_id]
+	var paths := director.save()
+	if subtitle and not paths.is_empty():
+		subtitle.text = "Saved: " + ", ".join(paths)
+		subtitle.visible = true
+		_subtitle_until = voice.clock + 2.5
+	print("[save] ", paths)
+
+# ── drawers ───────────────────────────────────────────────────────────────────────
 func _drawer_open() -> bool:
-	return map_open or cast_open
+	return map_open or cast_open or director_open
 
 func _toggle_map() -> void:
 	var open := not map_open
@@ -1054,15 +1486,35 @@ func _toggle_cast() -> void:
 	cast_panel.visible = open
 	_update_hud()
 
+func _toggle_director() -> void:
+	var open := not director_open
+	if hud_clean:
+		director.stop(true)
+	_close_drawers()
+	director_open = open
+	director_panel.visible = open
+	if open:
+		_refresh_director_drawer()
+		update_director_status()
+
 func _close_drawers() -> void:
 	map_open = false
 	cast_open = false
+	director_open = false
 	map_panel.visible = false
 	cast_panel.visible = false
+	director_panel.visible = false
 	joy_id = -1
 	look_id = -1
 	joy_vec = Vector2.ZERO
 	joy_pad.active = false
+	var focus := get_viewport().gui_get_focus_owner()
+	if focus:
+		focus.release_focus()
+
+func update_director_status() -> void:
+	if director_status:
+		director_status.text = director.status_text()
 
 ## Loads a map with a quick fade through black.
 func _travel(id: String) -> void:
@@ -1077,8 +1529,11 @@ func _update_hud() -> void:
 		return
 	var info: Dictionary = maps[scene_name]
 	var chaos: String = ["calm", "drip", "surge", "FLOOD"][stage]
-	var who := _name_of(actor) if actor != null and is_instance_valid(actor) else "-"
-	hud_label.text = "%s · %s    [%s · %s · chaos: %s · 🎭 %s%s]" % [info["title"], info["tag"], rig, EXPRS[expr_i], chaos, who, " · 12fps" if on_twos else ""]
+	var who := _name_of(actor) if _has(actor) else "-"
+	var take := ""
+	if director and director.playing:
+		take = " · 🎬 shot %d" % (director.shot_i + 1)
+	hud_label.text = "%s · %s    [%s · %s · chaos: %s · 🎭 %s%s%s]" % [info["title"], info["tag"], rig, EXPRS[expr_i], chaos, who, " · 12fps" if on_twos else "", take]
 	if twos_button:
 		twos_button.set_pressed_no_signal(on_twos)
 	if cast_status:
