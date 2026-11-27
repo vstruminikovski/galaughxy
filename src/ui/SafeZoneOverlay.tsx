@@ -3,7 +3,7 @@ import { useStudioStore } from '../store/useStudioStore';
 /** Framing guides drawn as DOM over the canvas — never captured by the recorder. */
 export function SafeZoneOverlay() {
   const aspect = useStudioStore((s) => s.aspect);
-  if (aspect === '16:9') return <div className="guide thirds" />;
+  if (aspect === '16:9') return null; // no always-on grid
   if (aspect === '9:16')
     return (
       <>

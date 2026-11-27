@@ -126,7 +126,6 @@ export function Stage({ episode, dpr }: { episode: Episode; dpr: number }) {
 
   return (
     <Canvas
-      shadows
       dpr={dpr}
       gl={{ preserveDrawingBuffer: true, antialias: false, powerPreference: 'high-performance' }}
       camera={{ fov: c.fov, position: c.pos, near: 0.05, far: 200 }}
@@ -145,8 +144,7 @@ export function Stage({ episode, dpr }: { episode: Episode; dpr: number }) {
       <directionalLight
         position={[4, 8, 6]}
         intensity={2.1}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
+                shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-5}
         shadow-camera-right={5}
         shadow-camera-top={5}
