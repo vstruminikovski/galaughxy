@@ -39,8 +39,6 @@ interface StudioState extends Doc {
   episodeSlug: string;
 
   // timing
-  /** Cinematic post stack (DOF, bloom, grain). */
-  cinematic: boolean;
   /** Grease-pencil hand-drawn look. */
   drawn: boolean;
   drawnInk: number;
@@ -107,7 +105,6 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   uiHidden: false,
   episodeSlug: '',
 
-  cinematic: true,
   drawn: true,
   drawnInk: 1,
   /** Show block (voxel seam) outlines. Also forced on while painting. */

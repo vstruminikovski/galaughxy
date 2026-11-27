@@ -3,7 +3,6 @@ import { Canvas, type ThreeEvent } from '@react-three/fiber';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { ACTOR_TYPES } from '../actors';
-import { CinematicFX } from './CinematicFX';
 import { CameraRigs } from '../engine/CameraRigs';
 import { MicroVoxelWorld } from '../engine/MicroVoxelWorld';
 import { ProceduralEnv } from '../engine/ProceduralEnv';
@@ -120,9 +119,6 @@ export function Stage({ episode, dpr }: { episode: Episode; dpr: number }) {
   const mode = useStudioStore((s) => s.mode);
   const brush = useStudioStore((s) => s.brush);
   const selectedId = useStudioStore((s) => s.selectedId);
-  const cinematic = useStudioStore((s) => s.cinematic);
-  const drawn = useStudioStore((s) => s.drawn);
-  const drawnBlocks = useStudioStore((s) => s.drawnBlocks);
   const rendering = useStudioStore((s) => s.rendering);
   const studio = mode === 'studio';
   const base = useMemo(() => episode.buildBaseVoxels?.(), [episode]);
@@ -190,9 +186,6 @@ export function Stage({ episode, dpr }: { episode: Episode; dpr: number }) {
       ))}
       <CameraRigs config={episode.cameras} />
       {studio && <SelectionGizmo />}
-      {(cinematic || drawn) && (
-        <CinematicFX nature={false} cinematic={cinematic} drawn={drawn} blocks={drawnBlocks || (studio && brush !== 'off')} />
-      )}
     </Canvas>
   );
 }

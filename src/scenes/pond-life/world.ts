@@ -115,10 +115,6 @@ function buildPond(): PondWorld {
       solidTop.set(vkey(ix, 0, iz), s);
       if (under) {
         for (let y = s + 1; y <= WATER_TOP_CELL; y++) put(ix, y, iz, y === WATER_TOP_CELL ? C.water : C.waterDeep);
-      } else if (hash3(ix * 3.1, 0, iz * 1.7) > 0.4) {
-        put(ix, s + 1, iz, pick(C.grass, ix, iz));
-        if (hash3(ix, 5, iz) > 0.7) put(ix, s + 2, iz, pick(C.grass, iz, ix));
-        solidTop.set(vkey(ix, 0, iz), s + 1 + (hash3(ix, 5, iz) > 0.7 ? 1 : 0));
       }
     }
 

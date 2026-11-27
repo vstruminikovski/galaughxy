@@ -3,6 +3,7 @@ import { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import type { Voxel } from '../types';
 import { capacityFor, cullHidden, fillInstances, glowVoxelMaterial, litVoxelMaterial, VOXEL_SIZE } from './voxels';
+import { VoxelInk } from './VoxelInk';
 
 export interface VoxelHit {
   voxel: Voxel;
@@ -60,6 +61,7 @@ export function VoxelModelMesh({
         receiveShadow
         onClick={handler(lit)}
       />
+      <VoxelInk voxels={voxels} size={size} />
       {glow.length > 0 && (
         <instancedMesh
           key={`g${glowCap}-${size}`}

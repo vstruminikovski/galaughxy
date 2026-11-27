@@ -349,7 +349,6 @@ function TimingDrawer() {
       <h4>Turn overshoot</h4>
       <input type="range" min={0} max={1} step={0.05} value={s.overshoot} onChange={(e) => s.set({ overshoot: +e.target.value })} />
       <h4>Look</h4>
-      <label className="check"><input type="checkbox" checked={s.cinematic} onChange={(e) => s.set({ cinematic: e.target.checked })} /> Cinematic lens FX (depth of field, bloom, grain)</label>
       <label className="check"><input type="checkbox" checked={s.drawn} onChange={(e) => s.set({ drawn: e.target.checked })} /> ✏️ Grease-pencil drawn look</label>
       <span className="hint">Ink</span>
       <input type="range" min={0} max={1.5} step={0.05} value={s.drawnInk} onChange={(e) => s.set({ drawnInk: +e.target.value })} />

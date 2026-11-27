@@ -107,3 +107,9 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 - Requires Chrome/Edge (WebCodecs) and HTTPS for the live site.
 
 - **Grease pencil is outline-only.** The drawn pass inks silhouettes and boils them. It never changes fill colours, adds paper tint, or adds grain. The project contains no bitmap assets (no PNG/JPG/GLB); every surface is procedural geometry and colour.
+
+## 12. VECTOR ONLY (current rule — overrides earlier raster notes)
+- **No raster in the pipeline.** Removed: screen-space ink, depth of field, bloom, grain, vignette, tone mapping. Nothing samples pixels, and no bitmap/texture/image assets exist in the repo.
+- **Ink is vector geometry.** `src/engine/vectorInk.ts` builds each object's outer edges (each edge keeps the two faces it touches). `src/engine/VoxelInk.tsx` draws them as fat-line geometry. The GPU keeps an edge only if one face points toward the camera and the other away (silhouette), and wobbles it 12 times a second. Width scales with output height.
+- Block outlines (every edge) are on while painting or with Show block edges on.
+- Known cost: dense voxel areas create many edges. Keep detail coarse (e.g. no 1-cell grass tufts) to stay fast on phones.
