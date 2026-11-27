@@ -6,6 +6,7 @@ import { runtime } from '../engine/runtime';
 import { SFX_PADS, VOICE_PRESETS, voiceFX } from '../engine/VoiceFXEngine';
 import { LOCAL_LIBRARY_KEY } from '../props/library';
 import { useStudioStore, type BrushMode } from '../store/useStudioStore';
+import { sceneKey } from '../scenes/loadEpisode';
 import type { Drawer, SceneDoc, VoxelModel } from '../types';
 
 const DRAWERS: { id: Drawer; icon: string; label: string }[] = [
@@ -19,7 +20,6 @@ const DRAWERS: { id: Drawer; icon: string; label: string }[] = [
 
 const PALETTE = ['#ff4f6d', '#ffcc33', '#3dff7a', '#38e8ff', '#4aa3df', '#9b6bff', '#f4f6f8', '#2c3442', '#b97a46', '#5fa8a0'];
 
-export const sceneKey = (slug: string) => `robo-world:scene:${slug}`;
 
 function Row({ children }: { children: ReactNode }) {
   return <div className="row">{children}</div>;
@@ -327,6 +327,8 @@ function TimingDrawer() {
       <input type="range" min={30} max={400} step={5} value={s.snappiness} onChange={(e) => s.set({ snappiness: +e.target.value })} />
       <h4>Turn overshoot</h4>
       <input type="range" min={0} max={1} step={0.05} value={s.overshoot} onChange={(e) => s.set({ overshoot: +e.target.value })} />
+      <h4>Look</h4>
+      <label className="check"><input type="checkbox" checked={s.cinematic} onChange={(e) => s.set({ cinematic: e.target.checked })} /> Cinematic lens FX (depth of field, bloom, grain)</label>
       <h4>Mode</h4>
       <Seg value={s.mode} onChange={(m) => s.set({ mode: m, selectedId: null, brush: 'off' })} options={[{ id: 'game', label: 'Game' }, { id: 'studio', label: 'Studio / Puppet' }]} />
     </>

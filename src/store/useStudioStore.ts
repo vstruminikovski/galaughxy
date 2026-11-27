@@ -35,6 +35,8 @@ interface StudioState extends Doc {
   episodeSlug: string;
 
   // timing
+  /** Cinematic post stack (DOF, bloom, grain). */
+  cinematic: boolean;
   onTwos: boolean;
   /** Turn spring stiffness (higher = snappier). */
   snappiness: number;
@@ -94,6 +96,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   uiHidden: false,
   episodeSlug: '',
 
+  cinematic: true,
   onTwos: true,
   snappiness: 140,
   overshoot: 0.45,

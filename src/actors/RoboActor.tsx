@@ -261,4 +261,3 @@ export function hop(actorId: string | null) {
   void voiceFX.sfx('slideWhistle');
 }
 
-export const ACTOR_TYPES = { robo: RoboActor } as const;

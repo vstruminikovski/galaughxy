@@ -63,9 +63,20 @@ export interface CameraConfig {
 export interface Episode {
   slug: string;
   title: string;
+  tagline: string;
   cameras: CameraConfig;
   bounds: { minX: number; maxX: number; minZ: number; maxZ: number };
-  buildBaseVoxels: () => Map<string, string>;
+  /** Voxel episodes: procedural base room. */
+  buildBaseVoxels?: () => Map<string, string>;
+  /** Sculpted episodes: environment component (loads Blender-sculpted .glb). */
+  Environment?: import('react').ComponentType;
+  /** Ground height under (x, z) for actors. */
+  ground?: (x: number, z: number) => number;
+  /** Resting water surface height; undefined = dry room that floods from 0. */
+  waterRest?: number;
+  /** Multiplier on chaos flood heights (outdoor sets rise less). */
+  floodScale?: number;
+  look: 'studio' | 'nature';
   scene: SceneDoc;
   skyColor: string;
 }

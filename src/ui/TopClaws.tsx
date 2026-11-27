@@ -1,6 +1,8 @@
 import { dualRecorder } from '../engine/DualRecorder';
 import { exportPNG } from '../engine/FrameExport';
 import { useStudioStore } from '../store/useStudioStore';
+import { EPISODES } from '../scenes';
+import { loadEpisode } from '../scenes/loadEpisode';
 import type { AspectMode, CamRig } from '../types';
 
 const ASPECTS: AspectMode[] = ['16:9', '9:16', 'dual'];
@@ -28,6 +30,15 @@ export function TopClaws() {
         </button>
         <button className="claw" onClick={() => s.set({ aspect: ASPECTS[(ASPECTS.indexOf(s.aspect) + 1) % 3] })}>
           {s.aspect === 'dual' ? 'Dual' : s.aspect}
+        </button>
+        <button
+          className="claw"
+          onClick={() => {
+            const i = EPISODES.findIndex((e) => e.slug === s.episodeSlug);
+            loadEpisode(EPISODES[(i + 1) % EPISODES.length].slug);
+          }}
+        >
+          🎞 {EPISODES.find((e) => e.slug === s.episodeSlug)?.title ?? 'Episode'}
         </button>
         <button className="claw" onClick={() => s.set({ uiHidden: true })} title="H">
           Clean HUD

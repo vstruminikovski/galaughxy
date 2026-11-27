@@ -5,7 +5,18 @@ import { useStudioStore } from '../store/useStudioStore';
 import type { Episode, SceneObject } from '../types';
 import { runtime } from './runtime';
 
-const DROPS = 220;
+const DROPS = 1400;
+const pondMat = new THREE.MeshPhysicalMaterial({
+  color: '#2f4f3f',
+  roughness: 0.04,
+  metalness: 0.0,
+  clearcoat: 1,
+  clearcoatRoughness: 0.05,
+  transparent: true,
+  opacity: 0.78,
+  side: THREE.DoubleSide,
+  depthWrite: false,
+});
 const waterMat = new THREE.MeshStandardMaterial({
   color: '#3fa7d6',
   roughness: 0.06,
@@ -22,8 +33,10 @@ const waterMat = new THREE.MeshStandardMaterial({
  */
 export function WaterSystem({ episode, perform }: { episode: Episode; perform: boolean }) {
   const { minX, maxX, minZ, maxZ } = episode.bounds;
-  const w = maxX - minX + 0.6;
-  const d = maxZ - minZ + 0.6;
+  const pond = episode.waterRest !== undefined;
+  const rest = episode.waterRest ?? 0;
+  const w = maxX - minX + (pond ? 3 : 0.6);
+  const d = maxZ - minZ + (pond ? 3 : 0.6);
   const cx = (minX + maxX) / 2;
   const cz = (minZ + maxZ) / 2;
 
@@ -34,7 +47,7 @@ export function WaterSystem({ episode, perform }: { episode: Episode; perform: b
   const debrisRef = useRef<THREE.Group>(null);
 
   const surfGeo = useMemo(() => {
-    const g = new THREE.PlaneGeometry(w, d, 48, 40);
+    const g = new THREE.PlaneGeometry(w, d, pond ? 96 : 48, pond ? 80 : 40);
     g.rotateX(-Math.PI / 2);
     return g;
   }, [w, d]);
@@ -54,24 +67,26 @@ export function WaterSystem({ episode, perform }: { episode: Episode; perform: b
         x: minX + 0.4 + ((i * 0.618) % 1) * (maxX - minX - 0.8),
         z: minZ + 0.4 + ((i * 0.381 + 0.2) % 1) * (maxZ - minZ - 0.8),
         s: 0.08 + ((i * 0.27) % 1) * 0.14,
-        c: ['#8b5a2b', '#e6c27a', '#d94f4f', '#f2f2f2', '#6cbf6c'][i % 5],
+        c: (pond ? ['#6b4a2b', '#4d6b2a', '#8a6a3a', '#3f5a22', '#a08050'] : ['#8b5a2b', '#e6c27a', '#d94f4f', '#f2f2f2', '#6cbf6c'])[i % 5],
         ph: i * 1.7,
       })),
-    [minX, maxX, minZ, maxZ],
+    [minX, maxX, minZ, maxZ, pond],
   );
 
   const tapWorld = useRef(new THREE.Vector3(0, 1, -2));
 
   useFrame((state, dt) => {
     const t = state.clock.elapsedTime;
-    const level = runtime.waterLevel;
-    const amp = runtime.rippleAmp;
+    const level = rest + runtime.waterLevel * (episode.floodScale ?? 1);
+    const amp = runtime.rippleAmp + (pond ? 0.006 : 0);
 
-    // Locate the tap socket (any prop exposing "tapSocket").
+    // Locate the tap socket (any prop exposing "tapSocket"); outdoors there is none → rain.
+    let hasTap = false;
     for (const obj of runtime.objects.values()) {
       const s = obj.getObjectByName('socket:tapSocket');
       if (s) {
         s.getWorldPosition(tapWorld.current);
+        hasTap = true;
         break;
       }
     }
@@ -79,11 +94,12 @@ export function WaterSystem({ episode, perform }: { episode: Episode; perform: b
     // Flood body + rippling surface
     const surf = surfRef.current!;
     const body = bodyRef.current!;
-    const on = level > 0.004;
-    surf.visible = body.visible = on;
+    const on = pond || level > 0.004;
+    surf.visible = on;
+    body.visible = on && !pond;
     if (on) {
       surf.position.set(cx, level, cz);
-      body.scale.set(w, level, d);
+      body.scale.set(w, Math.max(level, 0.001), d);
       body.position.set(cx, level / 2, cz);
       const p = surfGeo.attributes.position as THREE.BufferAttribute;
       for (let i = 0; i < p.count; i++) {
@@ -101,29 +117,38 @@ export function WaterSystem({ episode, perform }: { episode: Episode; perform: b
 
     // Puddle under the sink
     const pud = puddleRef.current!;
-    pud.visible = runtime.puddle > 0.01 && level < 0.05;
+    pud.visible = hasTap && runtime.puddle > 0.01 && level < 0.05;
     pud.position.set(tapWorld.current.x, 0.006, Math.min(tapWorld.current.z + 0.7, maxZ));
     const r = runtime.puddle * 0.9;
     pud.scale.set(r, 1, r * 0.75);
 
     // Drip / stream emitter
-    const spawnPerSec = runtime.dripRate * runtime.dripRate * 260;
+    const spawnPerSec = runtime.dripRate * runtime.dripRate * 260 * (hasTap ? 1 : 12);
     let toSpawn = spawnPerSec * dt + (Math.random() < (spawnPerSec * dt) % 1 ? 1 : 0);
     while (toSpawn-- >= 1) {
       const i = drops.next;
       drops.next = (drops.next + 1) % DROPS;
-      drops.pos[i * 3] = tapWorld.current.x + (Math.random() - 0.5) * 0.04 * (1 + runtime.dripRate * 3);
-      drops.pos[i * 3 + 1] = tapWorld.current.y;
-      drops.pos[i * 3 + 2] = tapWorld.current.z + (Math.random() - 0.5) * 0.04 + runtime.dripRate * 0.05;
-      drops.vel[i] = 0;
+      if (hasTap) {
+        drops.pos[i * 3] = tapWorld.current.x + (Math.random() - 0.5) * 0.04 * (1 + runtime.dripRate * 3);
+        drops.pos[i * 3 + 1] = tapWorld.current.y;
+        drops.pos[i * 3 + 2] = tapWorld.current.z + (Math.random() - 0.5) * 0.04 + runtime.dripRate * 0.05;
+        drops.vel[i] = 0;
+      } else {
+        // rainstorm across the habitat
+        drops.pos[i * 3] = minX + Math.random() * (maxX - minX);
+        drops.pos[i * 3 + 1] = 3 + Math.random() * 2;
+        drops.pos[i * 3 + 2] = minZ + Math.random() * (maxZ - minZ);
+        drops.vel[i] = -6;
+      }
     }
-    const floor = Math.max(level, 0);
+    const floor = pond ? level : Math.max(level, 0);
     for (let i = 0; i < DROPS; i++) {
       if (drops.pos[i * 3 + 1] < -50) continue;
       drops.vel[i] -= 9.8 * dt;
       drops.pos[i * 3 + 1] += drops.vel[i] * dt;
-      drops.pos[i * 3 + 2] += runtime.dripRate * 0.8 * dt;
-      if (drops.pos[i * 3 + 1] < floor) drops.pos[i * 3 + 1] = -100;
+      if (hasTap) drops.pos[i * 3 + 2] += runtime.dripRate * 0.8 * dt;
+      const ground = episode.ground ? episode.ground(drops.pos[i * 3], drops.pos[i * 3 + 2]) : 0;
+      if (drops.pos[i * 3 + 1] < Math.max(floor, ground)) drops.pos[i * 3 + 1] = -100;
     }
     (drops.g.attributes.position as THREE.BufferAttribute).needsUpdate = true;
     dropsRef.current!.visible = runtime.dripRate > 0.01;
@@ -150,7 +175,7 @@ export function WaterSystem({ episode, perform }: { episode: Episode; perform: b
         if (!floats(o, lib)) continue;
         const g = runtime.objects.get(o.id);
         if (!g) continue;
-        const baseY = o.pos[1];
+        const baseY = o.pos[1] + (pond ? rest : 0);
         if (level > baseY + 0.03) {
           g.position.y = level - 0.04 + Math.sin(t * 2.3 + o.pos[0] * 3) * 0.025;
           g.rotation.z = Math.sin(t * 1.7 + o.pos[2]) * 0.18;
@@ -169,12 +194,12 @@ export function WaterSystem({ episode, perform }: { episode: Episode; perform: b
       <mesh ref={bodyRef} material={waterMat} visible={false} renderOrder={2}>
         <boxGeometry args={[1, 1, 1]} />
       </mesh>
-      <mesh ref={surfRef} geometry={surfGeo} material={waterMat} visible={false} renderOrder={3} />
+      <mesh ref={surfRef} geometry={surfGeo} material={pond ? pondMat : waterMat} visible={false} renderOrder={3} receiveShadow />
       <mesh ref={puddleRef} material={waterMat} visible={false} renderOrder={1}>
         <cylinderGeometry args={[1, 1, 0.012, 32]} />
       </mesh>
       <points ref={dropsRef} geometry={drops.g} frustumCulled={false}>
-        <pointsMaterial color="#9fdcff" size={0.035} transparent opacity={0.9} />
+        <pointsMaterial color="#cfe8ff" size={0.03} transparent opacity={0.75} />
       </points>
       <group ref={debrisRef} visible={false}>
         {debrisSeeds.map((s, i) => (

@@ -5,6 +5,8 @@ import sceneJson from './scene.json';
 export const overflowingKitchen: Episode = {
   slug: 'overflowing-kitchen',
   title: 'The Overflowing Kitchen',
+  tagline: 'flood the kitchen!',
+  look: 'studio',
   skyColor: '#8fc4e8',
   bounds: { minX: -3, maxX: 3, minZ: -2.5, maxZ: 2.5 },
   cameras: {

@@ -1,0 +1,7 @@
+{
+  "slug": "pond-life",
+  "objects": [
+    { "id": "frog_1", "kind": "actor", "ref": "frog", "name": "Bog the Frog", "pos": [-0.3, 0, 1.2], "rot": [0, 10, 0], "scale": [1, 1, 1], "visible": true }
+  ],
+  "voxels": {}
+}

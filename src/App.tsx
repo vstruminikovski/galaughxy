@@ -2,14 +2,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useKeyboard } from './engine/useKeyboard';
 import { EPISODES } from './scenes';
 import { useStudioStore } from './store/useStudioStore';
-import type { SceneDoc } from './types';
 import { GameHUD } from './ui/GameHUD';
 import { SafeZoneOverlay } from './ui/SafeZoneOverlay';
 import { Stage } from './ui/Stage';
-import { sceneKey, StudioDrawers } from './ui/StudioDrawers';
+import { loadEpisode } from './scenes/loadEpisode';
+import { StudioDrawers } from './ui/StudioDrawers';
 import { TopClaws } from './ui/TopClaws';
-
-const episode = EPISODES[0];
 
 /** Pixel-identical letterboxed frame: same framing on Galaxy S25 and desktop. */
 function useFrameBox(aspect: number) {
@@ -36,6 +34,8 @@ export default function App() {
   const uiHidden = useStudioStore((s) => s.uiHidden);
   const recording = useStudioStore((s) => s.recording);
   const set = useStudioStore((s) => s.set);
+  const episodeSlug = useStudioStore((s) => s.episodeSlug);
+  const episode = EPISODES.find((e) => e.slug === episodeSlug) ?? EPISODES[0];
   const ratio = aspect === '9:16' ? 9 / 16 : 16 / 9;
   const { ref, box } = useFrameBox(ratio);
 
@@ -43,22 +43,13 @@ export default function App() {
   const targetW = aspect === '9:16' ? 1080 : 1920;
   const dpr = box.w ? Math.min(3, Math.max(1, targetW / box.w)) : 1;
 
-  useEffect(() => {
-    let saved: SceneDoc | null = null;
-    try {
-      const raw = localStorage.getItem(sceneKey(episode.slug));
-      saved = raw ? JSON.parse(raw) : null;
-    } catch {
-      saved = null;
-    }
-    useStudioStore.getState().loadScene(saved ?? episode.scene);
-  }, []);
+  useEffect(() => loadEpisode(EPISODES[0].slug), []);
 
   return (
     <div className={`app mode-${mode}`}>
       <div className="viewport" ref={ref}>
         <div className="frame" style={{ width: box.w, height: box.h }}>
-          {box.w > 0 && <Stage episode={episode} dpr={dpr} />}
+          {box.w > 0 && episodeSlug && <Stage key={episode.slug} episode={episode} dpr={dpr} />}
           {!uiHidden && <SafeZoneOverlay />}
           {recording && <div className="rec-dot" />}
         </div>
@@ -70,7 +61,7 @@ export default function App() {
           <TopClaws />
           {mode === 'studio' && <StudioDrawers />}
           <div className="title-tag">
-            {episode.title} · <span>{mode === 'game' ? 'flood the kitchen!' : 'studio'}</span>
+            {episode.title} · <span>{mode === 'game' ? episode.tagline : 'studio'}</span>
           </div>
         </div>
       ) : (
