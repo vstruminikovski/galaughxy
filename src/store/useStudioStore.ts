@@ -109,7 +109,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   drawnInk: 1,
   /** Show block (voxel seam) outlines. Also forced on while painting. */
   drawnBlocks: false,
-  drawnBoil: 1,
+  drawnBoil: 0.4,
   onTwos: true,
   snappiness: 140,
   overshoot: 0.45,

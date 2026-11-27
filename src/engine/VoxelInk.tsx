@@ -5,7 +5,7 @@ import { useStudioStore } from '../store/useStudioStore';
 import type { Voxel } from '../types';
 import { buildInkEdges, createInkMaterial, inkGeometry } from './vectorInk';
 
-const INK = '#6e5a44'; // muted middle brown
+const INK = '#9a8570'; // muted middle brown
 const BASE_WIDTH_PX = 2.2; // at 1080p; scales with the output height
 
 /** Vector grease-pencil outline for one voxel object. Thickness & wobble follow the output size. */
