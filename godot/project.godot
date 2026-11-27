@@ -12,5 +12,5 @@ window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 
 [rendering]
-anti_aliasing/quality/msaa_3d=2
+anti_aliasing/quality/msaa_3d=3
 textures/vram_compression/import_etc2_astc=true

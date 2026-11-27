@@ -1,8 +1,8 @@
 class_name Outline
 extends RefCounted
 
-## Rounded outline by inverted hull: a copy of the mesh pushed out along smoothed normals and
-## drawn with front faces culled, so only its rim shows. Geometry, not pixels, so it stays exact
+## Rounded outline by inverted hull: a copy of the mesh with smoothed normals, drawn with front
+## faces culled and pushed out in screen space by the ink shader, so only its rim shows. Geometry, not pixels, so it stays exact
 ## at any resolution and from every angle.
 ##
 ## Normals are averaged over a neighbourhood (not just identical corners) so the rim follows the
@@ -55,14 +55,16 @@ static func hull(src: ArrayMesh, thickness: float) -> ArrayMesh:
 							if d < r2:
 								acc += sums[v] * (1.0 - d / r2)
 			smooth[u] = acc.normalized() if acc.length_squared() > 0.0 else sums[u].normalized()
-		# 3. push every corner out along its smoothed normal
-		var moved := PackedVector3Array()
-		moved.resize(verts.size())
+		# 3. keep the surface position; the shader pushes the rim out in screen pixels along the
+		#    smoothed normal, so the line has the same thin width at any distance
+		var normals := PackedVector3Array()
+		normals.resize(verts.size())
 		for i in verts.size():
-			moved[i] = verts[i] + smooth[key_of[i]] * thickness
+			normals[i] = smooth[key_of[i]]
 		var a := []
 		a.resize(Mesh.ARRAY_MAX)
-		a[Mesh.ARRAY_VERTEX] = moved
+		a[Mesh.ARRAY_VERTEX] = verts
+		a[Mesh.ARRAY_NORMAL] = normals
 		if idx.size() > 0:
 			a[Mesh.ARRAY_INDEX] = idx
 		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, a)

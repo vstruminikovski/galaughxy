@@ -78,6 +78,6 @@ static func parts() -> Dictionary:
 		}
 		out["arm" + side] = {
 			"sdf": Sdf.union([Sdf.capsule(Vector3(5.0 * s, 4, 4), Vector3(7.5 * s, 1.5, 8), 1.5), Sdf.rbox(Vector3(7.5 * s, 1, 9), Vector3(1.8, 0.8, 1.6), 0.6)]),
-			"lo": Vector3(5.0 * s - 4, -1, -2), "hi": Vector3(5.0 * s + 4, 8, 12), "color": SmoothMesh.solid(SKIN), "pivot": Vector3(5.0 * s, 5, 4), "glow": false,
+			"lo": Vector3(5.0 * s - 5.5, -1, -2), "hi": Vector3(5.0 * s + 5.5, 8, 12), "color": SmoothMesh.solid(SKIN), "pivot": Vector3(5.0 * s, 5, 4), "glow": false,
 		}
 	return out

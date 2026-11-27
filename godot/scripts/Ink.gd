@@ -13,7 +13,8 @@ static func material() -> ShaderMaterial:
 		_material.set_shader_parameter("ink_color", Color(0.48, 0.12, 0.12, 1.0))
 	return _material
 
-## Rounded rim for a closed mesh. `thick` is the rim width in the mesh's own units.
+## Rim for a closed mesh. `thick` (mesh units) only sets how widely normals are smoothed;
+## the drawn width is in screen pixels (shader `width_px`), so lines stay thin at any distance.
 static func rim(mesh: ArrayMesh, thick: float, occ_c: Array = [], occ_r: Array = []) -> MeshInstance3D:
 	var m := MeshInstance3D.new()
 	m.mesh = Outline.hull(mesh, thick)
