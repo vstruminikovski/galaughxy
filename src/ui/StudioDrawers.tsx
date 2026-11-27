@@ -352,8 +352,6 @@ function TimingDrawer() {
       <span className="hint">Ink</span>
       <input type="range" min={0} max={1.5} step={0.05} value={s.drawnInk} onChange={(e) => s.set({ drawnInk: +e.target.value })} />
       <label className="check"><input type="checkbox" checked={s.drawnBlocks} onChange={(e) => s.set({ drawnBlocks: e.target.checked })} /> Show block edges (always on while painting)</label>
-      <span className="hint">Hatching (off by default)</span>
-      <input type="range" min={0} max={1.2} step={0.05} value={s.drawnHatch} onChange={(e) => s.set({ drawnHatch: +e.target.value })} />
       <span className="hint">Line boil (wobble per drawn frame)</span>
       <input type="range" min={0} max={3} step={0.1} value={s.drawnBoil} onChange={(e) => s.set({ drawnBoil: +e.target.value })} />
       <h4>Mode</h4>

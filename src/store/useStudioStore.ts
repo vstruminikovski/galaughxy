@@ -42,7 +42,6 @@ interface StudioState extends Doc {
   /** Grease-pencil hand-drawn look. */
   drawn: boolean;
   drawnInk: number;
-  drawnHatch: number;
   drawnBlocks: boolean;
   drawnBoil: number;
   onTwos: boolean;
@@ -108,7 +107,6 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   cinematic: true,
   drawn: true,
   drawnInk: 1,
-  drawnHatch: 0,
   /** Show block (voxel seam) outlines. Also forced on while painting. */
   drawnBlocks: false,
   drawnBoil: 1,

@@ -5,13 +5,12 @@ import * as THREE from 'three';
  * "Grease Pencil" hand-drawn look as a single screen pass:
  *  - ink outlines from depth discontinuities + colour edges (Sobel)
  *  - line boil: the sampling jitters with noise that re-rolls 12×/sec (on twos)
- *  - pencil hatching in shadows, gentle paint posterize, paper grain
+ *  - gentle paint posterize (no hatching)
  */
 const frag = /* glsl */ `
 uniform float uTime;
 uniform float uInk;
 uniform float uThickness;
-uniform float uHatch;
 uniform float uPaper;
 uniform float uBoil;
 uniform vec3 uInkColor;
@@ -62,27 +61,18 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
   float Lq = floor(L * steps + 0.5) / steps;
   col *= mix(1.0, Lq / max(L, 0.001), 0.45);
 
-  // cross-hatching in the shadows, boiling with the lines
-  vec2 sp = uv * resolution / uThickness;
-  float jit = (vnoise(sp * 0.05 + frame * 5.1) - 0.5) * 3.0;
-  float h1 = smoothstep(0.7, 0.98, sin((sp.x + sp.y + jit) * 0.42) * 0.5 + 0.5);
-  float h2 = smoothstep(0.7, 0.98, sin((sp.x - sp.y + jit) * 0.42) * 0.5 + 0.5);
-  float shade = smoothstep(0.3, 0.06, L);
-  float hatch = (h1 * smoothstep(0.0, 0.5, shade) + h2 * smoothstep(0.5, 1.0, shade)) * uHatch;
-
   // paper tooth
   float paper = vnoise(uv * resolution * 0.35) * 0.6 + vnoise(uv * resolution * 0.9) * 0.4;
   col *= 1.0 - (paper - 0.5) * 0.12 * uPaper;
   col = mix(col, col * 0.94 + vec3(0.03, 0.025, 0.0), uPaper * 0.5);  // warm paper cast
 
-  col = mix(col, uInkColor, clamp(hatch * 0.55, 0.0, 1.0));
   col = mix(col, uInkColor, ink);
   outputColor = vec4(col, inputColor.a);
 }
 `;
 
 export class DrawnLookEffect extends Effect {
-  constructor({ ink = 1, thickness = 1.2, hatch = 0, paper = 0, boil = 1, blocks = 0, inkColor = '#1c1712' } = {}) {
+  constructor({ ink = 1, thickness = 1.2, paper = 0, boil = 1, blocks = 0, inkColor = '#1c1712' } = {}) {
     super('DrawnLookEffect', frag, {
       blendFunction: BlendFunction.NORMAL,
       attributes: EffectAttribute.DEPTH,
@@ -90,7 +80,6 @@ export class DrawnLookEffect extends Effect {
         ['uTime', new THREE.Uniform(0)],
         ['uInk', new THREE.Uniform(ink)],
         ['uThickness', new THREE.Uniform(thickness)],
-        ['uHatch', new THREE.Uniform(hatch)],
         ['uPaper', new THREE.Uniform(paper)],
         ['uBoil', new THREE.Uniform(boil)],
         ['uBlocks', new THREE.Uniform(blocks)],
@@ -99,11 +88,10 @@ export class DrawnLookEffect extends Effect {
     });
   }
 
-  set(p: { ink?: number; thickness?: number; hatch?: number; boil?: number; blocks?: number }) {
+  set(p: { ink?: number; thickness?: number; boil?: number; blocks?: number }) {
     if (p.blocks !== undefined) this.uniforms.get('uBlocks')!.value = p.blocks;
     if (p.ink !== undefined) this.uniforms.get('uInk')!.value = p.ink;
     if (p.thickness !== undefined) this.uniforms.get('uThickness')!.value = p.thickness;
-    if (p.hatch !== undefined) this.uniforms.get('uHatch')!.value = p.hatch;
     if (p.boil !== undefined) this.uniforms.get('uBoil')!.value = p.boil;
   }
 
