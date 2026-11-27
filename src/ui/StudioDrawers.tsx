@@ -6,6 +6,7 @@ import { runtime } from '../engine/runtime';
 import { SFX_PADS, VOICE_PRESETS, voiceFX } from '../engine/VoiceFXEngine';
 import { LOCAL_LIBRARY_KEY } from '../props/library';
 import { useStudioStore, type BrushMode } from '../store/useStudioStore';
+import { RenderDrawer } from './RenderDrawer';
 import { sceneKey } from '../scenes/loadEpisode';
 import { applyPose, loadViews, saveView, toggleFly } from '../engine/freeCam';
 import type { Drawer, SceneDoc, VoxelModel } from '../types';
@@ -16,6 +17,7 @@ const DRAWERS: { id: Drawer; icon: string; label: string }[] = [
   { id: 'voice', icon: '🎙', label: 'Voice & Lip-Sync' },
   { id: 'cameras', icon: '🎥', label: 'Cameras' },
   { id: 'timing', icon: '⏱', label: 'Movement & Timing' },
+  { id: 'render', icon: '🎬', label: 'Render take' },
   { id: 'export', icon: '💾', label: 'Export' },
 ];
 
@@ -391,6 +393,7 @@ export function StudioDrawers() {
     cameras: <CamerasDrawer />,
     timing: <TimingDrawer />,
     export: <ExportDrawer />,
+    render: <RenderDrawer />,
   };
   return (
     <div className="drawers" onPointerDown={(e) => e.stopPropagation()}>

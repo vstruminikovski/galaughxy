@@ -123,6 +123,7 @@ export function Stage({ episode, dpr }: { episode: Episode; dpr: number }) {
   const cinematic = useStudioStore((s) => s.cinematic);
   const drawn = useStudioStore((s) => s.drawn);
   const drawnBlocks = useStudioStore((s) => s.drawnBlocks);
+  const rendering = useStudioStore((s) => s.rendering);
   const studio = mode === 'studio';
   const base = useMemo(() => episode.buildBaseVoxels?.(), [episode]);
   const c = episode.cameras.static;
@@ -133,8 +134,10 @@ export function Stage({ episode, dpr }: { episode: Episode; dpr: number }) {
       dpr={dpr}
       gl={{ preserveDrawingBuffer: true, antialias: false, powerPreference: 'high-performance' }}
       camera={{ fov: c.fov, position: c.pos, near: 0.05, far: 200 }}
-      onCreated={({ gl, scene, camera }) => {
-        runtime.three = { gl, scene, camera };
+      frameloop={rendering ? 'never' : 'always'}
+      onCreated={(state) => {
+        const { gl, scene, camera } = state;
+        runtime.three = { gl, scene, camera, clock: state.clock };
         runtime.canvas = gl.domElement;
       }}
       onPointerMissed={() => studio && brush === 'off' && useStudioStore.getState().set({ selectedId: null })}

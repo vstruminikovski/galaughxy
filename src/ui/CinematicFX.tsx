@@ -45,5 +45,11 @@ export function CinematicFX({ nature, cinematic, drawn, blocks }: { nature: bool
       <Noise key="grain" opacity={nature ? 0.045 : 0.02} blendFunction={BlendFunction.OVERLAY} />,
     );
 
-  return <EffectComposer multisampling={4}>{fx}</EffectComposer>;
+  return (
+    <EffectComposer multisampling={4} ref={(c) => {
+        runtime.composer = (c as unknown as typeof runtime.composer) ?? null;
+      }}>
+      {fx}
+    </EffectComposer>
+  );
 }

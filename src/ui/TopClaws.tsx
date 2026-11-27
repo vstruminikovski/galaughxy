@@ -1,4 +1,3 @@
-import { dualRecorder } from '../engine/DualRecorder';
 import { toggleFly } from '../engine/freeCam';
 import { exportPNG } from '../engine/FrameExport';
 import { useStudioStore } from '../store/useStudioStore';
@@ -58,8 +57,8 @@ export function TopClaws() {
         <button className={`claw ${s.camRig === 'free' ? 'on' : ''}`} onClick={toggleFly} title="N">
           🛸 Fly
         </button>
-        <button className={`claw rec ${s.recording ? 'on' : ''}`} onClick={() => dualRecorder.toggle()}>
-          {s.recording ? '■ Stop' : '● Rec'}
+        <button className={`claw rec ${s.rendering ? 'on' : ''}`} onClick={() => s.set({ mode: 'studio', drawer: 'render' })} title="Render take">
+          🎬 Render
         </button>
       </div>
     </>

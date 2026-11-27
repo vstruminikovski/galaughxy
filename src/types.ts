@@ -52,7 +52,7 @@ export type CamRig = 'static' | 'slider' | 'drone' | 'free';
 export type AspectMode = '16:9' | '9:16' | 'dual';
 export type VoicePreset = 'normal' | 'radio' | 'phone' | 'scary' | 'squeaky';
 export type Mode = 'game' | 'studio';
-export type Drawer = 'models' | 'scene' | 'voice' | 'cameras' | 'timing' | 'export';
+export type Drawer = 'models' | 'scene' | 'voice' | 'cameras' | 'timing' | 'export' | 'render';
 
 export interface CameraConfig {
   static: { pos: Vec3; target: Vec3; fov: number; punchFov: number };

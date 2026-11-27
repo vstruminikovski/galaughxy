@@ -31,6 +31,8 @@ interface StudioState extends Doc {
   mode: Mode;
   /** World map overlay open. */
   map: boolean;
+  /** Offline render in progress (frame loop is stepped manually). */
+  rendering: boolean;
   drawer: Drawer | null;
   aspect: AspectMode;
   uiHidden: boolean;
@@ -99,6 +101,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
 
   mode: 'game',
   map: false,
+  rendering: false,
   drawer: null,
   aspect: '16:9',
   uiHidden: false,

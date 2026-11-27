@@ -99,3 +99,9 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 - **Drawn look is clean by default:** ink silhouettes with 12fps boil only. Hatching was removed; paper grain is off by default. Block (voxel seam) edges show when  is on or while painting in Studio.
 
 - **Drawn look is clean by default:** ink silhouettes with 12fps boil only. Hatching was removed; paper grain is off by default. Block (voxel seam) edges show when the Show block edges option is on, or while painting in Studio.
+
+## 11. RENDER TAKE (replaces screen recording)
+- 🎬 **Render** drawer (Studio → Render take, or the 🎬 Render claw). Choose output size (1080p, 4K, 9:16, square) and frame rate (12 on twos, 24, 30, 60), then arrange shots.
+- **Shots:** "+ Shot from this camera" freezes the current camera. "+ Slider" / "+ Drone" add moving-rig shots. Shots are saved per scene.
+- **How it works:** the render steps time by exactly 1/fps per frame (R3F frame loop set to manual), draws each frame at the chosen size with the full post-processing stack, and encodes H.264 MP4 with WebCodecs + mp4-muxer. Output sharpness comes from the chosen resolution, not the device screen.
+- Requires Chrome/Edge (WebCodecs) and HTTPS for the live site.
