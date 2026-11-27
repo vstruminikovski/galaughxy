@@ -121,7 +121,7 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 ## 13. GODOT PORT (in progress — `godot/`)
 - Engine: Godot 4.7 (installed via Homebrew). The Three.js app stays in the repo until the port reaches parity.
 - Voxels: `godot/scripts/VoxelMesh.gd` builds one ArrayMesh per object, emitting only exposed faces with flat normals and vertex colours. Glowing voxels are a second surface.
-- Outline: `godot/scripts/Outline.gd` is an inverted hull with smoothed corner normals. The rim is closed and rounded from every angle.
+- Outline: traced grease-pencil strokes (`InkStroke.gd`); the inverted-hull `Outline.gd` is retired.
 - Done: garden room + robo slice (`Main.gd`), screenshot checked.
 - Next: cameras + free fly, scene switching + portals, kitchen, pond + frog rig, flood chaos, tapered grease-pencil strokes, Movie Maker render path, Android export.
 
@@ -135,10 +135,10 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 - Pending art direction (new spec): characters, props and rooms move from voxel cubes to smooth stylized meshes. Decide per asset before converting, and keep the test green.
 
 ## 16. SMOOTH STYLISED PIPELINE (current — replaces the voxel look)
-- Shapes are signed-distance functions (`godot/scripts/Sdf.gd`: rounded boxes, capsules, ellipsoids, cylinders, smooth blends). `SmoothMesh.gd` extracts smooth surfaces from them (surface nets) with normals from the field and per-vertex colour. Ink is the rounded rim from `Outline.gd`.
+- Shapes are signed-distance functions (`godot/scripts/Sdf.gd`: rounded boxes, capsules, ellipsoids, cylinders, smooth blends). `SmoothMesh.gd` extracts smooth surfaces from them (surface nets) with normals from the field and per-vertex colour. Ink is traced strokes from `InkStroke.gd`.
 - Characters: `RoboParts.gd` and `FrogModel.gd` define parts with a pivot, a bounding box and a colour function. Parts are model-space; the mesh is shifted to its pivot.
 - Scenes: `KitchenWorld.gd`, `GardenWorld.gd`, `PondWorld.gd` (smooth height field for the ground). Scatter uses MultiMesh (reeds, pads, flowers).
 - The voxel builders (`VoxelMesh.gd`, `VoxelBuild.gd`) are removed.
 - Frog ground follows the smooth height field. Water is a translucent plane at -0.06 m in the pond.
 
-- **Boiling ink (all objects):** every outline goes through `godot/scripts/Ink.gd` and `godot/shaders/ink_boil.gdshader`. The line is redrawn 12 times a second with a per-point pressure, like Blender grease pencil. Any new object built with `Builders.sdf_piece` or `Main._piece` gets it automatically.
+- **Grease-pencil strokes (all objects):** every outline goes through `godot/scripts/Ink.gd` → `InkStroke.gd` + `godot/shaders/ink_stroke.gdshader`. The outline is traced where `dot(normal, camera - point)` crosses zero on each triangle, joined into continuous strokes (one line = one stroke, never overlapping), Chaikin-smoothed, and drawn as a constant-pixel-width ribbon (2.2 px at 1080p) that tapers to round blunt caps. Strokes rebuild at most 12×/s and only when the view changes. Boil = stepped noise (new seed 12×/s), sideways only, never pulsing. Frog limbs hide strokes inside the body (`FrogModel.occluders`). Any object built with `Builders.sdf_piece` or `Main._piece` gets this automatically.

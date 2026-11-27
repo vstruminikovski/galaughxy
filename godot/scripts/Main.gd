@@ -92,6 +92,7 @@ func _shot_and_quit(path: String) -> void:
 		await get_tree().process_frame
 	get_viewport().get_texture().get_image().save_png(path)
 	print("[shot] ", path)
+	print("[ink] builds %d, avg %.2f ms" % [InkStroke.builds, InkStroke.build_ms / maxi(1, InkStroke.builds)])
 	get_tree().quit()
 
 # ── environment ───────────────────────────────────────────────────────────────────
