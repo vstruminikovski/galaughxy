@@ -20,6 +20,13 @@ static func _skin(p: Vector3) -> Color:
 	var n := sin(p.x * 0.7 + sin(p.z * 0.5)) * 0.5 + sin(p.y * 0.9 + p.x * 0.3) * 0.5
 	return DARK.lerp(LIGHT, clampf(n * 0.5 + 0.5, 0.0, 1.0))
 
+## Body ellipsoids (model space) that hide limb and feature outlines inside the body.
+static func occluders() -> Dictionary:
+	return {
+		"c": [Vector4(0, 7, 0, 0), Vector4(0, 9, 6, 0)],
+		"r": [Vector4(7, 5, 9, 0), Vector4(6, 4.5, 5, 0)],
+	}
+
 static func parts() -> Dictionary:
 	var torso := Sdf.smin(Sdf.ellipsoid(Vector3(0, 7, 0), Vector3(7, 5, 9)), Sdf.ellipsoid(Vector3(0, 9, 6), Vector3(6, 4.5, 5)), 2.5)
 	var mouth := Sdf.ellipsoid(Vector3(0, 6.6, 9.6), Vector3(4.6, 1.4, 3.2))

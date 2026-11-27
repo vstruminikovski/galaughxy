@@ -54,6 +54,7 @@ var slider_t := 0.0
 var map_open := false
 var pond: PondWorld
 var frog_parts := {}
+var frog_ink: Array = []
 var robo_parts := {}
 var portal_nodes := []
 var hud_label: Label
@@ -148,13 +149,13 @@ func load_scene(name: String) -> void:
 			_portal(Vector3(5.4, 0, -3.4), -PI / 2, "garden")
 	_update_hud()
 
-func _piece(mesh: ArrayMesh, ink: Color, thick := 0.012) -> Node3D:
+func _piece(mesh: ArrayMesh, ink: Color, thick := 0.006, occ: Dictionary = {}) -> Node3D:
 	var n := Node3D.new()
 	var body := MeshInstance3D.new()
 	body.mesh = mesh
 	body.material_override = _lit()
 	n.add_child(body)
-	n.add_child(Ink.rim(mesh, thick))
+	n.add_child(Ink.rim(mesh, thick, occ.get("c", []), occ.get("r", [])))
 	return n
 
 func _lit() -> StandardMaterial3D:
@@ -164,7 +165,7 @@ func _lit() -> StandardMaterial3D:
 	return m
 
 ## One smooth part as a node on its pivot: surface, glow (emissive) or lit, plus rounded ink.
-func _smooth_part(part: Dictionary, thick: float) -> Node3D:
+func _smooth_part(part: Dictionary, thick: float, occ: Dictionary = {}) -> Node3D:
 	var pivot: Vector3 = part["pivot"]
 	var mesh := SmoothMesh.build(part["sdf"], part["lo"], part["hi"], part["step"], part["color"], pivot)
 	var n := Node3D.new()
@@ -181,7 +182,7 @@ func _smooth_part(part: Dictionary, thick: float) -> Node3D:
 		g.material_override = m
 		n.add_child(g)
 		return n
-	var piece := _piece(mesh, Color("#7a1f1f"), thick)
+	var piece := _piece(mesh, Color("#7a1f1f"), thick, occ)
 	n.add_child(piece)
 	return n
 
@@ -223,7 +224,7 @@ func _spawn_robo(at: Vector3) -> void:
 	for key in parts:
 		var part: Dictionary = parts[key]
 		part["step"] = 0.02
-		var node := _smooth_part(part, 0.006)
+		var node := _smooth_part(part, 0.003)
 		if key == "head":
 			head = node
 			actor.add_child(node)
@@ -242,13 +243,24 @@ func _spawn_frog(at: Vector3) -> void:
 	actor.scale = Vector3.ONE * FrogModel.FROG_SCALE
 	world.add_child(actor)
 	var parts := FrogModel.parts()
+	var occ := FrogModel.occluders()
 	frog_parts = {}
 	for key in parts:
 		var part: Dictionary = parts[key]
 		part["step"] = 0.5
-		var node := _smooth_part(part, 0.4)
+		# the body has no occluders; every limb and feature hides its line inside the body
+		var node := _smooth_part(part, 0.25, {} if key == "body" else occ)
 		actor.add_child(node)
 		frog_parts[key] = node
+	frog_ink = _collect_ink(actor)
+
+func _collect_ink(n: Node) -> Array:
+	var out := []
+	if n is MeshInstance3D and n.material_override is ShaderMaterial:
+		out.append(n.material_override)
+	for c in n.get_children():
+		out.append_array(_collect_ink(c))
+	return out
 
 # ── cameras ───────────────────────────────────────────────────────────────────────
 func _update_camera(dt: float) -> void:
@@ -396,6 +408,9 @@ func _animate_actor(dt: float) -> void:
 		frog_parts["legR"].rotation.x = -air * 1.1
 		frog_parts["armL"].rotation.x = air * 0.7
 		frog_parts["armR"].rotation.x = air * 0.7
+		var to_body: Transform3D = frog_parts["body"].global_transform.affine_inverse()
+		for m in frog_ink:
+			(m as ShaderMaterial).set_shader_parameter("to_body", to_body)
 	else:
 		var head: Node3D = robo_parts["head"]
 		head.position.y = 0.5 + (absf(sin(t * 9.0)) * 0.02 if talking else 0.0)

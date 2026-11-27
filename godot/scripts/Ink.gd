@@ -14,10 +14,19 @@ static func material() -> ShaderMaterial:
 	return _material
 
 ## Rounded rim for a closed mesh. `thick` is the rim width in the mesh's own units.
-static func rim(mesh: ArrayMesh, thick: float) -> MeshInstance3D:
+static func rim(mesh: ArrayMesh, thick: float, occ_c: Array = [], occ_r: Array = []) -> MeshInstance3D:
 	var m := MeshInstance3D.new()
 	m.mesh = Outline.hull(mesh, thick)
 	var mat := material().duplicate() as ShaderMaterial
 	mat.set_shader_parameter("thickness", thick)
+	# body ellipsoids that hide this rim (limbs pass the body; the body itself passes none)
+	var c := []
+	var r := []
+	for i in 4:
+		c.append(occ_c[i] if i < occ_c.size() else Vector4.ZERO)
+		r.append(occ_r[i] if i < occ_r.size() else Vector4(1, 1, 1, 0))
+	mat.set_shader_parameter("occ_n", mini(occ_c.size(), 4))
+	mat.set_shader_parameter("occ_c", c)
+	mat.set_shader_parameter("occ_r", r)
 	m.material_override = mat
 	return m
