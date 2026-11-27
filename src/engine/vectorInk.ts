@@ -21,7 +21,7 @@ export interface InkEdges {
 /** Stable pressure in [0.45, 1] per point, so strokes that meet at a point share its width. */
 const pressure = (x: number, y: number, z: number) => {
   const n = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453;
-  return 0.45 + 0.55 * (n - Math.floor(n));
+  return 0.25 + 0.75 * (n - Math.floor(n));
 };
 
 export function buildInkEdges(voxels: Voxel[], size: number): InkEdges {

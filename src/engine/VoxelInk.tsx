@@ -5,8 +5,8 @@ import { useStudioStore } from '../store/useStudioStore';
 import type { Voxel } from '../types';
 import { buildInkEdges, createInkMaterial, inkGeometry } from './vectorInk';
 
-const INK = '#5c5043'; // muted brown, 40% darker than the previous middle brown
-const BASE_WIDTH_PX = 6; // stroke width as a share of frame height (scales with output size)
+const INK = '#7a1f1f'; // dark red
+const BASE_WIDTH_PX = 3.6; // stroke width as a share of frame height (scales with output size)
 
 /** Vector grease-pencil outline for one voxel object. Thickness & wobble follow the output size. */
 export function VoxelInk({ voxels, size }: { voxels: Voxel[]; size: number }) {
