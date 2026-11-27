@@ -96,3 +96,6 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 - Scenes: The Overflowing Kitchen, Pond Life, Backyard Garden. Each is one node on the world map (`M`); doorways (portals) connect neighbouring scenes.
 - **Camera:** `N` or 🛸 Fly = free-fly (WASD, Space up, Shift down, drag to look). Studio → Cameras → Saved views stores three views per scene.
 - Deploy: `scripts/deploy.sh` builds the site and publishes to GitHub Pages (`gh-pages`, public).
+- **Drawn look is clean by default:** ink silhouettes with 12fps boil only. Hatching and paper grain are off (sliders remain). Block (voxel seam) edges show when  is on or while painting in Studio.
+
+- **Drawn look is clean by default:** ink silhouettes with 12fps boil only. Hatching and paper grain are off (sliders remain). Block (voxel seam) edges show when the Show block edges option is on, or while painting in Studio.

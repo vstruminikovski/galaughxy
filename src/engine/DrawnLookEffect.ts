@@ -15,6 +15,7 @@ uniform float uHatch;
 uniform float uPaper;
 uniform float uBoil;
 uniform vec3 uInkColor;
+uniform float uBlocks;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vnoise(vec2 p) {
@@ -51,7 +52,8 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
   float colorEdge = smoothstep(0.25, 0.6, length(vec2(cx, cy)));
   // pencil pressure varies along the stroke
   float pressure = 0.65 + 0.35 * vnoise(uv * resolution * 0.08 + frame * 3.7);
-  float ink = clamp(max(depthEdge, colorEdge * 0.7) * pressure, 0.0, 1.0) * uInk;
+  // silhouettes always; block (colour-seam) lines only when uBlocks is on
+  float ink = clamp(max(depthEdge, colorEdge * 0.7 * uBlocks) * pressure, 0.0, 1.0) * uInk;
 
   // paint: soft posterize toward flat cel fills
   vec3 col = inputColor.rgb;
@@ -80,7 +82,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
 `;
 
 export class DrawnLookEffect extends Effect {
-  constructor({ ink = 1, thickness = 1.2, hatch = 0.6, paper = 1, boil = 1, inkColor = '#1c1712' } = {}) {
+  constructor({ ink = 1, thickness = 1.2, hatch = 0, paper = 0, boil = 1, blocks = 0, inkColor = '#1c1712' } = {}) {
     super('DrawnLookEffect', frag, {
       blendFunction: BlendFunction.NORMAL,
       attributes: EffectAttribute.DEPTH,
@@ -91,12 +93,14 @@ export class DrawnLookEffect extends Effect {
         ['uHatch', new THREE.Uniform(hatch)],
         ['uPaper', new THREE.Uniform(paper)],
         ['uBoil', new THREE.Uniform(boil)],
+        ['uBlocks', new THREE.Uniform(blocks)],
         ['uInkColor', new THREE.Uniform(new THREE.Color(inkColor))],
       ]),
     });
   }
 
-  set(p: { ink?: number; thickness?: number; hatch?: number; boil?: number }) {
+  set(p: { ink?: number; thickness?: number; hatch?: number; boil?: number; blocks?: number }) {
+    if (p.blocks !== undefined) this.uniforms.get('uBlocks')!.value = p.blocks;
     if (p.ink !== undefined) this.uniforms.get('uInk')!.value = p.ink;
     if (p.thickness !== undefined) this.uniforms.get('uThickness')!.value = p.thickness;
     if (p.hatch !== undefined) this.uniforms.get('uHatch')!.value = p.hatch;

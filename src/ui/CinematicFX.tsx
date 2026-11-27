@@ -12,14 +12,14 @@ import { useStudioStore } from '../store/useStudioStore';
  *  cinematic → depth of field auto-focused on the active actor, bloom, vignette, grain
  *  drawn     → grease-pencil ink outlines with 12fps line boil, shadow hatching, paper
  */
-export function CinematicFX({ nature, cinematic, drawn }: { nature: boolean; cinematic: boolean; drawn: boolean }) {
+export function CinematicFX({ nature, cinematic, drawn, blocks }: { nature: boolean; cinematic: boolean; drawn: boolean; blocks: boolean }) {
   const focus = useMemo(() => new THREE.Vector3(), []);
   const dof = useRef<DepthOfFieldEffect>(null);
   const drawnFx = useMemo(() => new DrawnLookEffect({ thickness: nature ? 1.3 : 1.6 }), [nature]);
   const ink = useStudioStore((s) => s.drawnInk);
   const hatch = useStudioStore((s) => s.drawnHatch);
   const boil = useStudioStore((s) => s.drawnBoil);
-  useEffect(() => drawnFx.set({ ink, hatch, boil }), [drawnFx, ink, hatch, boil]);
+  useEffect(() => drawnFx.set({ ink, hatch, boil, blocks: blocks ? 1 : 0 }), [drawnFx, ink, hatch, boil, blocks]);
 
   useFrame(() => {
     const id = useStudioStore.getState().activeActorId;

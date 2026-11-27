@@ -122,6 +122,7 @@ export function Stage({ episode, dpr }: { episode: Episode; dpr: number }) {
   const selectedId = useStudioStore((s) => s.selectedId);
   const cinematic = useStudioStore((s) => s.cinematic);
   const drawn = useStudioStore((s) => s.drawn);
+  const drawnBlocks = useStudioStore((s) => s.drawnBlocks);
   const studio = mode === 'studio';
   const base = useMemo(() => episode.buildBaseVoxels?.(), [episode]);
   const c = episode.cameras.static;
@@ -186,7 +187,9 @@ export function Stage({ episode, dpr }: { episode: Episode; dpr: number }) {
       ))}
       <CameraRigs config={episode.cameras} />
       {studio && <SelectionGizmo />}
-      {(cinematic || drawn) && <CinematicFX nature={false} cinematic={cinematic} drawn={drawn} />}
+      {(cinematic || drawn) && (
+        <CinematicFX nature={false} cinematic={cinematic} drawn={drawn} blocks={drawnBlocks || (studio && brush !== 'off')} />
+      )}
     </Canvas>
   );
 }

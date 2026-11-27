@@ -43,6 +43,7 @@ interface StudioState extends Doc {
   drawn: boolean;
   drawnInk: number;
   drawnHatch: number;
+  drawnBlocks: boolean;
   drawnBoil: number;
   onTwos: boolean;
   /** Turn spring stiffness (higher = snappier). */
@@ -107,7 +108,9 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   cinematic: true,
   drawn: true,
   drawnInk: 1,
-  drawnHatch: 0.45,
+  drawnHatch: 0,
+  /** Show block (voxel seam) outlines. Also forced on while painting. */
+  drawnBlocks: false,
   drawnBoil: 1,
   onTwos: true,
   snappiness: 140,
