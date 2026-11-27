@@ -61,3 +61,22 @@ static func scatter(mesh: Mesh, transforms: Array, color: Color) -> MultiMeshIns
 
 static func box_bounds(c: Vector3, half: Vector3, pad := 0.05) -> Array:
 	return [c - half - Vector3(pad, pad, pad), c + half + Vector3(pad, pad, pad)]
+
+## Glowing ring lying flat (Godot's TorusMesh: exactly round, cheap). R = ring radius, r = tube radius.
+static func glow_torus(c: Vector3, major: float, minor: float, color: Color) -> MeshInstance3D:
+	var t := TorusMesh.new()
+	t.inner_radius = major - minor
+	t.outer_radius = major + minor
+	t.rings = 96
+	t.ring_segments = 16
+	var m := MeshInstance3D.new()
+	m.mesh = t
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.emission_energy_multiplier = 1.6
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.material_override = mat
+	m.position = c
+	return m

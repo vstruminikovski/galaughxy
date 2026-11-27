@@ -1,0 +1,232 @@
+{
+ "characters": [
+  {
+   "id": "robo_bear",
+   "name": "RoboBear",
+   "category": "Robo",
+   "model": "res://assets/models/characters/robo_bear.glb",
+   "scale": 1.0,
+   "color": "#4A90E2",
+   "icon": "🐻",
+   "gag": "CRT-screen head, antenna bobble",
+   "flags": []
+  },
+  {
+   "id": "robo_fish",
+   "name": "RoboFish",
+   "category": "Robo",
+   "model": "res://assets/models/characters/robo_fish.glb",
+   "scale": 1.0,
+   "color": "#FF5F56",
+   "icon": "🐟",
+   "gag": "Wind-up fish on a spring",
+   "flags": [
+    "flop"
+   ]
+  },
+  {
+   "id": "toaster_bot",
+   "name": "Toast-O",
+   "category": "Robo",
+   "model": "res://assets/models/characters/toaster_bot.glb",
+   "scale": 1.0,
+   "color": "#E5E7EB",
+   "icon": "🍞",
+   "gag": "Pops toast when SHOCKED",
+   "flags": []
+  },
+  {
+   "id": "coffee_bot",
+   "name": "Brewster",
+   "category": "Robo",
+   "model": "res://assets/models/characters/coffee_bot.glb",
+   "scale": 1.0,
+   "color": "#C9A27E",
+   "icon": "☕",
+   "gag": "Boils over with steam when ANGRY",
+   "flags": []
+  },
+  {
+   "id": "roomba_dog",
+   "name": "SweepPup",
+   "category": "Robo",
+   "model": "res://assets/models/characters/roomba_dog.glb",
+   "scale": 1.0,
+   "color": "#2C2E33",
+   "icon": "🐶",
+   "gag": "Spins wildly in floods",
+   "flags": [
+    "spin_in_flood"
+   ]
+  },
+  {
+   "id": "tv_head",
+   "name": "Cathode",
+   "category": "Robo",
+   "model": "res://assets/models/characters/tv_head.glb",
+   "scale": 1.0,
+   "color": "#F5F2EB",
+   "icon": "📺",
+   "gag": "Beige monitor head, rabbit ears",
+   "flags": []
+  },
+  {
+   "id": "gumball_bot",
+   "name": "Gumball",
+   "category": "Robo",
+   "model": "res://assets/models/characters/gumball_bot.glb",
+   "scale": 1.0,
+   "color": "#FF5F56",
+   "icon": "🍬",
+   "gag": "Dome full of bouncing gumballs",
+   "flags": []
+  },
+  {
+   "id": "chaotic_frog",
+   "name": "Gulp",
+   "category": "Animal",
+   "model": "res://assets/models/characters/chaotic_frog.glb",
+   "scale": 1.0,
+   "color": "#9BCB3C",
+   "icon": "🐸",
+   "gag": "Giant dome eyes, hinge jaw",
+   "flags": []
+  },
+  {
+   "id": "grumpy_duck",
+   "name": "Quackers",
+   "category": "Animal",
+   "model": "res://assets/models/characters/grumpy_duck.glb",
+   "scale": 1.0,
+   "color": "#FFBD2E",
+   "icon": "🦆",
+   "gag": "Amber beak, tiny beret",
+   "flags": []
+  },
+  {
+   "id": "chonk_cat",
+   "name": "Mochi",
+   "category": "Animal",
+   "model": "res://assets/models/characters/chonk_cat.glb",
+   "scale": 1.0,
+   "color": "#6B6E76",
+   "icon": "🐱",
+   "gag": "Flattens like a pancake when hopping",
+   "flags": [
+    "squash_hop"
+   ]
+  },
+  {
+   "id": "pigeon_chef",
+   "name": "Crumbs",
+   "category": "Animal",
+   "model": "res://assets/models/characters/pigeon_chef.glb",
+   "scale": 1.0,
+   "color": "#6B7A8F",
+   "icon": "🐦",
+   "gag": "Crooked chef toque",
+   "flags": []
+  },
+  {
+   "id": "panic_hamster",
+   "name": "Nugget",
+   "category": "Animal",
+   "model": "res://assets/models/characters/panic_hamster.glb",
+   "scale": 1.0,
+   "color": "#E0A060",
+   "icon": "🐹",
+   "gag": "Cheeks puff on Talk",
+   "flags": []
+  },
+  {
+   "id": "long_dachshund",
+   "name": "Stretch",
+   "category": "Animal",
+   "model": "res://assets/models/characters/long_dachshund.glb",
+   "scale": 1.0,
+   "color": "#8B5A2B",
+   "icon": "🐕",
+   "gag": "Stretches when turning fast",
+   "flags": [
+    "stretch_turn"
+   ]
+  },
+  {
+   "id": "grumpy_landlord",
+   "name": "Mr. Grump",
+   "category": "Animal",
+   "model": "res://assets/models/characters/grumpy_landlord.glb",
+   "scale": 1.0,
+   "color": "#A47551",
+   "icon": "🦭",
+   "gag": "Twitching mustache, noodle legs",
+   "flags": []
+  },
+  {
+   "id": "cyber_penguin",
+   "name": "Waddle-9",
+   "category": "Hybrid",
+   "model": "res://assets/models/characters/cyber_penguin.glb",
+   "scale": 1.0,
+   "color": "#4A90E2",
+   "icon": "🐧",
+   "gag": "Glowing visor, jetpack",
+   "flags": []
+  },
+  {
+   "id": "mecha_bunny",
+   "name": "VoltHare",
+   "category": "Hybrid",
+   "model": "res://assets/models/characters/mecha_bunny.glb",
+   "scale": 1.0,
+   "color": "#27C93F",
+   "icon": "🐰",
+   "gag": "Spring-coil ears, battery pack",
+   "flags": []
+  },
+  {
+   "id": "bot_octopus",
+   "name": "Octo-ARM",
+   "category": "Hybrid",
+   "model": "res://assets/models/characters/bot_octopus.glb",
+   "scale": 1.0,
+   "color": "#FF5F56",
+   "icon": "🐙",
+   "gag": "Six claw-tentacles",
+   "flags": []
+  },
+  {
+   "id": "turbo_turtle",
+   "name": "ShellOS",
+   "category": "Hybrid",
+   "model": "res://assets/models/characters/turbo_turtle.glb",
+   "scale": 1.0,
+   "color": "#E5E7EB",
+   "icon": "🐢",
+   "gag": "Wheels pop out when moving",
+   "flags": []
+  },
+  {
+   "id": "owl_drone",
+   "name": "HootCam",
+   "category": "Hybrid",
+   "model": "res://assets/models/characters/owl_drone.glb",
+   "scale": 1.0,
+   "color": "#B07A4A",
+   "icon": "🦉",
+   "gag": "Lens eyes, rotor blades",
+   "flags": []
+  },
+  {
+   "id": "dino_mech",
+   "name": "Rex-Bit",
+   "category": "Hybrid",
+   "model": "res://assets/models/characters/dino_mech.glb",
+   "scale": 1.0,
+   "color": "#4FBF5C",
+   "icon": "🦖",
+   "gag": "Clamp arms, LED belly",
+   "flags": []
+  }
+ ]
+}

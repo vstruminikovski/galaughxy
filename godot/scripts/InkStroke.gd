@@ -18,8 +18,12 @@ const REDRAW_FPS := 12.0
 const CAP_STEPS := 8
 const MIN_POINTS := 3
 
+const FRAME_BUDGET_MS := 4.0 # stroke rebuilds share this much time per frame; the rest wait a frame
+
 static var build_ms := 0.0
 static var builds := 0
+static var _frame := -1
+static var _spent_ms := 0.0
 
 var _pts := PackedVector3Array()
 var _nrm := PackedVector3Array()
@@ -61,9 +65,15 @@ func _process(dt: float) -> void:
 	_clock += dt
 	if _built and _clock < 1.0 / REDRAW_FPS:
 		return
-	_clock = fmod(_clock, 1.0 / REDRAW_FPS)
 	if not is_visible_in_tree():
 		return
+	var f := Engine.get_process_frames()
+	if f != _frame:
+		_frame = f
+		_spent_ms = 0.0
+	if _built and _spent_ms > FRAME_BUDGET_MS:
+		return # over this frame's budget: try again next frame
+	_clock = fmod(_clock, 1.0 / REDRAW_FPS)
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
 		return
@@ -73,7 +83,9 @@ func _process(dt: float) -> void:
 	_last_cam = c
 	var t0 := Time.get_ticks_usec()
 	_rebuild(c)
-	build_ms += (Time.get_ticks_usec() - t0) / 1000.0
+	var ms := (Time.get_ticks_usec() - t0) / 1000.0
+	build_ms += ms
+	_spent_ms += ms
 	builds += 1
 	_built = true
 

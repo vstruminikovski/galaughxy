@@ -77,3 +77,22 @@ static func cyl(c: Vector3, radius: float, half_h: float) -> Callable:
 		var q := p - c
 		var d := Vector2(Vector2(q.x, q.z).length() - radius, absf(q.y) - half_h)
 		return minf(maxf(d.x, d.y), 0.0) + Vector2(maxf(d.x, 0.0), maxf(d.y, 0.0)).length()
+
+## Torus lying flat (ring around the Y axis): major radius R, tube radius r.
+static func torus(c: Vector3, major: float, minor: float) -> Callable:
+	return func(p: Vector3) -> float:
+		var q := p - c
+		return Vector2(Vector2(q.x, q.z).length() - major, q.y).length() - minor
+
+## Smooth intersection (rounded where the two shapes meet).
+static func smax(a: Callable, b: Callable, k: float) -> Callable:
+	return func(p: Vector3) -> float:
+		var da: float = a.call(p)
+		var db: float = b.call(p)
+		var h := clampf(0.5 - 0.5 * (db - da) / k, 0.0, 1.0)
+		return lerpf(db, da, h) + k * h * (1.0 - h)
+
+## Half-space below a plane through `at` with normal `n` (inside where dot(p - at, n) < 0).
+static func plane(at: Vector3, n: Vector3) -> Callable:
+	var nn := n.normalized()
+	return func(p: Vector3) -> float: return (p - at).dot(nn)
