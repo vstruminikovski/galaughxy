@@ -1,31 +1,46 @@
 class_name RoboParts
 extends RefCounted
 
-## The robo character, as voxel parts (ported from the Three.js RoboActor).
-const TRIM := Color("#f4f6f8")
+## Robo character, smooth stylised parts (metres). Each part has a pivot, a signed-distance
+## shape in local space, a bounding box, and a colour function. Glow parts are emissive.
+
 const DARK := Color("#1b1f2a")
-const METAL := Color("#2c3442")
+const TRIM := Color("#f4f6f8")
+const METAL := Color("#8c96a6")
+const LED := Color("#ffcc33")
+const BEACON := Color("#ff3d7f")
 
-static func build(color: Color) -> Dictionary:
-	var body := {}
-	VoxelBuild.box(body, -3, 2, 0, 5, -2, 1, color)
-	VoxelBuild.box(body, -2, 1, 1, 3, 2, 2, DARK)
-	VoxelBuild.box(body, -1, 0, 2, 2, 2, 2, Color("#ffcc33"), true)
-	VoxelBuild.box(body, -3, 2, 0, 0, -2, 1, METAL)
-	var head := {}
-	VoxelBuild.box(head, -5, 4, 0, 9, -4, 3, color)
-	VoxelBuild.box(head, -4, 3, 1, 8, 3, 3, DARK)
-	VoxelBuild.box(head, -6, -6, 3, 6, -1, 0, TRIM)
-	VoxelBuild.box(head, 5, 5, 3, 6, -1, 0, TRIM)
-	VoxelBuild.box(head, 0, 0, 10, 12, 0, 0, Color("#9aa4b2"))
-	VoxelBuild.box(head, 0, 0, 13, 13, 0, 0, Color("#ff3d7f"), true)
-	return {"body": body, "head": head}
-
-## Flatten parts into one voxel dictionary with the head lifted to sit on the body.
-static func assembled(color: Color) -> Dictionary:
-	var p := build(color)
-	var out := {}
-	for k in p["body"]: out[k] = p["body"][k]
-	for k in p["head"]:
-		out[k + Vector3i(0, 6, 0)] = p["head"][k]
-	return out
+static func parts(body_color: Color) -> Dictionary:
+	var body_sdf := Sdf.union([
+		Sdf.rbox(Vector3(0, 0.26, 0), Vector3(0.2, 0.2, 0.15), 0.07),
+		Sdf.rbox(Vector3(-0.1, 0.03, 0.0), Vector3(0.07, 0.04, 0.1), 0.03),
+		Sdf.rbox(Vector3(0.1, 0.03, 0.0), Vector3(0.07, 0.04, 0.1), 0.03),
+	])
+	var body := {
+		"sdf": body_sdf, "lo": Vector3(-0.3, -0.02, -0.25), "hi": Vector3(0.3, 0.5, 0.25),
+		"color": func(p: Vector3) -> Color: return DARK if p.y < 0.07 else body_color,
+		"pivot": Vector3.ZERO, "glow": false,
+	}
+	var led := {
+		"sdf": Sdf.sphere(Vector3(0, 0.26, 0.16), 0.03), "lo": Vector3(-0.05, 0.2, 0.1), "hi": Vector3(0.05, 0.32, 0.2),
+		"color": SmoothMesh.solid(LED), "pivot": Vector3.ZERO, "glow": true,
+	}
+	# head pivots at the neck so the head can bob and tilt
+	var neck := Vector3(0, 0.5, 0)
+	var head_sdf := Sdf.union([Sdf.rbox(neck + Vector3(0, 0.16, 0), Vector3(0.2, 0.16, 0.16), 0.07)])
+	var head := {
+		"sdf": head_sdf, "lo": Vector3(-0.3, 0.3, -0.25), "hi": Vector3(0.3, 0.9, 0.25),
+		"color": func(p: Vector3) -> Color:
+			var q := p - neck
+			return DARK if (q.z > 0.1 and absf(q.x) < 0.14 and absf(q.y - 0.16) < 0.1) else body_color,
+		"pivot": neck, "glow": false,
+	}
+	var antenna := {
+		"sdf": Sdf.capsule(neck + Vector3(0, 0.3, 0), neck + Vector3(0, 0.46, 0), 0.018), "lo": Vector3(-0.05, 0.5, -0.05), "hi": Vector3(0.05, 0.85, 0.05),
+		"color": SmoothMesh.solid(METAL), "pivot": neck, "glow": false,
+	}
+	var beacon := {
+		"sdf": Sdf.sphere(neck + Vector3(0, 0.5, 0), 0.03), "lo": Vector3(-0.05, 0.42, -0.05), "hi": Vector3(0.05, 0.6, 0.05),
+		"color": SmoothMesh.solid(BEACON), "pivot": neck, "glow": true,
+	}
+	return {"body": body, "led": led, "head": head, "antenna": antenna, "beacon": beacon}

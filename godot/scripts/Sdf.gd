@@ -63,3 +63,17 @@ static func voxelize(f: Callable, lo: Vector3i, hi: Vector3i, paint: Callable) -
 static func hash3(x: float, y: float, z: float) -> float:
 	var n := sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453
 	return n - floor(n)
+
+## Rounded box: a box of half-size `half` with corners rounded by `r`.
+static func rbox(c: Vector3, half: Vector3, r: float) -> Callable:
+	return func(p: Vector3) -> float:
+		var q := (p - c).abs() - half + Vector3(r, r, r)
+		var outside := Vector3(maxf(q.x, 0.0), maxf(q.y, 0.0), maxf(q.z, 0.0)).length()
+		return outside + minf(maxf(q.x, maxf(q.y, q.z)), 0.0) - r
+
+## Cylinder along Y (flat caps, rounded rim).
+static func cyl(c: Vector3, radius: float, half_h: float) -> Callable:
+	return func(p: Vector3) -> float:
+		var q := p - c
+		var d := Vector2(Vector2(q.x, q.z).length() - radius, absf(q.y) - half_h)
+		return minf(maxf(d.x, d.y), 0.0) + Vector2(maxf(d.x, 0.0), maxf(d.y, 0.0)).length()

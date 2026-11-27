@@ -1,29 +1,21 @@
 class_name PondWorld
 extends RefCounted
 
-## Pond Life: terrain from a height field, then rocks, trees, reeds, lily pads and mushrooms,
-## all as 0.1 m square voxels. Ported from scenes/pond-life/world.ts (same constants).
+## Pond Life, smooth stylised habitat (metres). The ground is a smooth height field; rocks,
+## trees, reeds, lily pads and flowers are rounded shapes. Layout matches the earlier version.
 
-const V := 0.1
-const WATER_TOP_CELL := -1
-const WATER := Color("#2f6f8a")
-const WATER_DEEP := Color("#22566b")
+const WATER_LEVEL := -0.06
 const GRASS := [Color("#3f5f22"), Color("#6b8834"), Color("#8f9145"), Color("#2f4a1c")]
 const DIRT := Color("#6a5236")
 const MUD := [Color("#4d3d27"), Color("#2e2618")]
 const ROCK := [Color("#80796c"), Color("#4d4942"), Color("#6d6a60")]
 const LICHEN := Color("#b3ad72")
-const BARK := [Color("#5b4431"), Color("#2d2118")]
+const BARK := Color("#5b4431")
 const LEAF := [Color("#3e6b23"), Color("#7a9a3a"), Color("#1d3312")]
-const PAD := [Color("#3c6e2a"), Color("#7aa344")]
+const PAD := Color("#3c6e2a")
 const PINK := Color("#f7c6d6")
 const REED := Color("#9b9a55")
 const CATTAIL := Color("#5a3a1e")
-const MUSH_CAP := Color("#b8452a")
-const MUSH_STEM := Color("#efe3c8")
-
-var voxels := {}
-var solid_top := {}
 
 static func _smooth(a: float, b: float, x: float) -> float:
 	var t := clampf((x - a) / (b - a), 0.0, 1.0)
@@ -52,7 +44,7 @@ static func _fbm(x: float, y: float, o := 4) -> float:
 		f *= 2.0
 	return v
 
-## Height in metres at world (x, z). Same layout as the Three.js version.
+## Height in metres at world (x, z). Same layout as the voxel version.
 static func height(x: float, z: float) -> float:
 	var y := -z
 	var h := _fbm(x * 0.22 + 3.1, y * 0.22) * 0.32 + _fbm(x * 0.9 + 4.0, y * 0.9 + 4.0) * 0.05
@@ -64,103 +56,155 @@ static func height(x: float, z: float) -> float:
 	h *= 1.0 - 0.75 * _smooth(1.4, 0.0, Vector2(x + 0.3, y + 1.2).length())
 	return h
 
-func build() -> void:
-	var surf := {}
-	for ix in range(-60, 61):
-		for iz in range(-50, 51):
-			var x := ix * V
-			var z := iz * V
-			var s := roundi(height(x, z) / V)
-			var under := s < WATER_TOP_CELL
-			surf[Vector3i(ix, 0, iz)] = s
-			var pick := int(Sdf.hash3(ix, 0, iz) * 4.0) % 4
-			var top: Color
-			if under:
-				top = MUD[pick % 2]
-			elif _smooth(0.25, 0.45, _fbm(x * 0.6 + 5.0, -z * 0.6) + 0.5) > 0.5:
-				top = DIRT
-			else:
-				top = GRASS[pick]
-			for y in range(-8, s):
-				voxels[Vector3i(ix, y, iz)] = {"c": DIRT if y >= s - 2 else MUD[1], "e": false}
-			voxels[Vector3i(ix, s, iz)] = {"c": top, "e": false}
-			solid_top[Vector3i(ix, 0, iz)] = s
-			if under:
-				for y in range(s + 1, WATER_TOP_CELL + 1):
-					voxels[Vector3i(ix, y, iz)] = {"c": WATER if y == WATER_TOP_CELL else WATER_DEEP, "e": false}
-	# lily pads on the water
-	for ix in range(-60, 61):
-		for iz in range(-50, 51):
-			var s: int = surf[Vector3i(ix, 0, iz)]
-			if s >= WATER_TOP_CELL or Sdf.hash3(ix, 9, iz) < 0.955:
-				continue
-			for dx in range(-2, 3):
-				for dz in range(-2, 3):
-					if dx * dx + dz * dz <= 4:
-						voxels[Vector3i(ix + dx, 0, iz + dz)] = {"c": PAD[0], "e": false}
-			if Sdf.hash3(iz, 4, ix) > 0.5:
-				voxels[Vector3i(ix, 1, iz)] = {"c": PINK, "e": false}
+## Metres to stand at above world (x, z). Smooth height, so the frog can sit on the bank.
+func ground(x: float, z: float) -> float:
+	return height(x, z)
+
+func build() -> Node3D:
+	var root := Node3D.new()
+	root.add_child(_terrain())
 	# rocks
 	for r in [[-2.6, 0.6, 0.45], [-2.0, 1.2, 0.25], [3.4, 0.9, 0.55], [3.9, 1.7, 0.3], [2.2, 3.0, 0.4], [-1.0, 3.1, 0.6], [4.6, -1.5, 0.35], [-4.4, -1.0, 0.5]]:
-		var cx := roundi(r[0] / V)
-		var cz := roundi(-r[1] / V)
-		var rad := maxi(2, roundi(r[2] / V))
-		var cy: int = surf.get(Vector3i(cx, 0, cz), 0) + roundi(rad * 0.3)
-		var f := Sdf.ellipsoid(Vector3(cx, cy, cz), Vector3(rad, rad * 0.7, rad))
-		var cells := Sdf.voxelize(f, Vector3i(cx - rad, cy - rad, cz - rad), Vector3i(cx + rad, cy + rad, cz + rad), func(c: Vector3i):
-			return {"c": LICHEN if Sdf.hash3(c.x, c.y, c.z) > 0.93 else ROCK[int(Sdf.hash3(c.x + c.y, c.z, 0) * 3) % 3], "e": false})
-		for c in cells:
-			voxels[c] = cells[c]
-	# log along the bank
-	for x in range(-36, -3):
-		var s: int = surf.get(Vector3i(x, 0, 2), 0)
-		for z in range(1, 4):
-			for y in range(1, 3):
-				voxels[Vector3i(x, s + y, z)] = {"c": BARK[1] if (y == 2 and z == 2) else BARK[0], "e": false}
-	# trees: trunk + leafy crown of spheres
+		var c := Vector3(r[0], height(r[0], -r[1]), -r[1])
+		var rad: float = r[2]
+		var f := Sdf.ellipsoid(c + Vector3(0, rad * 0.3, 0), Vector3(rad, rad * 0.7, rad))
+		root.add_child(Builders.sdf_piece(f, c - Vector3.ONE * (rad + 0.1), c + Vector3.ONE * (rad + 0.1), 0.025,
+			func(p: Vector3) -> Color: return LICHEN if Sdf.hash3(p.x * 9.0, p.y * 9.0, p.z * 9.0) > 0.85 else ROCK[int(Sdf.hash3(p.x, p.z, 0.0) * 3.0) % 3]))
+	# fallen log along the bank
+	var log_a := Vector3(-3.6, height(-3.6, 0.2) + 0.12, 0.2)
+	var log_b := Vector3(-0.4, height(-0.4, 0.2) + 0.12, 0.2)
+	root.add_child(Builders.sdf_piece(Sdf.capsule(log_a, log_b, 0.14), log_a - Vector3.ONE * 0.3, log_b + Vector3.ONE * 0.3, 0.03, SmoothMesh.solid(BARK)))
+	# trees
 	for t in [[-4.6, 3.6, 4.2], [-1.8, 4.4, 5.0], [1.2, 4.6, 4.4], [3.9, 4.0, 5.2], [5.4, 2.0, 3.6], [-5.4, 0.6, 3.4]]:
-		var cx := roundi(t[0] / V)
-		var cz := roundi(-t[1] / V)
-		var s: int = surf.get(Vector3i(cx, 0, cz), 0)
-		var trunk := roundi(t[2] * 6.0)
-		for y in range(s + 1, s + trunk + 1):
-			voxels[Vector3i(cx, y, cz)] = {"c": BARK[int(Sdf.hash3(cx, y, cz) * 2) % 2], "e": false}
-		var top := s + trunk
-		var blobs := []
-		for k in 9:
-			var a := Sdf.hash3(cx, k, cz) * TAU
-			var rr := 1.0 + Sdf.hash3(k, cz, cx) * 5.0
-			blobs.append(Sdf.sphere(Vector3(cx + cos(a) * rr, top + 2 + Sdf.hash3(cz, k, 3) * 4.0, cz + sin(a) * rr), 3.0 + Sdf.hash3(k, 7, cx) * 1.5))
-		var crown := Sdf.voxelize(Sdf.union(blobs), Vector3i(cx - 9, top - 1, cz - 9), Vector3i(cx + 9, top + 9, cz + 9), func(c: Vector3i):
-			return {"c": LEAF[int(Sdf.hash3(c.x + c.y, c.z, 0) * 3) % 3], "e": false})
-		for c in crown:
-			voxels[c] = crown[c]
-	# cattail reeds on the shore
-	for ix in range(-60, 61):
-		for iz in range(-50, 51):
-			var s: int = surf.get(Vector3i(ix, 0, iz), 0)
-			if s < WATER_TOP_CELL or s > 1 or Sdf.hash3(ix, 1, iz) < 0.72:
-				continue
-			var near_water := false
-			for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-				if int(surf.get(Vector3i(ix + d.x, 0, iz + d.y), 0)) < WATER_TOP_CELL:
-					near_water = true
-			if not near_water:
-				continue
-			var hgt := 4 + int(Sdf.hash3(iz, 2, ix) * 4.0)
-			for k in range(1, hgt + 1):
-				voxels[Vector3i(ix, s + k, iz)] = {"c": REED, "e": false}
-			voxels[Vector3i(ix, s + hgt + 1, iz)] = {"c": CATTAIL, "e": false}
-	# ground lookup: highest non-water voxel per column (grass and reeds count as ground)
-	for c in voxels:
-		var col: Color = voxels[c]["c"]
-		if col == WATER or col == WATER_DEEP:
-			continue
-		var k := Vector3i(c.x, 0, c.z)
-		if c.y > int(solid_top.get(k, -99)):
-			solid_top[k] = c.y
+		root.add_child(_tree(Vector3(t[0], 0, -t[1]), t[2] * 0.6))
+	# reeds and cattail heads on the shore; lily pads and pink flowers on the water
+	var reeds: Array[Transform3D] = []
+	var heads: Array[Transform3D] = []
+	var pads: Array[Transform3D] = []
+	var flowers: Array[Transform3D] = []
+	for ix in range(-60, 61, 2):
+		for iz in range(-50, 51, 2):
+			var x := ix * 0.1
+			var z := iz * 0.1
+			var h := height(x, z)
+			var hs := Sdf.hash3(ix, 1, iz)
+			if h > -0.05 and h < 0.12 and hs > 0.7 and _near_water(x, z):
+				var hgt := 0.5 + hs * 0.4
+				reeds.append(Transform3D(Basis().scaled(Vector3(1, hgt, 1)), Vector3(x, h, z) + Vector3(0, hgt * 0.5, 0)))
+				heads.append(Transform3D(Basis(), Vector3(x, h + hgt, z) + Vector3(0, 0.05, 0)))
+			elif h < -0.12 and hs > 0.94:
+				pads.append(Transform3D(Basis().scaled(Vector3(0.22, 0.012, 0.22)), Vector3(x, WATER_LEVEL + 0.01, z)))
+				if Sdf.hash3(iz, 4, ix) > 0.5:
+					flowers.append(Transform3D(Basis().scaled(Vector3(0.05, 0.05, 0.05)), Vector3(x, WATER_LEVEL + 0.05, z)))
+	root.add_child(Builders.scatter(_cyl_mesh(0.02, 1.0), reeds, REED))
+	root.add_child(Builders.scatter(_sphere_mesh(0.035), heads, CATTAIL))
+	root.add_child(Builders.scatter(_cyl_mesh(0.5, 1.0), pads, PAD))
+	root.add_child(Builders.scatter(_sphere_mesh(1.0), flowers, PINK))
+	# water surface (translucent) over the basin
+	var water := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(11.4, 9.4)
+	water.mesh = plane
+	water.position = Vector3(0, WATER_LEVEL, 0)
+	var wm := StandardMaterial3D.new()
+	wm.albedo_color = Color(0.18, 0.44, 0.52, 0.55)
+	wm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	wm.roughness = 0.05
+	wm.cull_mode = BaseMaterial3D.CULL_DISABLED
+	water.material_override = wm
+	root.add_child(water)
+	return root
 
-## Metres to stand at above world (x, z).
-func ground(x: float, z: float) -> float:
-	var k := Vector3i(roundi(x / V), 0, roundi(z / V))
-	return (float(solid_top[k]) + 1.0) * V if solid_top.has(k) else 0.0
+func _near_water(x: float, z: float) -> bool:
+	for d in [Vector2(0.3, 0), Vector2(-0.3, 0), Vector2(0, 0.3), Vector2(0, -0.3)]:
+		if height(x + d.x, z + d.y) < -0.08:
+			return true
+	return false
+
+func _terrain() -> MeshInstance3D:
+	var nx := 121
+	var nz := 101
+	var step := 0.1
+	var verts := PackedVector3Array()
+	var cols := PackedColorArray()
+	var norms := PackedVector3Array()
+	var grid := []
+	grid.resize(nx * nz)
+	for i in nx:
+		for j in nz:
+			var x := -6.0 + i * step
+			var z := -5.0 + j * step
+			grid[i * nz + j] = Vector3(x, height(x, z), z)
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	var out_v := PackedVector3Array()
+	var out_n := PackedVector3Array()
+	var out_c := PackedColorArray()
+	for i in nx - 1:
+		for j in nz - 1:
+			var a: Vector3 = grid[i * nz + j]
+			var b: Vector3 = grid[(i + 1) * nz + j]
+			var c: Vector3 = grid[(i + 1) * nz + j + 1]
+			var d: Vector3 = grid[i * nz + j + 1]
+			for tri in [[a, c, b], [a, d, c]]:
+				var n: Vector3 = (tri[1] - tri[0]).cross(tri[2] - tri[0]).normalized()
+				if n.y < 0.0:
+					n = -n
+				for v: Vector3 in tri:
+					out_v.append(v)
+					out_n.append(n)
+					out_c.append(_ground_color(v, n))
+	arrays[Mesh.ARRAY_VERTEX] = out_v
+	arrays[Mesh.ARRAY_NORMAL] = out_n
+	arrays[Mesh.ARRAY_COLOR] = out_c
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	var m := StandardMaterial3D.new()
+	m.vertex_color_use_as_albedo = true
+	m.roughness = 0.95
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mi.material_override = m
+	return mi
+
+func _ground_color(v: Vector3, n: Vector3) -> Color:
+	if v.y < -0.1:
+		return MUD[0].lerp(MUD[1], _smooth(-0.1, -0.5, v.y))
+	var g: Color = GRASS[int(absf(sin(v.x * 7.0 + v.z * 3.0)) * 4.0) % 4]
+	var dirt := _smooth(0.62, 0.8, _fbm(v.x * 0.6 + 5.0, -v.z * 0.6) + 0.5)
+	var c := g.lerp(DIRT, dirt)
+	var steep := _smooth(0.8, 0.95, n.y)
+	c = c.lerp(DIRT, 1.0 - steep)
+	return MUD[0].lerp(c, _smooth(-0.1, -0.02, v.y))
+
+func _tree(base: Vector3, height_m: float) -> Node3D:
+	var root := Node3D.new()
+	root.position = base
+	var top := Vector3(0, height_m, 0)
+	root.add_child(Builders.sdf_piece(Sdf.capsule(Vector3.ZERO, top, 0.12), Vector3(-0.3, -0.1, -0.3), top + Vector3(0.3, 0.3, 0.3), 0.025, SmoothMesh.solid(BARK)))
+	var blobs := []
+	for k in 9:
+		var a := Sdf.hash3(base.x, k, base.z) * TAU
+		var rr := 0.2 + Sdf.hash3(k, base.z, base.x) * 0.5
+		blobs.append(Sdf.sphere(top + Vector3(cos(a) * rr, 0.2 + Sdf.hash3(base.z, k, 3.0) * 0.4, sin(a) * rr), 0.32 + Sdf.hash3(k, 7.0, base.x) * 0.15))
+	var crown := Sdf.union(blobs)
+	root.add_child(Builders.sdf_piece(crown, top - Vector3.ONE * 0.9, top + Vector3(0.9, 1.0, 0.9), 0.05,
+		func(p: Vector3) -> Color: return LEAF[int(Sdf.hash3(p.x * 4.0, p.y * 4.0, p.z * 4.0) * 3.0) % 3]))
+	return root
+
+func _cyl_mesh(radius: float, h: float) -> Mesh:
+	var c := CylinderMesh.new()
+	c.top_radius = radius
+	c.bottom_radius = radius
+	c.height = h
+	c.radial_segments = 12
+	return c
+
+func _sphere_mesh(r: float) -> Mesh:
+	var s := SphereMesh.new()
+	s.radius = r
+	s.height = r * 2.0
+	s.radial_segments = 12
+	s.rings = 6
+	return s

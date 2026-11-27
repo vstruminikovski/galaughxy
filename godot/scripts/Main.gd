@@ -133,43 +133,29 @@ func load_scene(name: String) -> void:
 	look = Vector2.ZERO
 	match name:
 		"kitchen":
-			_add_voxels(KitchenWorld.room(), ROOM_SIZE, Vector3.ZERO)
-			for p in KitchenWorld.props():
-				_add_voxels(p["v"], ROOM_SIZE, p["pos"])
+			world.add_child(KitchenWorld.build())
 			_spawn_robo(Vector3(0, 0, 0.3))
 			_portal(Vector3(-2.95, 0, 0.9), -PI / 2, "pond")
 		"garden":
-			_add_voxels(GardenWorld.build(), ROOM_SIZE, Vector3.ZERO)
+			world.add_child(GardenWorld.build())
 			_spawn_robo(Vector3(0, 0, 0.3))
 			_portal(Vector3(0, 0, -4.8), 0.0, "pond")
 		"pond":
 			pond = PondWorld.new()
-			pond.build()
-			_add_voxels(_pond_voxels(), ROOM_SIZE, Vector3.ZERO)
+			world.add_child(pond.build())
 			_spawn_frog(Vector3(-0.3, 0, 1.2))
 			_portal(Vector3(-5.4, 0, 3.6), PI / 2, "kitchen")
 			_portal(Vector3(5.4, 0, -3.4), -PI / 2, "garden")
 	_update_hud()
 
-func _pond_voxels() -> Dictionary:
-	return pond.voxels
-
-func _add_voxels(voxels: Dictionary, size: float, at: Vector3) -> Node3D:
-	var root := Node3D.new()
-	root.position = at
-	world.add_child(root)
-	var mesh := VoxelMesh.build(voxels, size)
-	root.add_child(_piece(mesh, Color("#7a1f1f")))
-	return root
-
-func _piece(mesh: ArrayMesh, ink: Color) -> Node3D:
+func _piece(mesh: ArrayMesh, ink: Color, thick := 0.012) -> Node3D:
 	var n := Node3D.new()
 	var body := MeshInstance3D.new()
 	body.mesh = mesh
 	body.material_override = _lit()
 	n.add_child(body)
 	var rim := MeshInstance3D.new()
-	rim.mesh = Outline.hull(mesh, 0.012)
+	rim.mesh = Outline.hull(mesh, thick)
 	rim.material_override = _ink(ink)
 	n.add_child(rim)
 	return n
@@ -177,8 +163,30 @@ func _piece(mesh: ArrayMesh, ink: Color) -> Node3D:
 func _lit() -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.vertex_color_use_as_albedo = true
-	m.roughness = 0.85
+	m.roughness = 0.7
 	return m
+
+## One smooth part as a node on its pivot: surface, glow (emissive) or lit, plus rounded ink.
+func _smooth_part(part: Dictionary, thick: float) -> Node3D:
+	var pivot: Vector3 = part["pivot"]
+	var mesh := SmoothMesh.build(part["sdf"], part["lo"], part["hi"], part["step"], part["color"], pivot)
+	var n := Node3D.new()
+	n.position = pivot
+	if part.get("glow", false):
+		var g := MeshInstance3D.new()
+		g.mesh = mesh
+		var m := StandardMaterial3D.new()
+		m.vertex_color_use_as_albedo = true
+		m.emission_enabled = true
+		m.emission_energy_multiplier = 1.6
+		m.emission_texture = null
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		g.material_override = m
+		n.add_child(g)
+		return n
+	var piece := _piece(mesh, Color("#7a1f1f"), thick)
+	n.add_child(piece)
+	return n
 
 func _ink(c: Color) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
@@ -213,12 +221,20 @@ func _spawn_robo(at: Vector3) -> void:
 	actor_yaw = 0.0
 	actor = Node3D.new()
 	world.add_child(actor)
-	var parts := RoboParts.build(Color("#4aa3df"))
-	var body := _piece(VoxelMesh.build(parts["body"], ROBO_SIZE), Color("#7a1f1f"))
-	actor.add_child(body)
-	var head := _piece(VoxelMesh.build(parts["head"], ROBO_SIZE), Color("#7a1f1f"))
-	head.position = Vector3(0, 6 * ROBO_SIZE, 0)
-	actor.add_child(head)
+	var parts := RoboParts.parts(Color("#4aa3df"))
+	var head: Node3D = null
+	for key in parts:
+		var part: Dictionary = parts[key]
+		part["step"] = 0.02
+		var node := _smooth_part(part, 0.006)
+		if key == "head":
+			head = node
+			actor.add_child(node)
+		elif key in ["antenna", "beacon"]:
+			node.position = Vector3.ZERO # already shifted to the neck pivot
+			head.add_child(node)
+		else:
+			actor.add_child(node)
 	robo_parts = {"head": head}
 
 func _spawn_frog(at: Vector3) -> void:
@@ -226,21 +242,16 @@ func _spawn_frog(at: Vector3) -> void:
 	actor_pos = at
 	actor_yaw = 0.0
 	actor = Node3D.new()
+	actor.scale = Vector3.ONE * FrogModel.FROG_SCALE
 	world.add_child(actor)
 	var parts := FrogModel.parts()
 	frog_parts = {}
 	for key in parts:
 		var part: Dictionary = parts[key]
-		var piv: Vector3i = part["pivot"]
-		var pivot_node := Node3D.new()
-		pivot_node.position = Vector3(piv) * FROG_SIZE
-		actor.add_child(pivot_node)
-		var rel := {}
-		for c: Vector3i in part["v"]:
-			rel[c - piv] = part["v"][c]
-		var piece := _piece(VoxelMesh.build(rel, FROG_SIZE), Color("#7a1f1f"))
-		pivot_node.add_child(piece)
-		frog_parts[key] = pivot_node
+		part["step"] = 0.5
+		var node := _smooth_part(part, 0.4)
+		actor.add_child(node)
+		frog_parts[key] = node
 
 # ── cameras ───────────────────────────────────────────────────────────────────────
 func _update_camera(dt: float) -> void:
@@ -390,7 +401,7 @@ func _animate_actor(dt: float) -> void:
 		frog_parts["armR"].rotation.x = air * 0.7
 	else:
 		var head: Node3D = robo_parts["head"]
-		head.position.y = 6 * ROBO_SIZE + (absf(sin(t * 9.0)) * 0.03 if talking else 0.0)
+		head.position.y = 0.5 + (absf(sin(t * 9.0)) * 0.02 if talking else 0.0)
 		head.rotation.z = 0.12 if expr == "SMIRK" else 0.0
 
 # ── flood ─────────────────────────────────────────────────────────────────────────

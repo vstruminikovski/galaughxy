@@ -1,91 +1,48 @@
 class_name KitchenWorld
 extends RefCounted
 
-## The Overflowing Kitchen: checker floor, two walls with a window, plus the starter props.
-## Ported from scenes/overflowing-kitchen/room.ts and props/seeds.ts.
+## The Overflowing Kitchen, smooth stylised room (metres). Same layout as before.
 
-const WALL_TEAL := Color("#5fa8a0")
-const WALL_GREEN := Color("#9fd3c7")
-const WALL_YELLOW := Color("#f4c97a")
-const TRIM := Color("#29e6ff")
-const FLOOR_A := Color("#f1e6d0")
-const FLOOR_B := Color("#cdb894")
-const WOOD := Color("#b97a46")
+const TEAL := Color("#5fa8a0")
+const GREEN := Color("#9fd3c7")
+const YELLOW := Color("#f4c97a")
+const CREAM := Color("#f1e6d0")
+const TAN := Color("#cdb894")
 const WHITE := Color("#efe9dc")
+const WOOD := Color("#b97a46")
+const FRIDGE := Color("#dfe8ef")
+const TRIM := Color("#29e6ff")
 
-static func room() -> Dictionary:
-	var v := {}
-	for x in range(-30, 30):
-		for z in range(-25, 25):
-			var checker := (int(floor((x + 30) / 5.0)) + int(floor((z + 25) / 5.0))) % 2 == 0
-			v[Vector3i(x, -1, z)] = {"c": FLOOR_A if checker else FLOOR_B, "e": false}
-	# back wall (z = -26) with a window cut-out
-	for x in range(-31, 30):
-		for y in range(0, 30):
-			if x >= -4 and x <= 7 and y >= 15 and y <= 22:
-				continue
-			var frame := x >= -5 and x <= 8 and y >= 14 and y <= 23
-			var c := Color("#ffffff") if frame else _wall_colour(y, WALL_GREEN)
-			v[Vector3i(x, y, -26)] = {"c": c, "e": (y == 11 and not frame)}
-	# left wall (x = -31)
-	for z in range(-26, 25):
-		for y in range(0, 30):
-			v[Vector3i(-31, y, z)] = {"c": _wall_colour(y, WALL_YELLOW), "e": y == 11}
-	return v
+static func build() -> Node3D:
+	var root := Node3D.new()
+	# floor: soft checker tiles from vertex colour
+	var floor_col := func(p: Vector3) -> Color:
+		return CREAM if (int(floorf(p.x / 0.5)) + int(floorf(p.z / 0.5))) % 2 == 0 else TAN
+	root.add_child(Builders.sdf_piece(Sdf.rbox(Vector3(0, -0.05, 0), Vector3(3.1, 0.05, 2.6), 0.02),
+		Vector3(-3.3, -0.2, -2.8), Vector3(3.3, 0.1, 2.8), 0.04, floor_col))
+	# back wall with a window cut-out, and a left wall
+	var back := Sdf.minus(Sdf.rbox(Vector3(0, 1.5, -2.65), Vector3(3.15, 1.5, 0.08), 0.05), Sdf.rbox(Vector3(0.15, 1.85, -2.65), Vector3(0.6, 0.45, 0.3), 0.04))
+	root.add_child(Builders.sdf_piece(back, Vector3(-3.3, -0.1, -2.8), Vector3(3.3, 3.1, -2.5), 0.03,
+		func(p: Vector3) -> Color: return TEAL if p.y < 1.1 else GREEN))
+	root.add_child(Builders.sdf_piece(Sdf.rbox(Vector3(-3.1, 1.5, 0), Vector3(0.08, 1.5, 2.6), 0.05),
+		Vector3(-3.3, -0.1, -2.8), Vector3(-2.9, 3.1, 2.8), 0.03,
+		func(p: Vector3) -> Color: return TEAL if p.y < 1.1 else YELLOW))
+	# neon trim along the back wall
+	root.add_child(Builders.glow_piece(Sdf.rbox(Vector3(0, 1.1, -2.55), Vector3(3.15, 0.03, 0.02), 0.01), Vector3(-3.3, 1.0, -2.6), Vector3(3.3, 1.2, -2.5), 0.02, TRIM))
+	# counter with a white worktop, stove, fridge, plant, bucket, duck
+	root.add_child(_piece(Sdf.rbox(Vector3(0.2, 0.4, -2.1), Vector3(1.15, 0.4, 0.3), 0.04), Vector3(-1.0, 0, -2.5), Vector3(1.3, 0.9, -1.7), WOOD))
+	root.add_child(_piece(Sdf.rbox(Vector3(0.2, 0.84, -2.1), Vector3(1.2, 0.04, 0.33), 0.02), Vector3(-1.0, 0.7, -2.5), Vector3(1.3, 0.95, -1.7), WHITE))
+	root.add_child(_piece(Sdf.rbox(Vector3(-1.45, 0.45, -2.1), Vector3(0.35, 0.45, 0.3), 0.04), Vector3(-1.9, 0, -2.5), Vector3(-1.0, 1.0, -1.7), WHITE))
+	root.add_child(_piece(Sdf.rbox(Vector3(-1.45, 0.92, -2.1), Vector3(0.36, 0.03, 0.31), 0.02), Vector3(-1.9, 0.85, -2.5), Vector3(-1.0, 0.98, -1.7), Color("#26262b")))
+	root.add_child(_piece(Sdf.rbox(Vector3(-2.45, 0.95, -2.1), Vector3(0.35, 0.95, 0.3), 0.07), Vector3(-2.9, 0, -2.5), Vector3(-2.0, 2.0, -1.7), FRIDGE))
+	root.add_child(Builders.glow_piece(Sdf.sphere(Vector3(-2.3, 1.5, -1.78), 0.03), Vector3(-2.4, 1.4, -1.85), Vector3(-2.2, 1.6, -1.7), 0.01, Color("#ff5f87")))
+	root.add_child(_piece(Sdf.cyl(Vector3(2.6, 0.12, -2.1), 0.15, 0.12), Vector3(2.3, 0, -2.4), Vector3(2.9, 0.3, -1.8), Color("#c8643b")))
+	root.add_child(_piece(Sdf.union([Sdf.sphere(Vector3(2.6, 0.42, -2.1), 0.2), Sdf.sphere(Vector3(2.48, 0.56, -2.1), 0.14), Sdf.sphere(Vector3(2.72, 0.58, -2.1), 0.14)]),
+		Vector3(2.2, 0.2, -2.5), Vector3(3.0, 0.8, -1.7), Color("#5bbf5b")))
+	root.add_child(_piece(Sdf.cyl(Vector3(1.9, 0.3, -0.6), 0.2, 0.3), Vector3(1.6, 0, -0.9), Vector3(2.2, 0.7, -0.3), Color("#3d8bd4")))
+	root.add_child(_piece(Sdf.union([Sdf.ellipsoid(Vector3(-0.9, 0.14, 0.9), Vector3(0.22, 0.14, 0.2)), Sdf.sphere(Vector3(-0.7, 0.3, 0.9), 0.12)]),
+		Vector3(-1.2, 0, 0.6), Vector3(-0.5, 0.5, 1.2), Color("#ffd23f")))
+	return root
 
-static func _wall_colour(y: int, base: Color) -> Color:
-	if y == 0:
-		return Color("#5a3b24")
-	if y == 11:
-		return TRIM
-	return WALL_TEAL if y < 11 else base
-
-## Props as {name, voxels, pos (metres)}. Simple original shapes built from boxes.
-static func props() -> Array:
-	return [
-		{"name": "counter", "pos": Vector3(0.2, 0, -2.1), "v": _counter()},
-		{"name": "stove", "pos": Vector3(-1.4, 0, -2.1), "v": _stove()},
-		{"name": "fridge", "pos": Vector3(-2.4, 0, -2.1), "v": _fridge()},
-		{"name": "plant", "pos": Vector3(2.6, 0, -2.1), "v": _plant()},
-		{"name": "bucket", "pos": Vector3(1.9, 0, -0.6), "v": _bucket()},
-		{"name": "duck", "pos": Vector3(-0.9, 0, 0.9), "v": _duck()},
-	]
-
-static func _counter() -> Dictionary:
-	var v := {}
-	VoxelBuild.box(v, -12, 11, 0, 7, -3, 3, WOOD)
-	VoxelBuild.box(v, -12, 11, 8, 8, -4, 3, WHITE)
-	return v
-
-static func _stove() -> Dictionary:
-	var v := {}
-	VoxelBuild.box(v, -4, 3, 0, 8, -3, 3, Color("#f2f2ee"))
-	VoxelBuild.box(v, -4, 3, 9, 9, -3, 3, Color("#26262b"))
-	VoxelBuild.box(v, -3, 2, 2, 5, 4, 4, Color("#3a3f48"))
-	return v
-
-static func _fridge() -> Dictionary:
-	var v := {}
-	VoxelBuild.box(v, -4, 3, 0, 18, -3, 3, Color("#dfe8ef"))
-	VoxelBuild.box(v, -4, 3, 12, 12, 4, 4, Color("#aab6bf"))
-	VoxelBuild.box(v, -3, -2, 15, 16, 4, 4, Color("#ff5f87"), true)
-	return v
-
-static func _plant() -> Dictionary:
-	var v := {}
-	VoxelBuild.box(v, -1, 1, 0, 2, -1, 1, Color("#c8643b"))
-	VoxelBuild.box(v, 0, 0, 3, 6, 0, 0, Color("#3e8f3e"))
-	VoxelBuild.box(v, -2, 2, 5, 5, 0, 0, Color("#5bbf5b"))
-	return v
-
-static func _bucket() -> Dictionary:
-	var v := {}
-	VoxelBuild.box(v, -2, 2, 0, 3, -2, 2, Color("#3d8bd4"))
-	return v
-
-static func _duck() -> Dictionary:
-	var v := {}
-	VoxelBuild.box(v, -2, 1, 0, 1, -1, 1, Color("#ffd23f"))
-	VoxelBuild.box(v, 0, 1, 2, 3, -1, 0, Color("#ffd23f"))
-	v[Vector3i(1, 3, 1)] = {"c": Color("#20e3ff"), "e": true}
-	return v
+static func _piece(f: Callable, lo: Vector3, hi: Vector3, c: Color) -> Node3D:
+	return Builders.sdf_piece(f, lo, hi, 0.02, SmoothMesh.solid(c))

@@ -133,3 +133,10 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 ## 15. REGRESSION TEST (run before every build)
 - `cd godot && /Applications/Godot.app/Contents/MacOS/Godot --headless --path . -- --test` drives keys, HUD buttons, touch joystick, look-drag, fly, flood stages, map and portals, then prints `RESULT: ALL PASS` or the failures.
 - Pending art direction (new spec): characters, props and rooms move from voxel cubes to smooth stylized meshes. Decide per asset before converting, and keep the test green.
+
+## 16. SMOOTH STYLISED PIPELINE (current — replaces the voxel look)
+- Shapes are signed-distance functions (`godot/scripts/Sdf.gd`: rounded boxes, capsules, ellipsoids, cylinders, smooth blends). `SmoothMesh.gd` extracts smooth surfaces from them (surface nets) with normals from the field and per-vertex colour. Ink is the rounded rim from `Outline.gd`.
+- Characters: `RoboParts.gd` and `FrogModel.gd` define parts with a pivot, a bounding box and a colour function. Parts are model-space; the mesh is shifted to its pivot.
+- Scenes: `KitchenWorld.gd`, `GardenWorld.gd`, `PondWorld.gd` (smooth height field for the ground). Scatter uses MultiMesh (reeds, pads, flowers).
+- The voxel builders (`VoxelMesh.gd`, `VoxelBuild.gd`) are removed.
+- Frog ground follows the smooth height field. Water is a translucent plane at -0.06 m in the pond.
