@@ -41,6 +41,7 @@ var actor_pos := Vector3.ZERO
 var actor_yaw := 0.0
 var actor_moving := 0.0
 var actor_hop := 0.0
+var hop_lift := 0.0
 var jaw := 0.0
 var expr_i := 0
 var talk := false
@@ -64,6 +65,7 @@ var joy_vec := Vector2.ZERO
 var look_id := -1
 var last_look := Vector2.ZERO
 var test_runner: SelfTest
+var joy_pad: JoyPad
 
 func _ready() -> void:
 	_setup_environment()
@@ -302,8 +304,6 @@ func _capture_fly() -> void:
 # ── per frame ─────────────────────────────────────────────────────────────────────
 func _process(dt: float) -> void:
 	t += dt
-	if rig == "slider" and Input.is_key_pressed(KEY_NONE):
-		pass
 	# look drag (camera orbit or fly turn)
 	if rig == "free":
 		fly_yaw -= look.x * 0.004
@@ -348,7 +348,7 @@ func _update_actor(dt: float) -> void:
 		var water_h := flood * 0.5
 		var swim := water_h > ground + 0.12
 		actor.position.y = (water_h - 0.17) if swim else ground + actor_hop
-		actor_hop = maxf(0.0, sin(t * 9.0)) * 0.13 * actor_moving
+		actor_hop = maxf(0.0, sin(t * 9.0)) * 0.13 * actor_moving + hop_lift
 
 func _bounds() -> Rect2:
 	match scene_name:
@@ -470,6 +470,9 @@ func _input(event: InputEvent) -> void:
 				joy_id = event.index if event is InputEventScreenTouch else 0
 				joy_origin = pos
 				joy_vec = Vector2.ZERO
+				joy_pad.origin = pos
+				joy_pad.knob = pos
+				joy_pad.active = true
 			elif pos.x >= vp.x * 0.42 and look_id == -1 and not _over_button(pos):
 				look_id = event.index if event is InputEventScreenTouch else 0
 				last_look = pos
@@ -477,6 +480,7 @@ func _input(event: InputEvent) -> void:
 			if (event.index if event is InputEventScreenTouch else 0) == joy_id:
 				joy_id = -1
 				joy_vec = Vector2.ZERO
+				joy_pad.active = false
 			if (event.index if event is InputEventScreenTouch else 0) == look_id:
 				look_id = -1
 	elif event is InputEventScreenDrag or (event is InputEventMouseMotion and look_id != -1):
@@ -484,6 +488,7 @@ func _input(event: InputEvent) -> void:
 		if idx == joy_id:
 			var d: Vector2 = event.position - joy_origin
 			joy_vec = d.limit_length(70.0) / 70.0
+			joy_pad.knob = joy_pad.origin + d.limit_length(70.0)
 		elif idx == look_id:
 			var rel: Vector2 = event.position - last_look
 			look += rel
@@ -501,8 +506,8 @@ func _toggle_fly() -> void:
 func _hop() -> void:
 	if actor_kind == "frog":
 		var tw := create_tween()
-		tw.tween_property(self, "actor_hop", 0.55, 0.22).set_ease(Tween.EASE_OUT)
-		tw.tween_property(self, "actor_hop", 0.0, 0.26)
+		tw.tween_property(self, "hop_lift", 0.22, 0.22).set_ease(Tween.EASE_OUT)
+		tw.tween_property(self, "hop_lift", 0.0, 0.26)
 
 func _save_png() -> void:
 	var img := get_viewport().get_texture().get_image()
@@ -520,18 +525,25 @@ func _setup_hud() -> void:
 	hud_label.position = Vector2(12, 8)
 	hud_label.add_theme_font_size_override("font_size", 14)
 	layer.add_child(hud_label)
+	joy_pad = JoyPad.new()
+	joy_pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	joy_pad.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(joy_pad)
 	# top-left: map, fly, rig
 	var row := HBoxContainer.new()
 	row.position = Vector2(12, 34)
+	row.add_theme_constant_override("separation", 8)
 	layer.add_child(row)
 	for entry in [["🗺 Map", "m"], ["🛸 Fly", "n"], ["Static", "z"], ["Slider", "x"], ["Drone", "c"], ["PNG", "p"]]:
 		var b := Button.new()
 		b.text = entry[0]
+		b.custom_minimum_size = Vector2(88, 44)
 		b.pressed.connect(func(): _key_pressed(entry[1]))
 		row.add_child(b)
 		hud_buttons.append(b)
 	# bottom-right: action buttons
 	var acts := VBoxContainer.new()
+	acts.add_theme_constant_override("separation", 10)
 	acts.anchor_left = 1.0
 	acts.anchor_top = 1.0
 	acts.anchor_right = 1.0
@@ -543,6 +555,7 @@ func _setup_hud() -> void:
 	layer.add_child(acts)
 	var talk_b := Button.new()
 	talk_b.text = "TALK (hold)"
+	talk_b.custom_minimum_size = Vector2(180, 64)
 	talk_b.button_down.connect(func(): talk = true)
 	talk_b.button_up.connect(func(): talk = false)
 	acts.add_child(talk_b)
@@ -602,4 +615,19 @@ func _update_hud() -> void:
 	if not SCENES.has(scene_name):
 		return
 	var info: Dictionary = SCENES[scene_name]
-	hud_label.text = "%s · %s    [%s · %s]" % [info["title"], info["tag"], rig, EXPRS[expr_i]]
+	var chaos: String = ["calm", "drip", "surge", "FLOOD"][stage]
+	hud_label.text = "%s · %s    [%s · %s · chaos: %s]" % [info["title"], info["tag"], rig, EXPRS[expr_i], chaos]
+
+## Draws the floating joystick while a thumb is on the left half.
+class JoyPad:
+	extends Control
+	var origin := Vector2.ZERO
+	var knob := Vector2.ZERO
+	var active := false
+
+	func _draw() -> void:
+		if not active:
+			return
+		draw_circle(origin, 70.0, Color(1, 1, 1, 0.12))
+		draw_arc(origin, 70.0, 0, TAU, 48, Color(1, 1, 1, 0.45), 2.0)
+		draw_circle(knob, 26.0, Color(0.22, 0.9, 1.0, 0.7))
