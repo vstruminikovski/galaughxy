@@ -63,6 +63,7 @@ var joy_origin := Vector2.ZERO
 var joy_vec := Vector2.ZERO
 var look_id := -1
 var last_look := Vector2.ZERO
+var test_runner: SelfTest
 
 func _ready() -> void:
 	_setup_environment()
@@ -79,6 +80,9 @@ func _ready() -> void:
 		_set_rig(args[args.find("--rig") + 1])
 	if args.has("--shot"):
 		_shot_and_quit(args[args.find("--shot") + 1])
+	if args.has("--test"):
+		test_runner = SelfTest.new(self)
+		test_runner.run()
 
 func _shot_and_quit(path: String) -> void:
 	for i in 60:

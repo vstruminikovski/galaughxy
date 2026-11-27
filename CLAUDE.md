@@ -129,3 +129,7 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 - Install a new build over the old one: no uninstall, and app data is kept. Android allows this only if the package name (`com.galaughxy.studio`) and signing key match, and the new `version/code` is higher than the installed one.
 - Bump `version/code` in `godot/export_presets.cfg` every release (current: 3, version 0.3.0).
 - Keep the signing key: `~/Library/Application Support/Godot/keystores/debug.keystore`. Never delete or regenerate it, or updates will fail and the phone will need a fresh install.
+
+## 15. REGRESSION TEST (run before every build)
+- `cd godot && /Applications/Godot.app/Contents/MacOS/Godot --headless --path . -- --test` drives keys, HUD buttons, touch joystick, look-drag, fly, flood stages, map and portals, then prints `RESULT: ALL PASS` or the failures.
+- Pending art direction (new spec): characters, props and rooms move from voxel cubes to smooth stylized meshes. Decide per asset before converting, and keep the test green.
