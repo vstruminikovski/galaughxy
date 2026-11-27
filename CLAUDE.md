@@ -113,3 +113,5 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 - **Ink is vector geometry.** `src/engine/vectorInk.ts` builds each object's outer edges (each edge keeps the two faces it touches). `src/engine/VoxelInk.tsx` draws them as fat-line geometry. The GPU keeps an edge only if one face points toward the camera and the other away (silhouette), and wobbles it 12 times a second. Width scales with output height.
 - Block outlines (every edge) are on while painting or with Show block edges on.
 - Known cost: dense voxel areas create many edges. Keep detail coarse (e.g. no 1-cell grass tufts) to stay fast on phones.
+
+- Ink: darker muted brown (`#5c5043`), pressure-tapered strokes (width varies per point, shared where strokes meet), stroke width as a share of frame height. The 16:9 thirds grid is removed; shadows are off to avoid shaded-square artifacts.

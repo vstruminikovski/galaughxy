@@ -14,7 +14,15 @@ export interface InkEdges {
   pos: Float32Array; // 6 floats per segment: start xyz, end xyz (object space, metres)
   na: Float32Array; // normal of the first face at the edge
   nb: Float32Array; // normal of the second face (equal to na if the edge has one face)
+  ws: Float32Array; // pressure at the start point (shared by every stroke meeting there)
+  we: Float32Array; // pressure at the end point
 }
+
+/** Stable pressure in [0.45, 1] per point, so strokes that meet at a point share its width. */
+const pressure = (x: number, y: number, z: number) => {
+  const n = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453;
+  return 0.45 + 0.55 * (n - Math.floor(n));
+};
 
 export function buildInkEdges(voxels: Voxel[], size: number): InkEdges {
   const solid = new Set<string>();
@@ -25,6 +33,8 @@ export function buildInkEdges(voxels: Voxel[], size: number): InkEdges {
   const pos: number[] = [];
   const na: number[] = [];
   const nb: number[] = [];
+  const ws: number[] = [];
+  const we: number[] = [];
 
   for (const v of voxels)
     for (let A = 0; A < 3; A++) {
@@ -80,10 +90,18 @@ export function buildInkEdges(voxels: Voxel[], size: number): InkEdges {
           const n1 = normals[1] ?? normals[0];
           na.push(...n0);
           nb.push(...n1);
+          ws.push(pressure(s[0], s[1], s[2]));
+          we.push(pressure(e[0], e[1], e[2]));
         }
     }
 
-  return { pos: Float32Array.from(pos), na: Float32Array.from(na), nb: Float32Array.from(nb) };
+  return {
+    pos: Float32Array.from(pos),
+    na: Float32Array.from(na),
+    nb: Float32Array.from(nb),
+    ws: Float32Array.from(ws),
+    we: Float32Array.from(we),
+  };
 }
 
 /** Line material with the silhouette test and the 12fps boil added to its vertex shader. */
@@ -104,6 +122,8 @@ export function createInkMaterial(color: string) {
         `#include <common>
         attribute vec3 instanceNA;
         attribute vec3 instanceNB;
+        attribute float instanceWS;
+        attribute float instanceWE;
         uniform vec3 uViewObj;
         uniform float uBlocks;
         uniform float uStep;
@@ -127,6 +147,7 @@ export function createInkMaterial(color: string) {
         vec4 start = modelViewMatrix * vec4( bS, 1.0 );`,
       )
       .replace('vec4 end = modelViewMatrix * vec4( instanceEnd, 1.0 );', 'vec4 end = modelViewMatrix * vec4( bE, 1.0 );')
+      .replace(/offset \*= linewidth;/g, 'offset *= linewidth * ((position.y < 0.5) ? instanceWS : instanceWE);')
       .replace('gl_Position = clip;', 'gl_Position = hideEdge ? vec4(0.0, 0.0, 2.0, 1.0) : clip;');
   };
   return mat;
@@ -137,5 +158,7 @@ export function inkGeometry(edges: InkEdges) {
   g.setPositions(edges.pos);
   g.setAttribute('instanceNA', new InstancedBufferAttribute(edges.na, 3));
   g.setAttribute('instanceNB', new InstancedBufferAttribute(edges.nb, 3));
+  g.setAttribute('instanceWS', new InstancedBufferAttribute(edges.ws, 1));
+  g.setAttribute('instanceWE', new InstancedBufferAttribute(edges.we, 1));
   return g;
 }
