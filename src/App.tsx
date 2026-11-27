@@ -43,7 +43,7 @@ export default function App() {
 
   // Render at the export target resolution (1920 wide for 16:9, 1080 for 9:16).
   const targetW = aspect === '9:16' ? 1080 : 1920;
-  const dpr = box.w ? Math.min(3, Math.max(1, targetW / box.w)) : 1;
+  const dpr = box.w ? Math.min(3, Math.max(2, targetW / box.w)) : 2;
 
   useEffect(() => loadEpisode(EPISODES[0].slug), []);
 

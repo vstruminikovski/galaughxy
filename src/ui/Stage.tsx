@@ -127,7 +127,7 @@ export function Stage({ episode, dpr }: { episode: Episode; dpr: number }) {
   return (
     <Canvas
       dpr={dpr}
-      gl={{ preserveDrawingBuffer: true, antialias: false, powerPreference: 'high-performance' }}
+      gl={{ preserveDrawingBuffer: true, antialias: true, powerPreference: 'high-performance' }}
       camera={{ fov: c.fov, position: c.pos, near: 0.05, far: 200 }}
       frameloop={rendering ? 'never' : 'always'}
       onCreated={(state) => {
