@@ -18,7 +18,7 @@ static func ink_material(c: Color) -> StandardMaterial3D:
 	return m
 
 ## A smooth SDF surface with its rounded ink rim. Returns a Node3D positioned at origin.
-static func sdf_piece(f: Callable, lo: Vector3, hi: Vector3, step: float, color: Callable, ink := true, thick := 0.006) -> Node3D:
+static func sdf_piece(f: Callable, lo: Vector3, hi: Vector3, step: float, color: Callable, ink := true, thick := 0.009) -> Node3D:
 	var mesh := SmoothMesh.build(f, lo - Vector3.ONE * 0.1, hi + Vector3.ONE * 0.1, step, color)
 	var n := Node3D.new()
 	var body := MeshInstance3D.new()

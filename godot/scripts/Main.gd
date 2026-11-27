@@ -149,7 +149,7 @@ func load_scene(name: String) -> void:
 			_portal(Vector3(5.4, 0, -3.4), -PI / 2, "garden")
 	_update_hud()
 
-func _piece(mesh: ArrayMesh, ink: Color, thick := 0.006, occ: Dictionary = {}) -> Node3D:
+func _piece(mesh: ArrayMesh, ink: Color, thick := 0.009, occ: Dictionary = {}) -> Node3D:
 	var n := Node3D.new()
 	var body := MeshInstance3D.new()
 	body.mesh = mesh
@@ -224,7 +224,7 @@ func _spawn_robo(at: Vector3) -> void:
 	for key in parts:
 		var part: Dictionary = parts[key]
 		part["step"] = 0.02
-		var node := _smooth_part(part, 0.003)
+		var node := _smooth_part(part, 0.0045)
 		if key == "head":
 			head = node
 			actor.add_child(node)
