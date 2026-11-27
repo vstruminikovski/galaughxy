@@ -26,10 +26,7 @@ static func sdf_piece(f: Callable, lo: Vector3, hi: Vector3, step: float, color:
 	body.material_override = lit_material()
 	n.add_child(body)
 	if ink and mesh.get_surface_count() > 0:
-		var rim := MeshInstance3D.new()
-		rim.mesh = Outline.hull(mesh, thick)
-		rim.material_override = ink_material(Color("#7a1f1f"))
-		n.add_child(rim)
+		n.add_child(Ink.rim(mesh, thick))
 	return n
 
 ## A glowing SDF surface (emissive, no ink).

@@ -154,10 +154,7 @@ func _piece(mesh: ArrayMesh, ink: Color, thick := 0.012) -> Node3D:
 	body.mesh = mesh
 	body.material_override = _lit()
 	n.add_child(body)
-	var rim := MeshInstance3D.new()
-	rim.mesh = Outline.hull(mesh, thick)
-	rim.material_override = _ink(ink)
-	n.add_child(rim)
+	n.add_child(Ink.rim(mesh, thick))
 	return n
 
 func _lit() -> StandardMaterial3D:

@@ -140,3 +140,5 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 - Scenes: `KitchenWorld.gd`, `GardenWorld.gd`, `PondWorld.gd` (smooth height field for the ground). Scatter uses MultiMesh (reeds, pads, flowers).
 - The voxel builders (`VoxelMesh.gd`, `VoxelBuild.gd`) are removed.
 - Frog ground follows the smooth height field. Water is a translucent plane at -0.06 m in the pond.
+
+- **Boiling ink (all objects):** every outline goes through `godot/scripts/Ink.gd` and `godot/shaders/ink_boil.gdshader`. The line is redrawn 12 times a second with a per-point pressure, like Blender grease pencil. Any new object built with `Builders.sdf_piece` or `Main._piece` gets it automatically.
