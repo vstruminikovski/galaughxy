@@ -37,6 +37,11 @@ interface StudioState extends Doc {
   // timing
   /** Cinematic post stack (DOF, bloom, grain). */
   cinematic: boolean;
+  /** Grease-pencil hand-drawn look. */
+  drawn: boolean;
+  drawnInk: number;
+  drawnHatch: number;
+  drawnBoil: number;
   onTwos: boolean;
   /** Turn spring stiffness (higher = snappier). */
   snappiness: number;
@@ -97,6 +102,10 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   episodeSlug: '',
 
   cinematic: true,
+  drawn: true,
+  drawnInk: 1,
+  drawnHatch: 0.45,
+  drawnBoil: 1,
   onTwos: true,
   snappiness: 140,
   overshoot: 0.45,

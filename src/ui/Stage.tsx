@@ -121,6 +121,7 @@ export function Stage({ episode, dpr }: { episode: Episode; dpr: number }) {
   const brush = useStudioStore((s) => s.brush);
   const selectedId = useStudioStore((s) => s.selectedId);
   const cinematic = useStudioStore((s) => s.cinematic);
+  const drawn = useStudioStore((s) => s.drawn);
   const studio = mode === 'studio';
   const nature = episode.look === 'nature';
   const base = useMemo(() => episode.buildBaseVoxels?.(), [episode]);
@@ -211,7 +212,7 @@ export function Stage({ episode, dpr }: { episode: Episode; dpr: number }) {
       {!nature && <ScenePortal to="pond-life" position={[-2.95, 0, 0.9]} rotationY={Math.PI / 2} />}
       <CameraRigs config={episode.cameras} />
       {studio && <SelectionGizmo />}
-      {cinematic && <CinematicFX nature={nature} />}
+      {(cinematic || drawn) && <CinematicFX nature={nature} cinematic={cinematic} drawn={drawn} />}
     </Canvas>
   );
 }

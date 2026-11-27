@@ -40,6 +40,9 @@ export function TopClaws() {
         >
           🎞 {EPISODES.find((e) => e.slug === s.episodeSlug)?.title ?? 'Episode'}
         </button>
+        <button className={`claw ${s.drawn ? 'on' : ''}`} onClick={() => s.set({ drawn: !s.drawn })} title="L">
+          ✏️ Drawn
+        </button>
         <button className="claw" onClick={() => s.set({ uiHidden: true })} title="H">
           Clean HUD
         </button>

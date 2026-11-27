@@ -329,6 +329,13 @@ function TimingDrawer() {
       <input type="range" min={0} max={1} step={0.05} value={s.overshoot} onChange={(e) => s.set({ overshoot: +e.target.value })} />
       <h4>Look</h4>
       <label className="check"><input type="checkbox" checked={s.cinematic} onChange={(e) => s.set({ cinematic: e.target.checked })} /> Cinematic lens FX (depth of field, bloom, grain)</label>
+      <label className="check"><input type="checkbox" checked={s.drawn} onChange={(e) => s.set({ drawn: e.target.checked })} /> ✏️ Grease-pencil drawn look</label>
+      <span className="hint">Ink</span>
+      <input type="range" min={0} max={1.5} step={0.05} value={s.drawnInk} onChange={(e) => s.set({ drawnInk: +e.target.value })} />
+      <span className="hint">Hatching</span>
+      <input type="range" min={0} max={1.2} step={0.05} value={s.drawnHatch} onChange={(e) => s.set({ drawnHatch: +e.target.value })} />
+      <span className="hint">Line boil (wobble per drawn frame)</span>
+      <input type="range" min={0} max={3} step={0.1} value={s.drawnBoil} onChange={(e) => s.set({ drawnBoil: +e.target.value })} />
       <h4>Mode</h4>
       <Seg value={s.mode} onChange={(m) => s.set({ mode: m, selectedId: null, brush: 'off' })} options={[{ id: 'game', label: 'Game' }, { id: 'studio', label: 'Studio / Puppet' }]} />
     </>

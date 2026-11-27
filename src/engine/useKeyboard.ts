@@ -60,6 +60,9 @@ export function useKeyboard() {
         case 'h':
           st.set({ uiHidden: !st.uiHidden });
           break;
+        case 'l':
+          st.set({ drawn: !st.drawn });
+          break;
         case 'o':
           st.set({ onTwos: !st.onTwos });
           break;
