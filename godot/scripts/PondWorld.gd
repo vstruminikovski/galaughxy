@@ -5,17 +5,17 @@ extends RefCounted
 ## trees, reeds, lily pads and flowers are rounded shapes. Layout matches the earlier version.
 
 const WATER_LEVEL := -0.06
-const GRASS := [Color("#3f5f22"), Color("#6b8834"), Color("#8f9145"), Color("#2f4a1c")]
-const DIRT := Color("#6a5236")
-const MUD := [Color("#4d3d27"), Color("#2e2618")]
-const ROCK := [Color("#80796c"), Color("#4d4942"), Color("#6d6a60")]
-const LICHEN := Color("#b3ad72")
-const BARK := Color("#5b4431")
-const LEAF := [Color("#3e6b23"), Color("#7a9a3a"), Color("#1d3312")]
-const PAD := Color("#3c6e2a")
-const PINK := Color("#f7c6d6")
-const REED := Color("#9b9a55")
-const CATTAIL := Color("#5a3a1e")
+const GRASS := [Color("#27C93F"), Color("#27C93F"), Color("#27C93F"), Color("#27C93F")]
+const DIRT := Color("#AD811F")
+const MUD := [Color("#32629A"), Color("#32629A")]
+const ROCK := [Color("#E5E7EB"), Color("#9C9DA0"), Color("#E5E7EB")]
+const LICHEN := Color("#E5E7EB")
+const BARK := Color("#AD811F")
+const LEAF := [Color("#27C93F"), Color("#82E090"), Color("#1B892B")]
+const PAD := Color("#1B892B")
+const PINK := Color("#FFA29D")
+const REED := Color("#FFD986")
+const CATTAIL := Color("#AD811F")
 
 static func _smooth(a: float, b: float, x: float) -> float:
 	var t := clampf((x - a) / (b - a), 0.0, 1.0)
@@ -69,7 +69,7 @@ func build() -> Node3D:
 		var rad: float = r[2]
 		var f := Sdf.ellipsoid(c + Vector3(0, rad * 0.3, 0), Vector3(rad, rad * 0.7, rad))
 		root.add_child(Builders.sdf_piece(f, c - Vector3.ONE * (rad + 0.1), c + Vector3.ONE * (rad + 0.1), 0.025,
-			func(p: Vector3) -> Color: return LICHEN if Sdf.hash3(p.x * 9.0, p.y * 9.0, p.z * 9.0) > 0.85 else ROCK[int(Sdf.hash3(p.x, p.z, 0.0) * 3.0) % 3]))
+			func(p: Vector3) -> Color: return ROCK[0]))
 	# fallen log along the bank
 	var log_a := Vector3(-3.6, height(-3.6, 0.2) + 0.12, 0.2)
 	var log_b := Vector3(-0.4, height(-0.4, 0.2) + 0.12, 0.2)
@@ -153,7 +153,7 @@ func _terrain() -> MeshInstance3D:
 				for v: Vector3 in tri:
 					out_v.append(v)
 					out_n.append(n)
-					out_c.append(_ground_color(v, n))
+					out_c.append(Style.snap(_ground_color(v, n)))
 	arrays[Mesh.ARRAY_VERTEX] = out_v
 	arrays[Mesh.ARRAY_NORMAL] = out_n
 	arrays[Mesh.ARRAY_COLOR] = out_c
@@ -161,22 +161,18 @@ func _terrain() -> MeshInstance3D:
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
-	var m := StandardMaterial3D.new()
-	m.vertex_color_use_as_albedo = true
-	m.roughness = 0.95
+	var m := Style.toon(Color.WHITE, true)
 	m.cull_mode = BaseMaterial3D.CULL_DISABLED
 	mi.material_override = m
 	return mi
 
 func _ground_color(v: Vector3, n: Vector3) -> Color:
-	if v.y < -0.1:
-		return MUD[0].lerp(MUD[1], _smooth(-0.1, -0.5, v.y))
-	var g: Color = GRASS[int(absf(sin(v.x * 7.0 + v.z * 3.0)) * 4.0) % 4]
-	var dirt := _smooth(0.62, 0.8, _fbm(v.x * 0.6 + 5.0, -v.z * 0.6) + 0.5)
-	var c := g.lerp(DIRT, dirt)
-	var steep := _smooth(0.8, 0.95, n.y)
-	c = c.lerp(DIRT, 1.0 - steep)
-	return MUD[0].lerp(c, _smooth(-0.1, -0.02, v.y))
+	# flat swatches: lake bed under the water, a dirt bank on steep slopes, grass elsewhere
+	if v.y < -0.05:
+		return MUD[0]
+	if n.y < 0.86:
+		return DIRT
+	return GRASS[0]
 
 func _tree(base: Vector3, height_m: float) -> Node3D:
 	var root := Node3D.new()
@@ -190,7 +186,7 @@ func _tree(base: Vector3, height_m: float) -> Node3D:
 		blobs.append(Sdf.sphere(top + Vector3(cos(a) * rr, 0.2 + Sdf.hash3(base.z, k, 3.0) * 0.4, sin(a) * rr), 0.32 + Sdf.hash3(k, 7.0, base.x) * 0.15))
 	var crown := Sdf.union(blobs)
 	root.add_child(Builders.sdf_piece(crown, top - Vector3.ONE * 0.9, top + Vector3(0.9, 1.0, 0.9), 0.05,
-		func(p: Vector3) -> Color: return LEAF[int(Sdf.hash3(p.x * 4.0, p.y * 4.0, p.z * 4.0) * 3.0) % 3]))
+		func(p: Vector3) -> Color: return LEAF[0] if p.y > top.y + 0.35 else LEAF[2]))
 	return root
 
 func _cyl_mesh(radius: float, h: float) -> Mesh:

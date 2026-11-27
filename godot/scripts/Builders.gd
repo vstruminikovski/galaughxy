@@ -5,10 +5,7 @@ extends RefCounted
 ## MultiMesh scatter for small repeated pieces such as reeds, pads and flowers).
 
 static func lit_material() -> StandardMaterial3D:
-	var m := StandardMaterial3D.new()
-	m.vertex_color_use_as_albedo = true
-	m.roughness = 0.7
-	return m
+	return Style.toon(Color.WHITE, true)
 
 static func ink_material(c: Color) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
@@ -34,13 +31,7 @@ static func glow_piece(f: Callable, lo: Vector3, hi: Vector3, step: float, color
 	var mesh := SmoothMesh.build(f, lo - Vector3.ONE * 0.1, hi + Vector3.ONE * 0.1, step, SmoothMesh.solid(color))
 	var n := MeshInstance3D.new()
 	n.mesh = mesh
-	var m := StandardMaterial3D.new()
-	m.vertex_color_use_as_albedo = true
-	m.emission_enabled = true
-	m.emission = color
-	m.emission_energy_multiplier = 1.4
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	n.material_override = m
+	n.material_override = Style.glow(color)
 	return n
 
 ## Scatter one mesh many times (reeds, pads, flowers). transforms: Array[Transform3D].
@@ -53,10 +44,7 @@ static func scatter(mesh: Mesh, transforms: Array, color: Color) -> MultiMeshIns
 		mm.set_instance_transform(i, transforms[i])
 	var inst := MultiMeshInstance3D.new()
 	inst.multimesh = mm
-	var m := StandardMaterial3D.new()
-	m.albedo_color = color
-	m.roughness = 0.6
-	inst.material_override = m
+	inst.material_override = Style.toon(color)
 	return inst
 
 static func box_bounds(c: Vector3, half: Vector3, pad := 0.05) -> Array:
@@ -71,12 +59,6 @@ static func glow_torus(c: Vector3, major: float, minor: float, color: Color) -> 
 	t.ring_segments = 16
 	var m := MeshInstance3D.new()
 	m.mesh = t
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = color
-	mat.emission_enabled = true
-	mat.emission = color
-	mat.emission_energy_multiplier = 1.6
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	m.material_override = mat
+	m.material_override = Style.glow(color)
 	m.position = c
 	return m

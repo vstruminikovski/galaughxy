@@ -3,15 +3,15 @@ extends RefCounted
 
 ## The Overflowing Kitchen, smooth stylised room (metres). Same layout as before.
 
-const TEAL := Color("#5fa8a0")
-const GREEN := Color("#9fd3c7")
-const YELLOW := Color("#f4c97a")
-const CREAM := Color("#f1e6d0")
-const TAN := Color("#cdb894")
-const WHITE := Color("#efe9dc")
-const WOOD := Color("#b97a46")
-const FRIDGE := Color("#dfe8ef")
-const TRIM := Color("#29e6ff")
+const TEAL := Color("#4A90E2")
+const GREEN := Color("#F5F2EB")
+const YELLOW := Color("#FFD986")
+const CREAM := Color("#F5F2EB")
+const TAN := Color("#96BFEE")
+const WHITE := Color("#E5E7EB")
+const WOOD := Color("#FF5F56")
+const FRIDGE := Color("#E5E7EB")
+const TRIM := Color("#4A90E2")
 
 static func build() -> Node3D:
 	var root := Node3D.new()

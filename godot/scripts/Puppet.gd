@@ -45,6 +45,7 @@ static func create(data: Dictionary) -> Puppet:
 	p.model = scene.instantiate() as Node3D
 	p.model.scale = Vector3.ONE * float(data.get("scale", 1.0))
 	p.add_child(p.model)
+	Style.restyle(p.model)
 	p._index(p.model)
 	p._ink(p.model)
 	return p

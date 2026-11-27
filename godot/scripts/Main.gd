@@ -136,6 +136,7 @@ var hud_buttons: Array[Control] = []
 var expansions_on := {}
 var _subtitle_until := 0.0
 var _talk_held := false
+var _shot_mode := false   # screenshot / movie runs ignore the keyboard and never take focus
 
 func _ready() -> void:
 	Controls.setup()
@@ -159,6 +160,9 @@ func _ready() -> void:
 	director.changed.connect(_on_director_changed)
 	_setup_hud()
 	var args := OS.get_cmdline_user_args()
+	if args.has("--shot"):
+		_shot_mode = true
+		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_NO_FOCUS, true)
 	var start := "backyard_garden"
 	if args.has("--scene"):
 		start = args[args.find("--scene") + 1]
@@ -201,7 +205,9 @@ func _shot_and_quit(path: String, wait: float) -> void:
 	await get_tree().process_frame
 	get_viewport().get_texture().get_image().save_png(path)
 	print("[shot] ", path)
-	print("[ink] builds %d, avg %.2f ms" % [InkStroke.builds, InkStroke.build_ms / maxi(1, InkStroke.builds)])
+	print("[ink] outline meshes %d, setup avg %.2f ms" % [InkStroke.builds, InkStroke.build_ms / maxi(1, InkStroke.builds)])
+	print("[perf] fps %d, draw calls %d, primitives %d" % [Engine.get_frames_per_second(),
+		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)])
 	get_tree().quit()
 
 # ── registries ────────────────────────────────────────────────────────────────────
@@ -280,7 +286,7 @@ func _setup_environment() -> void:
 	add_child(we)
 
 func _apply_lighting(info: Dictionary) -> void:
-	var s: Dictionary = info.get("sun", {"rot": [-55, 35, 0], "color": "#ffffff", "energy": 0.9})
+	var s: Dictionary = info.get("sun", {"rot": [-50, 35, 0], "color": "#ffffff", "energy": 0.4})
 	sun.rotation_degrees = v3(s["rot"])
 	sun.light_color = Color(String(s["color"]))
 	sun.light_energy = float(s["energy"])
@@ -370,10 +376,7 @@ func _piece(mesh: ArrayMesh, _ink_col: Color, thick := 0.009, occ: Dictionary = 
 	return n
 
 func _lit() -> StandardMaterial3D:
-	var m := StandardMaterial3D.new()
-	m.vertex_color_use_as_albedo = true
-	m.roughness = 0.7
-	return m
+	return Style.toon(Color.WHITE, true)
 
 ## One smooth part as a node on its pivot: surface, glow (emissive) or lit, plus ink strokes.
 func _smooth_part(part: Dictionary, thick: float, occ: Dictionary = {}) -> Node3D:
@@ -421,7 +424,7 @@ func _spawn_robo(at: Vector3) -> void:
 	host.name = "Robo"
 	host.position = at
 	world.add_child(host)
-	var parts := RoboParts.parts(Color("#4aa3df"))
+	var parts := RoboParts.parts(Style.swatch("bondi_blue"))
 	var head: Node3D = null
 	for key in parts:
 		var part: Dictionary = parts[key]
@@ -650,6 +653,8 @@ func _trigger(action: String) -> void:
 
 ## Polls the InputMap once per frame.
 func _handle_input() -> void:
+	if _shot_mode:
+		return
 	var focus := get_viewport().gui_get_focus_owner()
 	var typing := focus is LineEdit
 	var flying := rig == "free"
@@ -810,7 +815,7 @@ func _step(dt: float, live: bool) -> void:
 
 func _update_actors(dt: float, live: bool) -> void:
 	var mv := Vector2.ZERO
-	if live and rig != "free" and not _drawer_open() and not hud_clean:
+	if live and rig != "free" and not _drawer_open() and not hud_clean and not _shot_mode:
 		mv = (Input.get_vector("move_left", "move_right", "move_forward", "move_back") + joy_vec).limit_length(1.0)
 	var b := _bounds()
 	for n in _actors():
@@ -932,6 +937,8 @@ func advance_chaos() -> void:
 
 # ── touch ─────────────────────────────────────────────────────────────────────────
 func _input(event: InputEvent) -> void:
+	if _shot_mode:
+		return
 	var vp := get_viewport().get_visible_rect().size
 	if event is InputEventScreenTouch or (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT):
 		var pressed: bool = event.pressed

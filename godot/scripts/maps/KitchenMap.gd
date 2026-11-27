@@ -2,8 +2,8 @@ extends MapBase
 
 ## The Overflowing Kitchen, with the Backyard Patio expansion on its open right side.
 
-const DECK_A := Color("#C99A6B")
-const DECK_B := Color("#B8875A")
+const DECK_A := Color("#FFBD2E")
+const DECK_B := Color("#AD811F")
 const WHITE := Color("#F5F2EB")
 const CORAL := Color("#FF5F56")
 const GRAY := Color("#2C2E33")

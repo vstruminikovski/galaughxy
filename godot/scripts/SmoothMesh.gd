@@ -112,7 +112,7 @@ static func build(f: Callable, lo: Vector3, hi: Vector3, step: float, color: Cal
 			f.call(p + Vector3(0, 0, eps)) - f.call(p - Vector3(0, 0, eps)))
 		out_v.append(p - shift)
 		out_n.append(g.normalized() if g.length_squared() > 1e-12 else Vector3.UP)
-		out_c.append(color.call(p))
+		out_c.append(Style.snap(color.call(p)))
 	# make every triangle wind outward (Godot: clockwise is front, so flip to match the normal)
 	for t in range(0, out_v.size(), 3):
 		var geo := (out_v[t + 1] - out_v[t]).cross(out_v[t + 2] - out_v[t])

@@ -6,19 +6,19 @@ extends RefCounted
 ## Each part has its pivot at a joint so the rig can rotate jaw, lids and limbs.
 
 const FROG_SCALE := 0.03
-const SKIN := Color("#5f9a3a")
-const DARK := Color("#3c6a24")
-const LIGHT := Color("#9cc35a")
-const BELLY := Color("#e6dca0")
-const GOLD := Color("#e6b52a")
-const BLACK := Color("#0b0b0b")
-const METAL := Color("#8c96a6")
-const LED := Color("#ff3d7f")
-const LIP := Color("#c9c27f")
+const SKIN := Color("#27C93F")
+const DARK := Color("#1B892B")
+const LIGHT := Color("#82E090")
+const BELLY := Color("#F5F2EB")
+const GOLD := Color("#FFBD2E")
+const BLACK := Color("#2C2E33")
+const METAL := Color("#E5E7EB")
+const LED := Color("#FF5F56")
+const LIP := Color("#F5F2EB")
 
 static func _skin(p: Vector3) -> Color:
-	var n := sin(p.x * 0.7 + sin(p.z * 0.5)) * 0.5 + sin(p.y * 0.9 + p.x * 0.3) * 0.5
-	return DARK.lerp(LIGHT, clampf(n * 0.5 + 0.5, 0.0, 1.0))
+	# two flat tones: a darker cap over the back and head, the body colour below
+	return DARK if p.y > 9.5 else SKIN
 
 ## Body ellipsoids (model space) that hide limb and feature outlines inside the body.
 static func occluders() -> Dictionary:

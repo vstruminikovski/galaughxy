@@ -9,11 +9,11 @@ static var _material: ShaderMaterial
 static func material() -> ShaderMaterial:
 	if _material == null:
 		_material = ShaderMaterial.new()
-		_material.shader = load("res://shaders/ink_stroke.gdshader")
+		_material.shader = load("res://shaders/ink_contour.gdshader")
 		_material.set_shader_parameter("ink_color", Color(0.48, 0.12, 0.12, 1.0))
 	return _material
 
-## Strokes traced from a closed mesh's outline (see InkStroke.gd). `thick` is kept for callers;
+## Outline traced on the GPU every frame from the camera (see InkStroke.gd). `thick` is kept for callers;
 ## the drawn width is in screen pixels (shader `width_px`). `occ_c`/`occ_r` are body ellipsoids
 ## (body space) that hide this object's strokes; the body itself passes none.
 static func rim(mesh: ArrayMesh, _thick: float = 0.0, occ_c: Array = [], occ_r: Array = []) -> MeshInstance3D:

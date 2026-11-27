@@ -9,7 +9,7 @@
    "tag": "flood the kitchen!",
    "icon": "🍳",
    "scene": "res://scenes/maps/overflowing_kitchen.tscn",
-   "sky": "#8fc4e8",
+   "sky": "#96BFEE",
    "host": "robo",
    "host_at": [
     0,
@@ -94,7 +94,18 @@
       4.8
      ]
     }
-   ]
+   ],
+   "ambient_energy": 0.62,
+   "ambient": "#FFFFFF",
+   "sun": {
+    "rot": [
+     -50,
+     35,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.4
+   }
   },
   {
    "id": "mac_garage_lab",
@@ -105,7 +116,7 @@
    "tag": "workbench, giant monitor, launch ramp",
    "icon": "🛠",
    "scene": "res://scenes/maps/mac_garage_lab.tscn",
-   "sky": "#d9dee6",
+   "sky": "#E5E7EB",
    "host": "robo",
    "host_at": [
     0,
@@ -175,7 +186,18 @@
      "title": "+ Basement Server Room",
      "bounds": []
     }
-   ]
+   ],
+   "ambient_energy": 0.62,
+   "ambient": "#FFFFFF",
+   "sun": {
+    "rot": [
+     -50,
+     35,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.4
+   }
   },
   {
    "id": "rooftop_terrace",
@@ -186,7 +208,7 @@
    "tag": "golden hour, pool, fountain",
    "icon": "🌇",
    "scene": "res://scenes/maps/rooftop_terrace.tscn",
-   "sky": "#f4cfa6",
+   "sky": "#FFD986",
    "host": "robo",
    "host_at": [
     0,
@@ -256,10 +278,10 @@
      0
     ],
     "color": "#ffc58a",
-    "energy": 1.1
+    "energy": 0.4
    },
-   "ambient": "#ffe8d4",
-   "ambient_energy": 0.48,
+   "ambient": "#FFD986",
+   "ambient_energy": 0.62,
    "portals": [],
    "expansions": [
     {
@@ -278,7 +300,7 @@
    "tag": "a nature mockumentary",
    "icon": "🐸",
    "scene": "res://scenes/maps/pond_life.tscn",
-   "sky": "#b9cfc4",
+   "sky": "#82E090",
    "host": "frog",
    "host_at": [
     -0.3,
@@ -361,7 +383,18 @@
      "to": "backyard_garden"
     }
    ],
-   "expansions": []
+   "expansions": [],
+   "ambient_energy": 0.62,
+   "ambient": "#FFFFFF",
+   "sun": {
+    "rot": [
+     -50,
+     35,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.4
+   }
   },
   {
    "id": "backyard_garden",
@@ -372,7 +405,7 @@
    "tag": "lawn, fence, tiny tree",
    "icon": "🌷",
    "scene": "res://scenes/maps/backyard_garden.tscn",
-   "sky": "#a9d3ea",
+   "sky": "#96BFEE",
    "host": "robo",
    "host_at": [
     0,
@@ -446,7 +479,18 @@
      "to": "pond_life"
     }
    ],
-   "expansions": []
+   "expansions": [],
+   "ambient_energy": 0.62,
+   "ambient": "#FFFFFF",
+   "sun": {
+    "rot": [
+     -50,
+     35,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.4
+   }
   }
  ]
 }

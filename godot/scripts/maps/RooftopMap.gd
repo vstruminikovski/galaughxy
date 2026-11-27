@@ -4,17 +4,17 @@ extends MapBase
 ## spills it over), a fountain, loungers, planters, string lights and a city skyline.
 ## Expansion: Helipad.
 
-const TILE_A := Color("#EADFCB")
-const TILE_B := Color("#DCCDB4")
-const WALL := Color("#D2BFA3")
-const POOL := Color("#BFE6E0")
+const TILE_A := Color("#F5F2EB")
+const TILE_B := Color("#E5E7EB")
+const WALL := Color("#FFA29D")
+const POOL := Color("#96BFEE")
 const WATER := Color(0.29, 0.62, 0.89, 0.7)
 const WHITE := Color("#F5F2EB")
 const GRAY := Color("#2C2E33")
 const CORAL := Color("#FF5F56")
 const AMBER := Color("#FFBD2E")
-const LEAF := Color("#5E9E4F")
-const CITY := [Color("#8E8AA3"), Color("#9FA4B8"), Color("#B39C9A"), Color("#7F879C")]
+const LEAF := Color("#27C93F")
+const CITY := [Color("#96BFEE"), Color("#E5E7EB"), Color("#FFA29D"), Color("#4A90E2")]
 
 func build() -> void:
 	var tiles := func(p: Vector3) -> Color:

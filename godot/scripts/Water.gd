@@ -11,7 +11,8 @@ func _ready() -> void:
 	mesh_inst = MeshInstance3D.new()
 	mesh_inst.mesh = plane
 	var m := StandardMaterial3D.new()
-	m.albedo_color = Color(0.25, 0.65, 0.84, 0.62)
+	var c := Style.swatch("bondi_blue", "light")
+	m.albedo_color = Color(c.r, c.g, c.b, 0.62)
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.roughness = 0.06
 	m.cull_mode = BaseMaterial3D.CULL_DISABLED

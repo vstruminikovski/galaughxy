@@ -4,22 +4,22 @@ extends RefCounted
 ## Backyard Garden, smooth stylised scene (metres): lawn, picket fence, flower beds,
 ## stepping stones, a rounded tree, bushes and a garden table with a glowing lantern.
 
-const LAWN := [Color("#4f7a2a"), Color("#5d8a33"), Color("#466f25")]
-const SOIL := Color("#5a4228")
-const WOOD := Color("#a6743f")
-const WOOD_DARK := Color("#7a5230")
-const BARK := Color("#5b4431")
-const LEAF := [Color("#3e6b23"), Color("#4f8030"), Color("#2f5a1c")]
-const FLOWERS := [Color("#ff5f87"), Color("#ffd23a"), Color("#9b6bff"), Color("#ffffff"), Color("#ff8a3d")]
-const STONE := Color("#9a9790")
-const TABLE := Color("#c79a5e")
+const LAWN := [Color("#27C93F"), Color("#1B892B"), Color("#27C93F")]
+const SOIL := Color("#AD811F")
+const WOOD := Color("#FFBD2E")
+const WOOD_DARK := Color("#AD811F")
+const BARK := Color("#AD811F")
+const LEAF := [Color("#1B892B"), Color("#27C93F"), Color("#1B892B")]
+const FLOWERS := [Color("#FF5F56"), Color("#FFBD2E"), Color("#4A90E2"), Color("#F5F2EB"), Color("#FFA29D")]
+const STONE := Color("#E5E7EB")
+const TABLE := Color("#F5F2EB")
 
 static func build() -> Node3D:
 	var root := Node3D.new()
 	# lawn with soft mown stripes
 	var lawn_col := func(p: Vector3) -> Color:
 		var stripe := (int(floorf((p.x + 6.0) / 1.2)) + int(floorf((p.z + 6.0) / 1.2))) % 2
-		return LAWN[0] if stripe == 1 else LAWN[int(absf(sin(p.x * 12.9 + p.z * 7.1)) * 3.0) % 3]
+		return LAWN[0] if stripe == 1 else LAWN[1]
 	root.add_child(Builders.sdf_piece(Sdf.rbox(Vector3(0, -0.12, 0), Vector3(5.6, 0.12, 4.6), 0.06),
 		Vector3(-5.8, -0.4, -4.8), Vector3(5.8, 0.1, 4.8), 0.07, lawn_col, false))
 	# picket fence around the lawn: rounded posts and rails
@@ -90,12 +90,12 @@ static func _crown(c: Vector3, radius: float) -> Node3D:
 	blobs.append(Sdf.sphere(c, radius * 0.8))
 	var f := Sdf.union(blobs)
 	return Builders.sdf_piece(f, c - Vector3.ONE * (radius + 0.4), c + Vector3.ONE * (radius + 0.4), 0.06,
-		func(p: Vector3) -> Color: return LEAF[int(absf(sin(p.x * 9.0 + p.z * 5.0)) * 3.0) % 3])
+		func(p: Vector3) -> Color: return LEAF[0])
 
 static func _bush(at: Vector3) -> Node3D:
 	var f := Sdf.union([Sdf.sphere(at + Vector3(0, 0.35, 0), 0.4), Sdf.sphere(at + Vector3(0.35, 0.3, 0.1), 0.3), Sdf.sphere(at + Vector3(-0.3, 0.3, -0.1), 0.32)])
 	return Builders.sdf_piece(f, at - Vector3(0.6, 0, 0.6), at + Vector3(0.7, 0.9, 0.7), 0.05,
-		func(p: Vector3) -> Color: return LEAF[int(absf(sin(p.x * 13.0 + p.z * 3.0)) * 3.0) % 3])
+		func(p: Vector3) -> Color: return LEAF[1])
 
 static func _stone_mesh() -> Mesh:
 	var b := BoxMesh.new()
