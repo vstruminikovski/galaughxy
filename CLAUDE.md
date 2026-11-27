@@ -115,3 +115,5 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 - Known cost: dense voxel areas create many edges. Keep detail coarse (e.g. no 1-cell grass tufts) to stay fast on phones.
 
 - Ink: darker muted brown (`#5c5043`), pressure-tapered strokes (width varies per point, shared where strokes meet), stroke width as a share of frame height. The 16:9 thirds grid is removed; shadows are off to avoid shaded-square artifacts.
+
+- **Ink strokes (current):** silhouette edges are joined into contours (one contour = one stroke, so strokes never overlap), smoothed with Chaikin, then drawn as a ribbon that tapers from the middle to both ends (`src/engine/vectorInk.ts`, `src/engine/VoxelInk.tsx`). Width is set in screen pixels relative to frame height.
