@@ -255,7 +255,10 @@ func _director() -> void:
 	_check("free fly is off while the director plays", main.rig != "free")
 	await _wait(0.6)
 	_check("timed events fire (bear talks)", main.voice.is_talking(main.find_actor("robo_bear")))
-	_check("subtitle shows the line", main.hud.subtitle.visible and main.hud.subtitle.text.contains("toaster"))
+	var line_ok: bool = main.hud.captions.showing() and main.hud.captions.line_text.contains("toaster")
+	if main.hud.caption_style == "classic":
+		line_ok = main.hud.subtitle.visible and main.hud.subtitle.text.contains("toaster")
+	_check("the line shows as %s captions" % main.hud.caption_style, line_ok)
 	# deterministic scrubbing
 	d.seek(2.0)
 	var frog: Node3D = main.find_actor("chaotic_frog")
@@ -371,6 +374,78 @@ func _maps() -> void:
 	await _frames(2)
 	_check("drain turns low gravity off", not main.lowgrav)
 
+## Shorts captions: chunking, timing and pop-in (pure functions of the clock), the style setting
+## and clean HUD.
+func _captions() -> void:
+	var hud: StudioHUD = main.hud
+	var line := "Why is the toaster humming? Don't look at me."
+	var parts: Array = Captions.chunks(line)
+	_check("captions: 1-3 words per chunk, never across a sentence end", parts.size() >= 2 and " ".join(parts) == line
+		and parts.all(func(c): return String(c).split(" ").size() <= 3 and String(c).length() <= Captions.MAX_CHARS)
+		and parts.all(func(c): return not String(c).contains("?") or String(c).ends_with("?")))
+	# each chunk's share of the spoken time follows its length; the last one holds after the words
+	var cap := Captions.new()
+	hud.add_child(cap)
+	var start := 10.0
+	var end: float = start + main.voice.line_length("", line) + Captions.HOLD
+	cap.show_line(line, start, end)
+	var at: Array = Captions.schedule(parts, start, end)
+	var spoken: float = end - Captions.HOLD - start
+	var total := 0
+	for c in parts:
+		total += String(c).length()
+	var right := true
+	for k in parts.size():
+		var next: float = float(at[k + 1]) if k + 1 < at.size() else end - Captions.HOLD
+		right = right and absf((next - float(at[k])) - spoken * String(parts[k]).length() / total) < 1e-4
+		cap.tick(float(at[k]) + 0.01)
+		right = right and cap.current() == parts[k]
+	cap.tick(end - 0.01)
+	right = right and cap.current() == parts[parts.size() - 1]
+	cap.tick(end + 0.01)
+	right = right and not cap.showing()
+	cap.tick(start - 0.01)
+	right = right and not cap.showing()
+	# a short chunk still gets 0.18 s; the others share what is left
+	var floor_at: Array = Captions.schedule(["I.", "sixteen chars ok", "sixteen chars ok"], 0.0, 2.0)
+	var floored: bool = absf(float(floor_at[1]) - Captions.MIN_CHUNK) < 1e-4 and absf(float(floor_at[2]) - (Captions.MIN_CHUNK + 0.76)) < 1e-4
+	# pop-in 0.82 -> 1.06 -> 1.0 from the clock alone: the same second gives the same scale
+	var s := float(at[1])
+	cap.tick(s)
+	var s0 := cap.label.scale.x
+	cap.tick(s + 0.07)
+	var s_mid := cap.label.scale.x
+	cap.tick(s + 0.2)
+	var s1 := cap.label.scale.x
+	cap.tick(s + 0.07)
+	var pop: bool = is_equal_approx(s0, 0.82) and s_mid > 1.0 and is_equal_approx(s1, 1.0) and is_equal_approx(cap.label.scale.x, s_mid)
+	cap.queue_free()
+	_check("captions: right chunk for the clock (length shares, 0.18 s floor, pop-in)", right and floored and pop)
+	# the style setting: only [look] captions changes in settings.cfg, the tips section stays
+	var style0: String = hud.caption_style
+	hud.set_caption_style("classic")
+	var cfg := ConfigFile.new()
+	cfg.load(ContextBanner.SETTINGS)
+	var saved_classic: bool = cfg.get_value("look", "captions", "") == "classic"
+	var tips_kept: bool = cfg.has_section_key("tips", "enabled")
+	hud.show_line("Robo", "Hello there, frog.", main.voice.clock + 2.0)
+	var classic_ok: bool = hud.subtitle.visible and hud.subtitle.text == "Robo: Hello there, frog." and not hud.captions.showing()
+	hud.set_caption_style("shorts")
+	cfg = ConfigFile.new()
+	cfg.load(ContextBanner.SETTINGS)
+	var saved_shorts: bool = cfg.get_value("look", "captions", "") == "shorts"
+	var cleared: bool = not hud.subtitle.visible and not hud.captions.showing()
+	_check("caption style switches (shorts <-> classic) and persists in settings.cfg",
+		saved_classic and tips_kept and classic_ok and saved_shorts and cleared)
+	# clean HUD (Play Episode, movie export) hides the toolboxes, never the captions
+	main.set_clean_hud(true)
+	hud.show_line("Robo", "Clean frames keep their captions.", main.voice.clock + 2.0)
+	await _frames(2)
+	_check("captions stay visible with clean HUD on", not hud.root.visible and hud.captions.is_visible_in_tree()
+		and hud.captions.current() != "" and hud.captions.line_text.begins_with("Clean"))
+	main.set_clean_hud(false)
+	hud.set_caption_style(style0)   # back to the saved style (shorts unless changed by hand)
+
 func _studio() -> void:
 	var hud: StudioHUD = main.hud
 	# toolboxes and the Window menu
@@ -404,6 +479,7 @@ func _studio() -> void:
 	hud.banner.reset_dismissed()
 	main._update_context(true)
 	_check("reset brings tips back", hud.banner.is_showing() and hud.banner.current == tip)
+	await _captions()
 	# abilities: 100, five per character, working on any map
 	var ab: Abilities = main.abilities
 	_check("100 abilities registered", ab.by_id.size() == 100)

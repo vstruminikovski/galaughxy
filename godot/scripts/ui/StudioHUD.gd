@@ -10,15 +10,19 @@ extends CanvasLayer
 ##   👥 Cast       spawn roster characters      🎬 Director  episodes, play / loop / retake
 ## Every button taps an InputMap action or calls the same studio function the keys use.
 ## Panels stop the mouse / touch; passive overlays ignore it; buttons never take focus.
+## Dialogue shows as Shorts-style captions (Captions.gd) or classic "Speaker: text" subtitles.
 
 const MAP_CATEGORIES := ["All", "Indoor", "Outdoor", "Sci-Fi & Wild"]
 const CHAR_CATEGORIES := [["All", "All"], ["Robo", "Robos"], ["Animal", "Animals"], ["Hybrid", "Hybrids"]]
 const EXPR_NAMES := ["Deadpan", "Smirk", "Panic", "Angry", "Happy", "Shocked"]
+const CAPTION_STYLES := ["shorts", "classic"]
 
 var main: Node
 var root: Control
 var label: Label
-var subtitle: Label
+var subtitle: Label        # classic subtitles ("Speaker: text") and studio messages ("Saved: …")
+var captions: Captions     # Shorts-style captions: 1-3 bold yellow words at a time
+var caption_style := "shorts"
 var fade: ColorRect
 var joy_pad: Control
 var banner: ContextBanner
@@ -28,6 +32,10 @@ var boxes := {}            # name -> Toolbox
 var hidden_all := false
 var clean := false
 var _subtitle_until := 0.0
+var _subtitle_line := false   # the classic label shows a dialogue line (not a message)
+var _line_speaker = null      # the character whose line is captioned (untyped: it may be freed)
+var _line_voiced := false
+var _line_end := 0.0          # voice clock when the captioned words end
 
 # camera toolbox
 var cam_tabs: Dictionary
@@ -104,7 +112,7 @@ func _ready() -> void:
 	_build_path_bar()
 	banner = (load("res://scenes/ui/context_banner.tscn") as PackedScene).instantiate() as ContextBanner
 	root.add_child(banner)
-	# subtitles and the fade sit outside root, so they stay in clean recordings
+	# subtitles, captions and the fade sit outside root, so they stay in clean recordings
 	subtitle = Label.new()
 	subtitle.anchor_left = 0.12
 	subtitle.anchor_right = 0.88
@@ -119,6 +127,9 @@ func _ready() -> void:
 	subtitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	subtitle.visible = false
 	add_child(subtitle)
+	captions = Captions.new()
+	add_child(captions)
+	caption_style = _load_caption_style()
 	fade = ColorRect.new()
 	fade.color = Color(0, 0, 0, 0)
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -251,10 +262,65 @@ func over_ui(pos: Vector2) -> bool:
 		return true
 	return banner.is_showing() and banner.card_rect().has_point(pos)
 
+## A studio message ("Saved: …") on the classic label until `until` (voice clock), in any style.
 func show_subtitle(text: String, until: float) -> void:
 	subtitle.text = text
 	subtitle.visible = true
 	_subtitle_until = until
+	_subtitle_line = false
+
+## A dialogue line (Main.say): Shorts captions without the speaker name, or in the classic style
+## the "Speaker: text" label. `until` is on main.voice.clock and includes the Captions.HOLD tail.
+func show_line(speaker: String, text: String, until: float) -> void:
+	_line_speaker = main.voice.speaker()   # the character whose line just started, if any
+	_line_voiced = _line_speaker != null
+	_line_end = until - Captions.HOLD
+	if caption_style == "classic":
+		captions.clear()
+		show_subtitle("%s: %s" % [speaker, text], until)
+		_subtitle_line = true
+	else:
+		if _subtitle_line:
+			subtitle.visible = false
+			_subtitle_line = false
+		captions.show_line(text, main.voice.clock, until)
+
+## Switches the caption style ("shorts" / "classic") at once and clears both displays. Saved in
+## user://settings.cfg as [look] captions; every other section (dismissed tips, …) is kept.
+func set_caption_style(s: String) -> void:
+	if not CAPTION_STYLES.has(s):
+		return
+	caption_style = s
+	var cfg := ConfigFile.new()
+	if cfg.load(ContextBanner.SETTINGS) != OK and FileAccess.file_exists(ContextBanner.SETTINGS):
+		push_warning("%s is unreadable: caption style not saved" % ContextBanner.SETTINGS)
+	else:
+		cfg.set_value("look", "captions", s)
+		cfg.save(ContextBanner.SETTINGS)
+	_clear_line()
+	subtitle.visible = false
+
+func _load_caption_style() -> String:
+	var cfg := ConfigFile.new()
+	var s := "shorts"
+	if cfg.load(ContextBanner.SETTINGS) == OK:
+		s = String(cfg.get_value("look", "captions", "shorts"))
+	return s if CAPTION_STYLES.has(s) else "shorts"
+
+func _clear_line() -> void:
+	_line_voiced = false
+	captions.clear()
+	if _subtitle_line:
+		subtitle.visible = false
+		_subtitle_line = false
+
+## True when the captioned line's voice stopped before its words ended: the director restored a
+## snapshot (scrub, retake, loop, jump) or stopped. A scrub that lands inside the line speaks it
+## again from the fast-forward, so the caption always matches that second.
+func _line_cut(clock: float) -> bool:
+	if not _line_voiced or clock + 0.001 >= _line_end:
+		return false
+	return not (is_instance_valid(_line_speaker) and main.voice.is_talking(_line_speaker))
 
 # ── Camera toolbox ────────────────────────────────────────────────────────────────
 func _build_camera() -> void:
@@ -1003,8 +1069,12 @@ func refresh_director() -> void:
 
 # ── every frame ───────────────────────────────────────────────────────────────────
 func sync() -> void:
-	if subtitle.visible and main.voice.clock > _subtitle_until:
+	var clock: float = main.voice.clock
+	if _line_cut(clock):
+		_clear_line()
+	if subtitle.visible and clock > _subtitle_until:
 		subtitle.visible = false
+	captions.tick(clock)
 	_sync_timeline()
 	_sync_character()
 	_sync_path_bar()

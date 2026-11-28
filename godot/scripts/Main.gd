@@ -646,13 +646,13 @@ func face(n: Node3D, yaw: float) -> void:
 	if _has(n):
 		motion[n]["yaw"] = yaw
 
-## Speaks a line with the character's voice preset; shows the subtitle; returns the duration.
+## Speaks a line with the character's voice preset; shows its captions; returns the duration.
 func say(n: Node3D, audio: String, text: String, duration := -1.0) -> float:
 	if not _has(n):
 		return 0.0
 	var d := voice.say(n, voice_of(n), audio, text, duration)
 	if text != "":
-		hud.show_subtitle("%s: %s" % [_name_of(n), text], voice.clock + d + 0.3)
+		hud.show_line(_name_of(n), text, voice.clock + d + 0.3)
 	return d
 
 func _trigger(action: String) -> void:
