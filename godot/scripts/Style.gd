@@ -36,6 +36,7 @@ const VALUES := {"base": 0, "light": 1, "shade": 2}
 const KINDS := {
 	"character": {"hatch": 1.0, "texture": 0.35, "stroke": 0.04, "snow": 0.3},
 	"prop": {"hatch": 0.9, "texture": 0.15, "stroke": 0.06, "snow": 0.9},
+	"object": {"hatch": 0.9, "texture": 0.15, "stroke": 0.05, "snow": 0.6},
 	"set": {"hatch": 0.8, "texture": 0.0, "stroke": 0.12, "snow": 1.0},
 	"flat": {"hatch": 0.45, "texture": 0.0, "stroke": 0.16, "snow": 1.0},
 }

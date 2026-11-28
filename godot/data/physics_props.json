@@ -1,0 +1,407 @@
+{
+  "about": "Physics objects (CLAUDE.md section 26). Models: tools/generate_physics_props.py, centred on their collision shape. shape: box [x, y, z] · sphere [r] · cylinder [r, h] · capsule [r, h], Godot axes (Y up). Preset offsets are [u, y, v]: u = screen right on the ground, v = away from the camera, y = height of the object's centre; vel is in the same frame. Set pieces are laid out 1.6 m to the right of the controlled character; single drops 1.1 m.",
+  "props": [
+    {
+      "id": "crate",
+      "name": "Crate",
+      "icon": "📦",
+      "shape": "box",
+      "size": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "mass": 6.0,
+      "bounce": 0.05,
+      "friction": 0.8
+    },
+    {
+      "id": "barrel",
+      "name": "Barrel",
+      "icon": "🛢",
+      "shape": "cylinder",
+      "size": [
+        0.215,
+        0.6
+      ],
+      "mass": 12.0,
+      "bounce": 0.05,
+      "friction": 0.7
+    },
+    {
+      "id": "amphora",
+      "name": "Amphora",
+      "icon": "🏺",
+      "shape": "capsule",
+      "size": [
+        0.16,
+        0.58
+      ],
+      "mass": 4.0,
+      "bounce": 0.05,
+      "friction": 0.6,
+      "history": true
+    },
+    {
+      "id": "column_drum",
+      "name": "Column drum",
+      "icon": "🏛",
+      "shape": "cylinder",
+      "size": [
+        0.3,
+        0.5
+      ],
+      "mass": 60.0,
+      "bounce": 0.0,
+      "friction": 0.9,
+      "history": true
+    },
+    {
+      "id": "boulder",
+      "name": "Boulder",
+      "icon": "🪨",
+      "shape": "sphere",
+      "size": [
+        0.32
+      ],
+      "mass": 70.0,
+      "bounce": 0.05,
+      "friction": 0.9,
+      "history": true
+    },
+    {
+      "id": "beach_ball",
+      "name": "Beach ball",
+      "icon": "🏐",
+      "shape": "sphere",
+      "size": [
+        0.25
+      ],
+      "mass": 0.25,
+      "bounce": 0.75,
+      "friction": 0.4
+    },
+    {
+      "id": "bowling_pin",
+      "name": "Bowling pin",
+      "icon": "🎳",
+      "shape": "cylinder",
+      "size": [
+        0.065,
+        0.37
+      ],
+      "mass": 1.5,
+      "bounce": 0.2,
+      "friction": 0.5
+    },
+    {
+      "id": "bowling_ball",
+      "name": "Bowling ball",
+      "icon": "🎱",
+      "shape": "sphere",
+      "size": [
+        0.11
+      ],
+      "mass": 6.5,
+      "bounce": 0.1,
+      "friction": 0.3
+    },
+    {
+      "id": "domino",
+      "name": "Domino",
+      "icon": "🁢",
+      "shape": "box",
+      "size": [
+        0.1,
+        0.2,
+        0.036
+      ],
+      "mass": 0.4,
+      "bounce": 0.0,
+      "friction": 0.6
+    },
+    {
+      "id": "watermelon",
+      "name": "Watermelon",
+      "icon": "🍉",
+      "shape": "sphere",
+      "size": [
+        0.16
+      ],
+      "mass": 5.0,
+      "bounce": 0.15,
+      "friction": 0.7
+    },
+    {
+      "id": "cone",
+      "name": "Traffic cone",
+      "icon": "🚧",
+      "shape": "cylinder",
+      "size": [
+        0.17,
+        0.49
+      ],
+      "mass": 2.0,
+      "bounce": 0.1,
+      "friction": 0.7
+    }
+  ],
+  "presets": [
+    {
+      "id": "crate_pyramid",
+      "name": "Crate pyramid",
+      "icon": "📦",
+      "items": [
+        [
+          "crate",
+          -0.52,
+          0.25,
+          0
+        ],
+        [
+          "crate",
+          0,
+          0.25,
+          0
+        ],
+        [
+          "crate",
+          0.52,
+          0.25,
+          0
+        ],
+        [
+          "crate",
+          -0.26,
+          0.76,
+          0
+        ],
+        [
+          "crate",
+          0.26,
+          0.76,
+          0
+        ],
+        [
+          "crate",
+          0,
+          1.27,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "domino_run",
+      "name": "Domino run",
+      "icon": "🁢",
+      "domino_run": 18
+    },
+    {
+      "id": "bowling",
+      "name": "Bowling strike",
+      "icon": "🎳",
+      "items": [
+        [
+          "bowling_pin",
+          0.0,
+          0.19,
+          1.6
+        ],
+        [
+          "bowling_pin",
+          -0.16,
+          0.19,
+          1.9
+        ],
+        [
+          "bowling_pin",
+          0.16,
+          0.19,
+          1.9
+        ],
+        [
+          "bowling_pin",
+          -0.32,
+          0.19,
+          2.2
+        ],
+        [
+          "bowling_pin",
+          0.0,
+          0.19,
+          2.2
+        ],
+        [
+          "bowling_pin",
+          0.32,
+          0.19,
+          2.2
+        ],
+        [
+          "bowling_pin",
+          -0.48,
+          0.19,
+          2.5
+        ],
+        [
+          "bowling_pin",
+          -0.16,
+          0.19,
+          2.5
+        ],
+        [
+          "bowling_pin",
+          0.16,
+          0.19,
+          2.5
+        ],
+        [
+          "bowling_pin",
+          0.48,
+          0.19,
+          2.5
+        ],
+        [
+          "bowling_ball",
+          0.03,
+          0.11,
+          -0.7,
+          [
+            0,
+            0,
+            6.0
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "column_tower",
+      "name": "Column tower",
+      "icon": "🏛",
+      "items": [
+        [
+          "column_drum",
+          0,
+          0.25,
+          0
+        ],
+        [
+          "column_drum",
+          0,
+          0.76,
+          0
+        ],
+        [
+          "column_drum",
+          0,
+          1.27,
+          0
+        ],
+        [
+          "column_drum",
+          0,
+          1.78,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "amphora_stack",
+      "name": "Amphora stack",
+      "icon": "🏺",
+      "items": [
+        [
+          "amphora",
+          -0.36,
+          0.3,
+          0
+        ],
+        [
+          "amphora",
+          0,
+          0.3,
+          0
+        ],
+        [
+          "amphora",
+          0.36,
+          0.3,
+          0
+        ],
+        [
+          "amphora",
+          -0.18,
+          0.9,
+          0
+        ],
+        [
+          "amphora",
+          0.18,
+          0.9,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "boulder_roll",
+      "name": "Rolling boulder",
+      "icon": "🪨",
+      "items": [
+        [
+          "boulder",
+          0.0,
+          0.9,
+          3.2,
+          [
+            0,
+            0,
+            -4.2
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "melon_pile",
+      "name": "Melon pile",
+      "icon": "🍉",
+      "items": [
+        [
+          "watermelon",
+          -0.34,
+          0.16,
+          0
+        ],
+        [
+          "watermelon",
+          0,
+          0.16,
+          0
+        ],
+        [
+          "watermelon",
+          0.34,
+          0.16,
+          0
+        ],
+        [
+          "watermelon",
+          -0.17,
+          0.46,
+          0
+        ],
+        [
+          "watermelon",
+          0.17,
+          0.46,
+          0
+        ],
+        [
+          "watermelon",
+          0,
+          0.76,
+          0
+        ]
+      ]
+    }
+  ]
+}

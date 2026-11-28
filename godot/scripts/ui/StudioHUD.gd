@@ -110,6 +110,7 @@ func _ready() -> void:
 	_build_world()
 	_build_cast()
 	_build_director()
+	_build_physics()
 	_build_path_bar()
 	banner = (load("res://scenes/ui/context_banner.tscn") as PackedScene).instantiate() as ContextBanner
 	root.add_child(banner)
@@ -172,7 +173,7 @@ func _build_menu() -> void:
 	root.add_child(menu)
 	for e in [["camera", "🎥 Camera", "tb_camera"], ["character", "🎭 Character", "tb_character"], ["timeline", "⏱ Timeline", "timeline"],
 			["world", "🗺 World", "maps"], ["cast", "👥 Cast", "cast"], ["director", "🎬 Director", "director"],
-			["controls", "? Controls", "controls"], ["fly", "🛸 Fly", "fly"], ["hide_all", "🙈 Hide All", "hide_all"]]:
+			["physics", "🧱 Physics", "physics"], ["controls", "?", "controls"], ["fly", "🛸", "fly"], ["hide_all", "🙈", "hide_all"]]:
 		var b := btn(String(e[1]), Vector2(0, 38))
 		b.toggle_mode = e[0] != "controls"
 		b.tooltip_text = "%s  [%s]" % [e[1], Controls.key_label(String(e[2]))]
@@ -1099,6 +1100,63 @@ func refresh_director() -> void:
 			v.add_child(row)
 		director_list.add_child(card)
 
+# ── Physics toolbox ───────────────────────────────────────────────────────────────
+var physics_info: Label
+
+func _build_physics() -> void:
+	var t := _box("physics", "🧱 Physics · drop, stack, kick", 430, Vector2(356, 124))
+	t.body.add_child(small("Drops land beside the controlled character; characters push things as they walk. While overdubbing, drops and kicks are recorded into the shot.", 12, 0.7))
+	var g := _grid(3)
+	for id in main.physics.order:
+		var d: Dictionary = main.physics.defs[id]
+		var b := btn("%s %s" % [d["icon"], d["name"]], Vector2(0, 40))
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.clip_text = true
+		var pid := String(id)
+		b.pressed.connect(func(): main.physics_drop(pid))
+		g.add_child(b)
+	t.body.add_child(g)
+	t.body.add_child(small("Set pieces", 12, 0.6))
+	var pg := _grid(2)
+	for id in main.physics.preset_order:
+		var p: Dictionary = main.physics.presets[id]
+		var b := btn("%s %s" % [p["icon"], p["name"]], Vector2(0, 40))
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var pre := String(id)
+		b.pressed.connect(func(): main.physics_preset(pre))
+		pg.add_child(b)
+	t.body.add_child(pg)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	for e in [["🦶 Kick [%s]" % Controls.key_label("physics_kick"), "kick"], ["💥 Shockwave", "wave"], ["🧹 Clear", "clear"]]:
+		var b := btn(String(e[0]), Vector2(0, 42))
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var what := String(e[1])
+		b.pressed.connect(func(): _physics_button(what))
+		row.add_child(b)
+	t.body.add_child(row)
+	physics_info = small("", 12, 0.85)
+	t.body.add_child(physics_info)
+
+func _physics_button(what: String) -> void:
+	match what:
+		"kick":
+			_tap("physics_kick")
+		"wave":
+			if main._has(main.actor):
+				main.physics.blast(main.actor.global_position, 3.5, 5.0, 0.6)
+		"clear":
+			main.physics.clear()
+
+func _sync_physics() -> void:
+	if physics_info == null or not is_open("physics"):
+		return
+	var d = main.director
+	var rec := ""
+	if d.playing and not d.ep.is_empty():
+		rec = "  ·  shot %d %s" % [d.shot_i + 1, "recorded ✓ (scrubs replay it)" if main.physics.has_recording(d.physics_key()) else "records while it plays"]
+	physics_info.text = "%d objects%s" % [main.physics.objects.size(), rec]
+
 # ── every frame ───────────────────────────────────────────────────────────────────
 func sync() -> void:
 	var clock: float = main.voice.clock
@@ -1107,6 +1165,7 @@ func sync() -> void:
 	if subtitle.visible and clock > _subtitle_until:
 		subtitle.visible = false
 	captions.tick(clock)
+	_sync_physics()
 	_sync_timeline()
 	_sync_character()
 	_sync_path_bar()

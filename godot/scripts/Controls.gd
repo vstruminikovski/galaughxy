@@ -28,8 +28,9 @@ const BINDINGS := {
 	# windows
 	"tb_camera": [KEY_F1], "tb_character": [KEY_F2], "maps": [KEY_M, KEY_F4], "cast": [KEY_I], "director": [KEY_P],
 	"controls": [KEY_SLASH, KEY_F5], "hide_all": [KEY_QUOTELEFT], "cancel": [KEY_ESCAPE],
-	# look
+	# look and physics
 	"mood_next": [KEY_F6],
+	"physics": [KEY_F7], "physics_kick": [KEY_F8],
 	# reaction bubbles (keypad)
 	"bubble_exclaim": [KEY_KP_1], "bubble_question": [KEY_KP_2], "bubble_heart": [KEY_KP_3], "bubble_sweat": [KEY_KP_4],
 	"bubble_anger": [KEY_KP_5], "bubble_dizzy": [KEY_KP_6], "bubble_dots": [KEY_KP_7], "bubble_idea": [KEY_KP_8],
@@ -47,10 +48,11 @@ const TRIGGERS := ["hop", "next_actor", "fly",
 	"bubble_dizzy", "bubble_dots", "bubble_idea", "bubble_note", "bubble_sparkle",
 	"path_pin", "path_undo", "path_finish", "path_preview", "path_shorter", "path_longer",
 	"timeline", "play_pause", "overdub", "take_toggle", "take_merge", "take_discard", "cam_key",
-	"tb_camera", "tb_character", "maps", "cast", "director", "controls", "hide_all", "cancel", "mood_next"]
+	"tb_camera", "tb_character", "maps", "cast", "director", "controls", "hide_all", "cancel", "mood_next",
+	"physics", "physics_kick"]
 
 ## Allowed while free-flying (Minecraft-style: move, look, rise, plus windows and the camera path).
-const FLY_OK := ["move_left", "move_right", "move_forward", "move_back", "talk", "fly", "fly_up", "fly_down",
+const FLY_OK := ["move_left", "move_right", "move_forward", "move_back", "talk", "fly", "fly_up", "fly_down", "physics",
 	"path_pin", "path_undo", "path_finish", "path_preview", "path_shorter", "path_longer",
 	"tb_camera", "tb_character", "timeline", "maps", "cast", "director", "controls", "hide_all", "cancel"]
 
@@ -102,10 +104,12 @@ const INFO := {
 	"director": ["Windows", "Director toolbox", "Menu ▸ Director"], "controls": ["Windows", "Controls reference", "Menu ▸ ?"],
 	"hide_all": ["Windows", "Hide / show all toolboxes", "Menu ▸ Hide All"],
 	"cancel": ["Windows", "Close windows · stop clean playback · cancel aiming", "Tap the screen during clean playback"],
+	"physics": ["Windows", "Physics toolbox: drop objects, set pieces, kick, clear", "Menu ▸ 🧱 Physics"],
+	"physics_kick": ["Physics", "Kick the nearest physics object", "Physics ▸ 🦶 Kick"],
 	"mood_next": ["Look", "Next mood (lighting preset); while an episode is open it is saved into the shot", "World ▸ Look ▸ mood cards"],
 }
 
-const CATEGORY_ORDER := ["Movement", "Character", "Bubbles", "Abilities", "Map chaos", "Camera", "Camera path", "Timeline", "Look", "Windows"]
+const CATEGORY_ORDER := ["Movement", "Character", "Bubbles", "Abilities", "Physics", "Map chaos", "Camera", "Camera path", "Timeline", "Look", "Windows"]
 
 ## Friendlier keycap text for punctuation keys (matched case-insensitively).
 const KEYCAPS := {"quoteleft": "`", "bracketleft": "[", "bracketright": "]", "backslash": "\\", "apostrophe": "'",

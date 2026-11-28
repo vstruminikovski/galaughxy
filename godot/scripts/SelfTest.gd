@@ -58,6 +58,7 @@ func run() -> void:
 		await _frames(5)
 		await _look()
 		await _dogwalk()
+		await _physics()
 		print("RESULT: %s" % ("ALL PASS" if fails == 0 else "%d FAIL" % fails))
 		main.get_tree().quit(1 if fails else 0)
 		return
@@ -202,6 +203,7 @@ func run() -> void:
 	await _studio()
 	await _look()
 	await _dogwalk()
+	await _physics()
 	# portal: walk the robo into the kitchen doorway; kitchen links to the pond
 	main.load_scene("kitchen")
 	await _frames(3)
@@ -782,3 +784,108 @@ func _dogwalk() -> void:
 	_check("two-shot preset frames a valid shot", main.cam.position.is_finite() and main.cam.fov > 10.0)
 	main._set_rig("static")
 	main.clear_cast()
+
+## Physics: colliders, drops, pushing, kicks, blasts, abilities, water, and exact replay when scrubbing.
+func _physics() -> void:
+	var ph: StudioPhysics = main.physics
+	var d: DirectorController = main.director
+	if d.playing:
+		d.stop(true)
+	main.load_scene("backyard_garden")
+	await _frames(3)
+	main.clear_cast()
+	_check("map meshes get colliders", main.world.find_children("Collider", "StaticBody3D", true, false).size() > 5)
+	main.physics_drop("crate")
+	await _wait(1.6)
+	var crate: RigidBody3D = ph.objects[0]
+	var g: float = main.world.ground(crate.global_position.x, crate.global_position.z)
+	_check("a dropped crate lands on the ground", absf(crate.global_position.y - 0.25 - g) < 0.12)
+	# a walking character pushes it
+	var p0 := crate.global_position
+	var from: Vector3 = p0 - Vector3(1.2, 0, 0)
+	main.place(main.actor, from, PI * 0.5)
+	await _frames(2)
+	main.walk_to(main.actor, p0 + Vector3(1.4, 0, 0))
+	await _wait(1.8)
+	_check("walking characters push objects", crate.global_position.distance_to(p0) > 0.15)
+	# kick
+	var p1 := crate.global_position
+	main.place(main.actor, p1 - Vector3(0.7, 0, 0), PI * 0.5)
+	await _frames(3)
+	await _tap(KEY_F8)
+	await _wait(0.5)
+	_check("F8 kicks the nearest object", crate.global_position.distance_to(p1) > 0.3)
+	# set piece + blast
+	ph.clear()
+	main.physics_preset("crate_pyramid")
+	await _wait(1.2)
+	_check("a set piece lays out its objects", ph.objects.size() == 6)
+	var before: Array = ph.objects.map(func(b): return (b as RigidBody3D).global_position)
+	ph.blast((ph.objects[1] as RigidBody3D).global_position, 3.0, 5.0)
+	await _wait(0.6)
+	var moved := 0
+	for i in ph.objects.size():
+		if (ph.objects[i] as RigidBody3D).global_position.distance_to(before[i]) > 0.2:
+			moved += 1
+	_check("a blast scatters the pyramid", moved >= 4)
+	# abilities push physics objects too
+	ph.clear()
+	main.physics_drop("barrel")
+	await _wait(1.2)
+	var barrel: RigidBody3D = ph.objects[0]
+	var bp := barrel.global_position
+	var blast_id := ""
+	for id in main.abilities.by_id:
+		if (main.abilities.by_id[id]["fx"] as Array).any(func(f): return f["type"] == "blast"):
+			blast_id = id
+			break
+	main.place(main.actor, bp - Vector3(0.8, 0, 0), 0.0)
+	await _frames(2)
+	main.abilities.cast(main.actor, blast_id, false)
+	await _wait(0.6)
+	_check("a blast ability flings physics objects", barrel.global_position.distance_to(bp) > 0.3)
+	# objects float on flood water
+	main.load_scene("overflowing_kitchen")
+	await _frames(3)
+	main.physics_drop("crate")
+	await _wait(1.0)
+	main.set_stage(3)
+	await _wait(3.5)
+	_check("objects float on the flood", (ph.objects[0] as RigidBody3D).global_position.y > 0.45)
+	main.set_stage(0)
+	ph.clear()
+	await _wait(1.0)
+	# recording: perform a set piece during overdub, let it settle, then scrub back to that second
+	d.play_shot("ep01_kitchen_disaster", 0, false)
+	await _frames(3)
+	main._take_control(main.find_actor("robo_bear"))
+	await _frames(2)
+	await _tap(KEY_R)
+	await _wait(0.2)
+	main.physics_preset("crate_pyramid")
+	await _wait(0.6)
+	ph.blast((ph.objects[0] as RigidBody3D).global_position + Vector3(0.3, 0, 0), 3.0, 4.0)
+	await _wait(2.4)
+	var t_live: float = d.shot_t
+	var live_pos: Array = ph.objects.map(func(b): return (b as RigidBody3D).global_position)
+	await _tap(KEY_R)
+	var evs: Array = d.ep["shots"][0]["events"]
+	_check("overdub records the set piece into the shot", evs.any(func(e): return e["action"] == "preset"))
+	_check("the shot's physics was recorded", ph.has_recording(d.physics_key()))
+	d.seek(t_live)
+	await _frames(1)
+	var err := 0.0
+	for i in mini(live_pos.size(), ph.objects.size()):
+		err = maxf(err, (ph.objects[i] as RigidBody3D).global_position.distance_to(live_pos[i]))
+	_check("scrubbing puts every object back where it was (%.3f m)" % err, ph.objects.size() == live_pos.size() and err < 0.06)
+	var held := (ph.objects[0] as RigidBody3D).global_position
+	await _wait(0.3)
+	_check("physics holds still while the Director is paused", (ph.objects[0] as RigidBody3D).global_position.distance_to(held) < 0.01)
+	d.seek(0.05)
+	_check("scrubbing before the drop removes the objects", ph.objects.size() == 0)
+	for e in evs.filter(func(e): return e["action"] == "preset"):
+		evs.erase(e)
+	d.dirty = false
+	d.stop(true)
+	await _frames(2)
+	ph.clear()

@@ -124,6 +124,15 @@ func _one_shots(a: Dictionary) -> void:
 			"shocked":
 				for n in _actors_near(a, float(fx.get("radius", 4.0)), false):
 					main.act(n, "expr_6")
+			# physics objects get real impulses (StudioPhysics)
+			"blast":
+				main.physics.blast(a["origin"], float(fx.get("radius", 3.0)), float(fx.get("force", 1.6)) * 3.2, 0.55)
+			"knockback":
+				main.physics.blast(a["origin"], float(fx.get("radius", 3.0)), float(fx.get("force", 1.8)) * 2.4, 0.35)
+			"launch":
+				main.physics.blast(a["origin"], float(fx.get("radius", 3.0)), 1.2, float(fx.get("height", 1.2)) * 3.5)
+			"push":
+				main.physics.push(a["origin"], a["facing"], float(fx.get("radius", 3.0)), float(fx.get("strength", 1.8)) * 2.2)
 
 func _props() -> Array:
 	var w = main.world
@@ -156,6 +165,10 @@ func _apply(a: Dictionary, fx: Dictionary, e: float, dur: float, env: float, dt:
 	match type:
 		# ── props ──
 		"blast", "magnet", "launch", "quake", "spin_props", "push":
+			if type == "magnet":
+				main.physics.pull(o, r, 5.0 * dt * env)
+			elif type == "quake":
+				main.physics.shake(o, r, float(fx.get("amp", 0.25)) * 6.0 * dt * env, e)
 			for n in _props():
 				var p: Vector3 = (n as Node3D).global_position
 				var flat := Vector3(p.x - o.x, 0, p.z - o.z)

@@ -191,7 +191,8 @@ func _actor_ids() -> Array:
 
 func _capture() -> Dictionary:
 	var s := {"flood": main.flood, "flood_target": main.flood_target, "stage": main.stage, "actors": {},
-		"chaos": main.world.chaos_state(main.t), "abilities": main.abilities.state(main.t)}
+		"chaos": main.world.chaos_state(main.t), "abilities": main.abilities.state(main.t),
+		"physics": main.physics.state()}
 	for n in main._actors():
 		var m: Dictionary = main.motion[n]
 		s["actors"][main.id_of(n)] = {"pos": m["pos"], "yaw": m["yaw"], "expr": m["expr"], "target": m["target"]}
@@ -211,6 +212,7 @@ func _restore(s: Dictionary) -> void:
 			(n as Puppet).reset_state()
 	main.flood = s["flood"]
 	main.flood_target = s["flood_target"]
+	main.physics.restore(s.get("physics", []))
 	main.stage = s["stage"]
 	main.jaw = 0.0
 	_pending_chaos = s.get("chaos", {})
@@ -226,6 +228,7 @@ func _go_to_shot(i: int) -> void:
 		while k < i:
 			_enter_shot(k)
 			_simulate(shot_len)
+			main.physics.replay(physics_key(), shot_t)   # objects where the recording left them
 			k += 1
 			snapshots[k] = _capture()
 	_restore(snapshots[i])
@@ -284,6 +287,7 @@ func process_shot(dt: float) -> void:
 	trauma = maxf(0.0, trauma - dt * 0.9)
 	if simulating:
 		return
+	main.physics.record(physics_key(), shot_t)
 	if overdub:
 		_sample_overdub()
 	if shot_t >= shot_len:
@@ -352,6 +356,7 @@ func seek(to: float) -> void:
 	_restore(snapshots[shot_i])
 	_enter_shot(shot_i)
 	_simulate(clampf(to, 0.0, shot_len))
+	main.physics.replay(physics_key(), shot_t)   # physics can't fast-forward: use the shot's recording
 	main.voice.resume_audio()
 	main.voice.set_paused(true)
 	_snap_cam = true
@@ -375,6 +380,16 @@ func _fire(e: Dictionary) -> void:
 			var to: Array = e.get("value", e.get("to", [0, 0, 0]))
 			main.walk_to(n, Vector3(float(to[0]), 0, float(to[to.size() - 1])))
 		"face": main.face(n, deg_to_rad(float(v)))
+		"spawn":
+			var at: Array = e.get("at", [0, 1, 0])
+			main.physics.spawn(String(v), Vector3(float(at[0]), float(at[1]), float(at[2])), deg_to_rad(float(e.get("yaw", 0.0))))
+		"preset":
+			var o: Array = e.get("at", [0, 0, 0])
+			var u: Array = e.get("u", [1, 0])
+			main.physics.spawn_preset(String(v), Vector3(float(o[0]), float(o[1]), float(o[2])), Vector3(float(u[0]), 0, float(u[1])))
+		"kick":
+			if n:
+				main.physics.kick_from(n)
 		"chaos": main.set_stage(int(v))
 		"shake": trauma = maxf(trauma, float(v))
 		"ability":
@@ -495,7 +510,16 @@ static func channel(action: String) -> String:
 	match action:
 		"emote", "hop": return "gesture"
 		"cam_pose": return "cam"
+		"spawn", "preset", "kick": return "physics"
 	return action
+
+## The key of the current shot's physics recording.
+func physics_key() -> String:
+	return "%s:%d" % [ep_id, shot_i]
+
+## A physics action performed live (dropped object, set piece, kick), recorded into the shot.
+func record_physics(action: String, value, extra: Dictionary, actor := "") -> void:
+	_record(action, value, actor, extra)
 
 ## Overdub: record over the playing shot and merge on stop. Also works from a pause: playback
 ## resumes from the paused second (others keep their scripted beats) while you perform.
@@ -647,7 +671,7 @@ func _arm_overdub() -> void:
 	_move_t = shot_t
 	_was_moving = false
 
-func _record(action: String, value, actor = null) -> void:
+func _record(action: String, value, actor = null, extra := {}) -> void:
 	if not overdub or _rec.is_empty():
 		return
 	var who := String(_rec["actor"]) if actor == null else String(actor)
@@ -657,6 +681,7 @@ func _record(action: String, value, actor = null) -> void:
 		e["actor"] = who
 	if value != null:
 		e["value"] = value
+	e.merge(extra)
 	var key := who + ":" + channel(action)
 	if not _rec["channels"].has(key):
 		_rec["channels"][key] = t

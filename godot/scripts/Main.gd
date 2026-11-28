@@ -44,6 +44,7 @@ var voice: Voice
 var director: DirectorController
 var art: Look              # the look: style, moods, sky, depth of field (Look.gd)
 var bubbles: Bubbles       # comic reaction bubbles over heads (Bubbles.gd)
+var physics: StudioPhysics # rigid bodies, pushers, recording / replay (StudioPhysics.gd)
 
 var scene_name := ""
 var rig := "static"
@@ -134,6 +135,9 @@ func _ready() -> void:
 	bubbles = Bubbles.new(self)
 	bubbles.name = "Bubbles"
 	add_child(bubbles)
+	physics = StudioPhysics.new(self)
+	physics.name = "Physics"
+	add_child(physics)
 	map_container = Node3D.new()
 	map_container.name = "MapContainer"
 	add_child(map_container)
@@ -186,6 +190,9 @@ func _ready() -> void:
 				var p := spawn_character(ids[i])
 				p.scale = Vector3.ONE
 				place(p, Vector3(-0.45 + i * 0.9, 0, 0.6), 0.0)
+	if args.has("--physics"):   # lay out a physics set piece next to the controlled character
+		for pre in String(args[args.find("--physics") + 1]).split(","):
+			physics_preset(pre)
 	if args.has("--stage"):
 		for k in range(1, int(args[args.find("--stage") + 1]) + 1):
 			set_stage(k)
@@ -354,6 +361,7 @@ func load_scene(name: String) -> void:
 	world = (load(String(info["scene"])) as PackedScene).instantiate() as MapBase
 	map_container.add_child(world)
 	world.configure(info)
+	physics.map_changed(world)   # colliders from the map's meshes (before the host is spawned)
 	_apply_lighting(info)
 	portal_nodes.clear()
 	expansions_on = {}
@@ -387,6 +395,7 @@ func load_scene(name: String) -> void:
 func set_expansion(id: String, on: bool) -> void:
 	world.set_expansion(id, on)
 	expansions_on[id] = on
+	physics.build_static(world)
 	hud.refresh_maps()
 
 func _bounds() -> Rect2:
@@ -697,6 +706,8 @@ func _trigger(action: String) -> void:
 		"director": hud.toggle_box("director")
 		"hide_all": hud.toggle_hide_all()
 		"mood_next": art.cycle()
+		"physics": hud.toggle_box("physics")
+		"physics_kick": physics_kick()
 		"play_pause": director.toggle_pause()
 		"overdub": director.toggle_overdub()
 		"take_toggle": director.toggle_take()
@@ -788,6 +799,29 @@ func _update_camera(dt: float) -> void:
 	cam.position = p[0]
 	cam.look_at(p[1], Vector3.UP)
 	cam.fov = p[2]
+
+# ── physics (StudioPhysics.gd) ────────────────────────────────────────────────────
+## Drops a physics object beside the controlled character. Recorded into the shot while overdubbing.
+func physics_drop(id: String) -> void:
+	var f := physics.frame_near(actor if _has(actor) else null)
+	var at: Vector3 = f[0] + Vector3.UP * 1.1
+	var yaw := float(physics.objects.size()) * 0.7
+	physics.spawn(id, at, yaw)
+	if director.overdub:
+		director.record_physics("spawn", id, {"at": [at.x, at.y, at.z], "yaw": rad_to_deg(yaw)})
+
+## Lays out a set piece (crate pyramid, domino run, bowling strike...) beside the controlled character.
+func physics_preset(id: String) -> void:
+	var f := physics.frame_near(actor if _has(actor) else null, 1.6)
+	physics.spawn_preset(id, f[0], f[1])
+	if director.overdub:
+		var o: Vector3 = f[0]
+		var u: Vector3 = f[1]
+		director.record_physics("preset", id, {"at": [o.x, o.y, o.z], "u": [u.x, u.z]})
+
+func physics_kick() -> void:
+	if _has(actor) and physics.kick_from(actor) and director.overdub:
+		director.record_physics("kick", null, {}, id_of(actor))
 
 # ── follow camera (after DOGWALK's camera, Blender Studio, CC-BY 4.0) ─────────────
 var _idle_t := 0.0
@@ -935,6 +969,7 @@ func _process(dt: float) -> void:
 		cam.position += Vector3(sin(t * 37.0) + sin(t * 23.0), sin(t * 29.0 + 1.0), sin(t * 31.0 + 2.0)) * 0.025 * chaos_shake
 	art.tick(dt)
 	bubbles.tick()
+	physics.set_paused(director.playing and director.paused)
 	_update_portals()
 	hud.sync()
 	_update_context()
