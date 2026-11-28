@@ -305,3 +305,50 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
   - In the Director it is the `two_shot` preset (13–28°, not eased, so it stays deterministic), and `;` during playback cuts to it.
 - **Fixed with it:** replaying an open episode after its cast was cleared now respawns the cast (`play_shot` reopens when a cast member is missing).
 - **Debug:** `--cast id1,id2` spawns those characters side by side. `--clean`, `--mood <id>`, `--look <style>` as before.
+
+## 26. PHYSICS (current; replaces the "no rigid bodies" decision in section 21)
+- **Engine:** Jolt (`project.godot` → `physics/3d/physics_engine`). `scripts/StudioPhysics.gd`, available as `main.physics`.
+- **World:**
+  - Every map mesh gets a static concave collider. Props carry theirs, so chaos FX that move a prop move its collider.
+  - Ink, glow, glass and characters are skipped.
+  - Characters push objects with kinematic capsules that follow them.
+  - Objects float on flood water and drift when `lowgrav` is on. Objects below y = −3 are parked and hidden.
+- **Objects** (`data/physics_props.json`):
+  - Models come from `tools/generate_physics_props.py`, centred on their collision shape (box, sphere, cylinder or capsule).
+  - Objects: crate, barrel, amphora, column drum, boulder, beach ball, bowling pin, bowling ball, domino, watermelon, cone.
+  - Set pieces in screen space (u = screen right, v = away from the camera): crate pyramid, domino run, bowling strike, column tower, amphora stack, rolling boulder, melon pile.
+  - Maps can start with objects: `"physics": [{"id", "at", "yaw"}]` in `maps.json`.
+- **Controls:**
+  - 🧱 Physics toolbox (F7): drop an object, lay out a set piece, kick (F8), shockwave, clear.
+  - Drops land 1.1 m to the camera's right of the controlled character; set pieces 1.6 m.
+  - Abilities apply real impulses: blast, knockback, launch, push; magnet pulls and quake shakes every step.
+- **Director determinism:**
+  - Drops, set pieces and kicks done during overdub or a take are recorded as events: `spawn` (`value`, `at`, `yaw`), `preset` (`value`, `at`, `u`), `kick` (`actor`), all in channel `physics`.
+  - While a shot plays live, every object's pose is recorded at 30 Hz (`recordings["<episode>:<shot>"]`).
+  - Physics can't fast-forward. After a scrub, jump or retake, `replay()` puts each object at its recorded pose and velocity (the test measures 0.000 m error), and live play continues from there.
+  - Snapshots hold every object (`physics.state()`).
+  - Physics pauses with the Director (`PhysicsServer3D.set_active`).
+  - Recordings are kept in memory per session. Movie export simulates live at its fixed frame rate.
+- **Debug:** `--physics <preset>[,<preset>]` lays out set pieces at start.
+
+## 27. HISTORY WORLDS (0 A.D. pipeline; art CC-BY-SA 3.0, see godot/assets/history/LICENSE.md)
+- **`tools/zeroad.py`:**
+  - Resolves a 0 A.D. actor XML and its root-attached prop actors. Variants that only include a base file (destruction FX, garrison flags) are skipped.
+  - Fetches meshes and textures once into `tools/.cache/0ad/`, which is git-ignored. Git LFS objects come through Gitea's `/media/` endpoint.
+  - Reads COLLADA with its own minimal parser, because Blender 5 has no COLLADA importer. The unit tag is ignored, as the game does.
+  - Bakes every face to one flat colour (5 texture samples), snapped to the 21 swatches. Player-colour areas become Bondi blue.
+  - Welds vertices, scales by 0.3, seats the building on the ground, and names it `Lowpoly_<label>`.
+- **Ink:** `Lowpoly_*` meshes are faceted, so the smooth contour ink can't see them. `InkEdges.gd` with `shaders/ink_edges.gdshader` draws silhouette edges bold and creases and open borders thin.
+- **Styling:** `Style` kind `lowpoly`: light hatching, never sways.
+- **Maps** (`tools/generate_history_maps.py`, category **History**, default mood Golden Hour). Each is kit-built ground, water, palms, cypresses, columns, stalls, amphora props and obelisks, plus converted buildings:
+  - `roman_forum`: Temple of Mars, triumphal arch, Pantheon, Temple of Vesta, basilica. Chaos: Earthquake / Senate Stampede / Tiber Flood.
+  - `nile_pyramids`: Kushite pyramids, Temple of Amun, Isis colossus, merchant barge on the Nile, obelisk avenue. Chaos: Sandstorm / Obelisk Topple / Nile Flood.
+- **Adding a building:** `building(m, "structures/<civ>/<actor>.xml", label, (x, 0, z), yaw)` in a map function.
+  - Good candidates: `romans/amphitheater_pompeii`, `romans/capitoline`, `ptolemies/lighthouse` and `library`, `hellenes/temple` and `propylaea`, `kushites/pyramid_large` and `wonder`.
+  - Skip 0 A.D. trees: they use alpha-cut leaf cards. Use the kit's `palm` and `cypress` instead.
+- **Videos must credit:** "Buildings: 0 A.D. by Wildfire Games (wildfiregames.com), CC-BY-SA 3.0". `maps.json` carries a `credit` field.
+
+## 28. MAIN FIVE
+- `characters.json` marks five characters `"main": true`: RoboBear, Gulp (frog), Quackers (duck), Waddle-9 (penguin), Mr. Grump.
+- The Cast drawer opens on ★ Main 5, and main characters' cards carry a ★. All, Robos, Animals and Hybrids still list the full roster.
+- To change the five, edit the flags.

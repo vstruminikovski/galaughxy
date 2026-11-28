@@ -37,6 +37,7 @@ const KINDS := {
 	"character": {"hatch": 1.0, "texture": 0.35, "stroke": 0.04, "snow": 0.3},
 	"prop": {"hatch": 0.9, "texture": 0.15, "stroke": 0.06, "snow": 0.9},
 	"object": {"hatch": 0.9, "texture": 0.15, "stroke": 0.05, "snow": 0.6},
+	"lowpoly": {"hatch": 0.6, "texture": 0.0, "stroke": 0.2, "snow": 1.0},
 	"set": {"hatch": 0.8, "texture": 0.0, "stroke": 0.12, "snow": 1.0},
 	"flat": {"hatch": 0.45, "texture": 0.0, "stroke": 0.16, "snow": 1.0},
 }
@@ -209,6 +210,8 @@ static func restyle(n: Node, kind := "prop") -> void:
 		k = "flat"
 	elif nm.begins_with("Prop_"):
 		k = "prop"
+	elif nm.begins_with("Lowpoly"):
+		k = "lowpoly"   # converted 0 A.D. architecture: faceted, edge-inked, never sways
 	for c in n.get_children():
 		restyle(c, k)
 	var mi := n as MeshInstance3D

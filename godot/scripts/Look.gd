@@ -301,6 +301,7 @@ func set_style(s: String) -> void:
 	style = s
 	_save("style", s)
 	Ink.reset()
+	InkEdges.reset()
 	_apply_style_env()
 	main.rebuild_look()
 	apply_mood(current())

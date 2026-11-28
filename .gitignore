@@ -9,3 +9,5 @@ godot/.godot/
 
 # agent worktrees
 .claude/worktrees/
+tools/.cache/
+__pycache__/

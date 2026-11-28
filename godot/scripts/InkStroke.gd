@@ -39,6 +39,8 @@ func setup(src: ArrayMesh, vcol := false) -> void:
 	var corners := [Vector2(0, -1), Vector2(0, 1), Vector2(1, -1), Vector2(1, 1)]
 	for s in src.get_surface_count():
 		var arrays := src.surface_get_arrays(s)
+		if arrays[Mesh.ARRAY_NORMAL] == null:
+			continue   # no normals (e.g. faceted imports): InkEdges draws those
 		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 		var norms: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
 		if norms.size() != verts.size():

@@ -13,7 +13,8 @@
    "voice": {
     "pitch": 1.0,
     "filter": "radio"
-   }
+   },
+   "main": true
   },
   {
    "id": "robo_fish",
@@ -122,7 +123,8 @@
    "voice": {
     "pitch": 0.8,
     "filter": "none"
-   }
+   },
+   "main": true
   },
   {
    "id": "grumpy_duck",
@@ -137,7 +139,8 @@
    "voice": {
     "pitch": 1.15,
     "filter": "none"
-   }
+   },
+   "main": true
   },
   {
    "id": "chonk_cat",
@@ -216,7 +219,8 @@
    "voice": {
     "pitch": 0.65,
     "filter": "none"
-   }
+   },
+   "main": true
   },
   {
    "id": "cyber_penguin",
@@ -231,7 +235,8 @@
    "voice": {
     "pitch": 1.1,
     "filter": "radio"
-   }
+   },
+   "main": true
   },
   {
    "id": "mecha_bunny",

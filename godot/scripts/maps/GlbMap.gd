@@ -66,6 +66,8 @@ func _walk(n: Node) -> void:
 		if Style.is_glow(mat):
 			_glows.append(mi)
 			_glow_base[mi] = mat
+		elif name.begins_with("Lowpoly") and mi.mesh is ArrayMesh:
+			mi.add_child(InkEdges.make(mi.mesh as ArrayMesh))   # faceted architecture: crease + silhouette ink
 		elif not name.begins_with("Flat") and mi.mesh is ArrayMesh and mi.mesh.get_aabb().get_longest_axis_size() > 0.045:
 			if not Style.is_clear(mat):
 				var rim := Ink.rim(mi.mesh as ArrayMesh)

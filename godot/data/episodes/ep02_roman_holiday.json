@@ -1,0 +1,46 @@
+{
+ "episode_id": "ep02_roman_holiday",
+ "title": "Ep 02 · Roman Holiday",
+ "map": "roman_forum",
+ "audio_dir": "ep02",
+ "cast": {
+  "robo_bear": {"at": [-0.8, 0.0, 2.6], "yaw": 15.0, "expr": "HAPPY"},
+  "grumpy_landlord": {"at": [0.9, 0.0, 2.4], "yaw": -20.0, "expr": "DEADPAN"},
+  "cyber_penguin": {"at": [-2.2, 0.0, 3.4], "yaw": 30.0, "expr": "SMIRK"}
+ },
+ "shots": [
+  {
+   "id": "shot_01", "name": "Welcome to the Forum", "cam": "wide_static", "cut": 0.0, "shake": 0.0, "mood": "golden_hour",
+   "auto_advance_on_audio": true, "min_duration": 3.5,
+   "events": [
+    {"t": 0.2, "actor": "robo_bear", "action": "talk", "text": "Welcome to the Roman Forum, heart of the Empire!"},
+    {"t": 0.4, "actor": "robo_bear", "action": "emote", "value": "emote_point"},
+    {"t": 2.2, "actor": "grumpy_landlord", "action": "bubble", "value": "dots", "duration": 1.6}
+   ]
+  },
+  {
+   "id": "shot_02", "name": "The Senator Objects", "cam": "two_shot", "cam_target": "grumpy_landlord", "cut": 0.0, "shake": 0.0,
+   "auto_advance_on_audio": true, "min_duration": 3.0,
+   "events": [
+    {"t": 0.0, "actor": "grumpy_landlord", "action": "expr", "value": "ANGRY"},
+    {"t": 0.1, "actor": "grumpy_landlord", "action": "bubble", "value": "anger", "duration": 1.4},
+    {"t": 0.3, "actor": "grumpy_landlord", "action": "talk", "text": "Robots in my forum? Absolutely not."},
+    {"t": 2.0, "actor": "robo_bear", "action": "bubble", "value": "sweat", "duration": 1.5}
+   ]
+  },
+  {
+   "id": "shot_03", "name": "Columns Are Load-Bearing", "cam": "wide_static", "cut": 0.25, "shake": 0.0,
+   "auto_advance_on_audio": true, "min_duration": 5.0,
+   "events": [
+    {"t": 0.0, "action": "preset", "value": "column_tower", "at": [-0.6, 0.0, 3.2], "u": [1.0, 0.0]},
+    {"t": 0.6, "actor": "cyber_penguin", "action": "bubble", "value": "idea", "duration": 1.2},
+    {"t": 1.0, "actor": "cyber_penguin", "action": "move", "value": [-1.1, 0.0, 3.25]},
+    {"t": 1.9, "actor": "cyber_penguin", "action": "kick"},
+    {"t": 2.2, "actor": "grumpy_landlord", "action": "expr", "value": "SHOCKED"},
+    {"t": 2.3, "actor": "grumpy_landlord", "action": "bubble", "value": "exclaim", "duration": 1.6},
+    {"t": 2.6, "actor": "grumpy_landlord", "action": "talk", "text": "My columns!"},
+    {"t": 3.4, "actor": "robo_bear", "action": "bubble", "value": "sparkle", "duration": 1.4}
+   ]
+  }
+ ]
+}

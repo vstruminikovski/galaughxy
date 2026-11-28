@@ -54,7 +54,7 @@ func map_changed(root: Node) -> void:
 func build_static(root: Node) -> void:
 	for node in root.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
-		if mi is InkStroke or mi.mesh == null or mi.has_node("Collider"):
+		if mi is InkStroke or mi is InkEdges or mi.mesh == null or mi.has_node("Collider"):
 			continue
 		if main.host != null and is_instance_valid(main.host) and main.host.is_ancestor_of(mi):
 			continue

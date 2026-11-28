@@ -17,5 +17,18 @@ These were rewritten for this project, not copied:
 No DOGWALK art, textures, models, sounds or logos are included. Source mirror used for reference:
 https://github.com/nikitalita/DOGWALK
 
+## 0 A.D. (Wildfire Games)
+Buildings in the history maps (Roman Forum, Nile of the Pharaohs) are converted from 0 A.D. art,
+Copyright (C) Wildfire Games, https://www.wildfiregames.com/, licensed CC-BY-SA 3.0
+(http://creativecommons.org/licenses/by-sa/3.0/). The converted pieces stay CC-BY-SA 3.0. See
+godot/assets/history/LICENSE.md, including the credit line to use in videos.
+
+## Reviewed, not used
+- polyworld (MIT, Nim engine) was read for ideas only. Its deterministic replay matches what the
+  Director already does, and its physics recording was the model for StudioPhysics.
+- Kiln (MIT) was not run. Our Blender kit already generates assets as code with verification renders.
+- CC0Tree (CC0) has mostly modern props. The physics objects were built in our own kit instead,
+  so they match the style.
+
 ## Fonts
 Poppins ExtraBold, SIL Open Font License 1.1 (`godot/assets/fonts/OFL-Poppins.txt`).

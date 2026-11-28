@@ -362,6 +362,8 @@ func load_scene(name: String) -> void:
 	map_container.add_child(world)
 	world.configure(info)
 	physics.map_changed(world)   # colliders from the map's meshes (before the host is spawned)
+	for o in info.get("physics", []):   # the map's own physics objects (amphorae, crates...)
+		physics.spawn(String(o["id"]), v3(o["at"]), deg_to_rad(float(o.get("yaw", 0.0))))
 	_apply_lighting(info)
 	portal_nodes.clear()
 	expansions_on = {}

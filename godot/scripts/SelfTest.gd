@@ -119,6 +119,10 @@ func run() -> void:
 	await _tap(KEY_I)
 	_check("I opens the Cast toolbox", main.hud.is_open("cast"))
 	_check("cast drawer has 20 cards", main.hud.cast_cards.size() == 20)
+	main.hud.cast_filter = "Main"
+	main.hud.filter_cast()
+	_check("Main 5 filter shows the five main characters", main.hud.cast_cards.filter(func(c): return (c["button"] as Button).visible).size() == 5)
+	main.hud.cast_filter = "All"
 	main.hud.cast_search.text = "toast"
 	main.hud.filter_cast()
 	var shown: int = main.hud.cast_cards.filter(func(c): return (c["button"] as Button).visible).size()
@@ -889,3 +893,4 @@ func _physics() -> void:
 	d.stop(true)
 	await _frames(2)
 	ph.clear()
+	main.clear_cast()   # later checks expect the map's host in control

@@ -3021,6 +3021,470 @@
     }
    ],
    "mood": "night"
+  },
+  {
+   "id": "roman_forum",
+   "aliases": [
+    "rome",
+    "forum"
+   ],
+   "title": "The Roman Forum",
+   "tag": "Temple of Mars, triumphal arch, Pantheon",
+   "icon": "🏛",
+   "scene": "res://scenes/maps/roman_forum.tscn",
+   "sky": "#96BFEE",
+   "host": "robo",
+   "bounds": [
+    -7.8,
+    -5.6,
+    15.6,
+    11.4
+   ],
+   "flood": [
+    0,
+    0.0,
+    0.0,
+    0.7
+   ],
+   "chaos": "Q Earthquake · E Senate Stampede · 9 Tiber Flood · 0 reset",
+   "chaos_stages": [
+    {
+     "key": "Q",
+     "name": "Earthquake",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "shake",
+       "amount": 0.55
+      },
+      {
+       "type": "wobble",
+       "group": "banners",
+       "amp": 0.3
+      },
+      {
+       "type": "wobble",
+       "group": "amphorae",
+       "amp": 0.22
+      },
+      {
+       "type": "wobble",
+       "group": "stalls",
+       "amp": 0.08
+      }
+     ]
+    },
+    {
+     "key": "E",
+     "name": "Senate Stampede",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "swarm",
+       "path": "rush",
+       "color": "#F5F2EB",
+       "count": 12,
+       "center": [
+        0,
+        1.2
+       ],
+       "width": 3.0,
+       "height": 0.6,
+       "size": [
+        0.18,
+        0.5,
+        0.18
+       ],
+       "speed": 2.4
+      },
+      {
+       "type": "scatter",
+       "group": "amphorae",
+       "spread": 1.2,
+       "height": 0.7,
+       "stagger": 0.05
+      },
+      {
+       "type": "topple",
+       "group": "stalls",
+       "angle": 75,
+       "time": 0.6,
+       "stagger": 0.2
+      }
+     ]
+    },
+    {
+     "key": "9",
+     "name": "Tiber Flood",
+     "flood": 0.7,
+     "water": "#9CC3EF",
+     "fx": [
+      {
+       "type": "float",
+       "group": "amphorae",
+       "height": 0.35
+      },
+      {
+       "type": "float",
+       "group": "stalls",
+       "height": 0.2
+      }
+     ]
+    }
+   ],
+   "cams": {
+    "static": [
+     [
+      0,
+      3.4,
+      13.5
+     ],
+     [
+      0,
+      1.6,
+      -4.0
+     ],
+     42
+    ],
+    "slider": [
+     [
+      -6.0,
+      2.0,
+      9.0
+     ],
+     [
+      6.0,
+      2.0,
+      9.0
+     ],
+     [
+      0,
+      -0.3,
+      -6.0
+     ],
+     42
+    ],
+    "drone": [
+     [
+      0,
+      0.5,
+      -2.0
+     ],
+     13.0,
+     8.0,
+     42
+    ]
+   },
+   "portals": [],
+   "ambient": "#FFFFFF",
+   "ambient_energy": 0.62,
+   "sun": {
+    "rot": [
+     -40,
+     30,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.45
+   },
+   "expansions": [],
+   "idle": [
+    {
+     "type": "wobble",
+     "group": "banners",
+     "amp": 0.04
+    }
+   ],
+   "host_at": [
+    0,
+    0,
+    2.4
+   ],
+   "category": "History",
+   "mood": "golden_hour",
+   "physics": [
+    {
+     "id": "amphora",
+     "at": [
+      -3.2,
+      0.3,
+      4.6
+     ]
+    },
+    {
+     "id": "amphora",
+     "at": [
+      -2.8,
+      0.3,
+      4.9
+     ]
+    },
+    {
+     "id": "amphora",
+     "at": [
+      -3.0,
+      0.9,
+      4.75
+     ]
+    },
+    {
+     "id": "column_drum",
+     "at": [
+      6.4,
+      0.25,
+      0.6
+     ]
+    },
+    {
+     "id": "column_drum",
+     "at": [
+      6.4,
+      0.76,
+      0.6
+     ]
+    },
+    {
+     "id": "crate",
+     "at": [
+      -5.6,
+      0.25,
+      3.4
+     ]
+    },
+    {
+     "id": "barrel",
+     "at": [
+      4.9,
+      0.3,
+      4.9
+     ]
+    }
+   ],
+   "credit": "Buildings: 0 A.D. (C) Wildfire Games, CC-BY-SA 3.0"
+  },
+  {
+   "id": "nile_pyramids",
+   "aliases": [
+    "egypt",
+    "nile",
+    "pyramids"
+   ],
+   "title": "Nile of the Pharaohs",
+   "tag": "pyramids, temple of Amun, river barge",
+   "icon": "🏜",
+   "scene": "res://scenes/maps/nile_pyramids.tscn",
+   "sky": "#96BFEE",
+   "host": "robo",
+   "bounds": [
+    -6.6,
+    -5.2,
+    14.4,
+    10.4
+   ],
+   "flood": [
+    0,
+    0.0,
+    0.0,
+    0.6
+   ],
+   "chaos": "Q Sandstorm · E Obelisk Topple · 9 Nile Flood · 0 reset",
+   "chaos_stages": [
+    {
+     "key": "Q",
+     "name": "Sandstorm",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "fog",
+       "color": "#FFD986",
+       "density": 0.09
+      },
+      {
+       "type": "shake",
+       "amount": 0.2
+      },
+      {
+       "type": "gust",
+       "group": "stalls",
+       "dir": [
+        1,
+        0.2
+       ],
+       "strength": 1.6,
+       "time": 1.2
+      },
+      {
+       "type": "swarm",
+       "path": "tornado",
+       "color": "#FFD986",
+       "count": 18,
+       "center": [
+        2.0,
+        -1.0
+       ],
+       "radius": 1.6,
+       "height": 2.4,
+       "speed": 2.2,
+       "size": [
+        0.06,
+        0.06,
+        0.06
+       ]
+      }
+     ]
+    },
+    {
+     "key": "E",
+     "name": "Obelisk Topple",
+     "flood": 0.0,
+     "fx": [
+      {
+       "type": "topple",
+       "group": "obelisks",
+       "angle": 85,
+       "time": 0.8,
+       "stagger": 0.18
+      },
+      {
+       "type": "shake",
+       "amount": 0.45
+      }
+     ]
+    },
+    {
+     "key": "9",
+     "name": "Nile Flood",
+     "flood": 0.6,
+     "water": "#7FB8E8",
+     "fx": [
+      {
+       "type": "float",
+       "group": "amphorae",
+       "height": 0.3
+      },
+      {
+       "type": "float",
+       "group": "stalls",
+       "height": 0.2
+      }
+     ]
+    }
+   ],
+   "cams": {
+    "static": [
+     [
+      0,
+      3.6,
+      13.0
+     ],
+     [
+      0,
+      2.4,
+      -6.0
+     ],
+     42
+    ],
+    "slider": [
+     [
+      -6.0,
+      2.2,
+      8.5
+     ],
+     [
+      6.0,
+      2.2,
+      8.5
+     ],
+     [
+      0,
+      -0.2,
+      -6.0
+     ],
+     42
+    ],
+    "drone": [
+     [
+      0,
+      0.5,
+      -3.0
+     ],
+     14.0,
+     9.0,
+     42
+    ]
+   },
+   "portals": [],
+   "ambient": "#FFFFFF",
+   "ambient_energy": 0.62,
+   "sun": {
+    "rot": [
+     -40,
+     30,
+     0
+    ],
+    "color": "#ffffff",
+    "energy": 0.45
+   },
+   "expansions": [],
+   "idle": [],
+   "host_at": [
+    0,
+    0,
+    2.6
+   ],
+   "category": "History",
+   "mood": "golden_hour",
+   "physics": [
+    {
+     "id": "amphora",
+     "at": [
+      -4.4,
+      0.3,
+      3.4
+     ]
+    },
+    {
+     "id": "amphora",
+     "at": [
+      -4.0,
+      0.3,
+      3.7
+     ]
+    },
+    {
+     "id": "crate",
+     "at": [
+      4.4,
+      0.25,
+      4.2
+     ]
+    },
+    {
+     "id": "crate",
+     "at": [
+      4.4,
+      0.76,
+      4.2
+     ]
+    },
+    {
+     "id": "watermelon",
+     "at": [
+      3.6,
+      0.16,
+      4.6
+     ]
+    },
+    {
+     "id": "watermelon",
+     "at": [
+      3.3,
+      0.16,
+      4.3
+     ]
+    }
+   ],
+   "credit": "Buildings: 0 A.D. (C) Wildfire Games, CC-BY-SA 3.0"
   }
  ]
 }

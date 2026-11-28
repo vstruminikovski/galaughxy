@@ -12,8 +12,8 @@ extends CanvasLayer
 ## Panels stop the mouse / touch; passive overlays ignore it; buttons never take focus.
 ## Dialogue shows as Shorts-style captions (Captions.gd) or classic "Speaker: text" subtitles.
 
-const MAP_CATEGORIES := ["All", "Indoor", "Outdoor", "Sci-Fi & Wild"]
-const CHAR_CATEGORIES := [["All", "All"], ["Robo", "Robos"], ["Animal", "Animals"], ["Hybrid", "Hybrids"]]
+const MAP_CATEGORIES := ["All", "History", "Indoor", "Outdoor", "Sci-Fi & Wild"]
+const CHAR_CATEGORIES := [["Main", "★ Main 5"], ["All", "All"], ["Robo", "Robos"], ["Animal", "Animals"], ["Hybrid", "Hybrids"]]
 const EXPR_NAMES := ["Deadpan", "Smirk", "Panic", "Angry", "Happy", "Shocked"]
 const CAPTION_STYLES := ["shorts", "classic"]
 
@@ -80,7 +80,7 @@ var mood_grid: GridContainer
 var caption_btns := {}
 # cast / director
 var cast_cards: Array = []
-var cast_filter := "All"
+var cast_filter := "Main"   # the five main characters first; All shows the whole roster
 var cast_search: LineEdit
 var cast_status: Label
 var director_list: VBoxContainer
@@ -957,11 +957,11 @@ func _build_cast() -> void:
 	filters.add_theme_constant_override("separation", 8)
 	var group := ButtonGroup.new()
 	for cat in CHAR_CATEGORIES:
-		var count: int = main.char_order.size() if cat[0] == "All" else main.char_order.filter(func(id): return main.chars[id]["category"] == cat[0]).size()
+		var count: int = main.char_order.size() if cat[0] == "All" else main.char_order.filter(func(id): return main.chars[id].get("main", false) if cat[0] == "Main" else main.chars[id]["category"] == cat[0]).size()
 		var b := btn("%s (%d)" % [cat[1], count], Vector2(0, 40))
 		b.toggle_mode = true
 		b.button_group = group
-		b.button_pressed = cat[0] == "All"
+		b.button_pressed = cat[0] == cast_filter
 		var c := String(cat[0])
 		b.pressed.connect(func(): cast_filter = c; filter_cast())
 		filters.add_child(b)
@@ -981,7 +981,7 @@ func _build_cast() -> void:
 	scroll.add_child(grid)
 	for id in main.char_order:
 		var data: Dictionary = main.chars[id]
-		var card := btn("%s  %s\n%s · %s" % [data["icon"], data["name"], data["category"], data["gag"]], Vector2(0, 86))
+		var card := btn("%s%s  %s\n%s · %s" % ["★ " if data.get("main", false) else "", data["icon"], data["name"], data["category"], data["gag"]], Vector2(0, 86))
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		card.clip_text = true
@@ -1012,12 +1012,13 @@ func _build_cast() -> void:
 	clr.pressed.connect(main.clear_cast)
 	foot.add_child(clr)
 	t.body.add_child(foot)
+	filter_cast()
 
 func filter_cast() -> void:
 	var q := cast_search.text.strip_edges().to_lower()
 	for c in cast_cards:
 		var d: Dictionary = c["data"]
-		var cat_ok: bool = cast_filter == "All" or d["category"] == cast_filter
+		var cat_ok: bool = cast_filter == "All" or (cast_filter == "Main" and d.get("main", false)) or d["category"] == cast_filter
 		var text := ("%s %s %s %s" % [d["name"], d["id"], d["category"], d["gag"]]).to_lower()
 		(c["button"] as Button).visible = cat_ok and (q == "" or text.contains(q))
 
