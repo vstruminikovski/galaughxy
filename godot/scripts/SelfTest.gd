@@ -54,6 +54,12 @@ func _wait(sec: float) -> void:
 
 func run() -> void:
 	print("[test] start")
+	if OS.get_cmdline_user_args().has("--test-look"):
+		await _frames(5)
+		await _look()
+		print("RESULT: %s" % ("ALL PASS" if fails == 0 else "%d FAIL" % fails))
+		main.get_tree().quit(1 if fails else 0)
+		return
 	if OS.get_cmdline_user_args().has("--test-only"):
 		await _frames(5)
 		await _studio()
@@ -193,6 +199,7 @@ func run() -> void:
 	await _director()
 	await _maps()
 	await _studio()
+	await _look()
 	# portal: walk the robo into the kitchen doorway; kitchen links to the pond
 	main.load_scene("kitchen")
 	await _frames(3)
@@ -509,3 +516,90 @@ func _studio() -> void:
 	d.stop(true)
 	main.clear_cast()
 	await _frames(2)
+
+## Illustrated Ink: materials, moods (map default, click, F6, per shot), depth of field, fog, Look tab, style switch.
+func _look() -> void:
+	var art: Look = main.art
+	var d: DirectorController = main.director
+	var was := Look.style
+	if not Look.illustrated():
+		art.set_style("illustrated")
+		await _frames(3)
+	main.load_scene("beach_boardwalk")
+	await _frames(3)
+	_check("map default mood (pier = blue hour)", art.mood_id == "blue_hour")
+	_check("illustrated sky is drawn", main.env.background_mode == Environment.BG_SKY and main.env.sky != null)
+	_check("key light casts shadows", main.sun.shadow_enabled)
+	var p: Node = main.spawn_character("robo_bear")
+	await _frames(3)
+	var mat: Material = _first_material(p)
+	_check("cast wears the illustrated shader", mat is ShaderMaterial and (mat as ShaderMaterial).shader.resource_path.ends_with("illustrated.gdshader"))
+	_check("palette maps Bondi blue to denim", Style.swatch("bondi_blue").is_equal_approx(Color("#6E8DD3")))
+	_check("snapping an illustrated swatch keeps it", Style.snap(Color("#6E8DD3")).is_equal_approx(Color("#6E8DD3")))
+	art.pick("night")
+	await _frames(2)
+	_check("a mood click relights the scene", art.mood_id == "night" and main.env.ambient_light_color.is_equal_approx(Color("#4A5488")))
+	var i: int = art.mood_order.find(art.mood_id)
+	await _tap(KEY_F6)
+	_check("F6 cycles to the next mood", art.mood_id == art.mood_order[(i + 1) % art.mood_order.size()])
+	art.clear_pick()
+	_check("map default restores the mood", art.mood_id == "blue_hour")
+	# depth of field follows the controlled character
+	await _wait(0.3)
+	_check("depth of field focuses on the subject", main.cam.attributes.dof_blur_far_enabled and art.focus > 0.1 and main.cam.attributes.dof_blur_far_distance > art.focus)
+	# chaos fog sits on top of the haze for one step only
+	art.add_fog(Color.WHITE, 0.2)
+	_check("chaos fog thickens the air", main.env.fog_mode == Environment.FOG_MODE_EXPONENTIAL and is_equal_approx(main.env.fog_density, 0.2))
+	await _frames(2)
+	_check("the mood haze comes back next step", main.env.fog_mode == Environment.FOG_MODE_DEPTH)
+	# per-shot moods
+	d.play_shot("ep01_kitchen_disaster", 1, false)
+	await _frames(3)
+	d.toggle_pause()
+	var shot: Dictionary = d.ep["shots"][1]
+	art.pick("golden_hour")
+	_check("a click while a shot is open is saved into the shot", shot.get("mood", "") == "golden_hour" and art.mood_id == "golden_hour")
+	d.seek(0.4)
+	await _frames(2)
+	_check("the shot keeps its mood when scrubbed", art.mood_id == "golden_hour")
+	d.play_shot("ep01_kitchen_disaster", 0, false)
+	await _frames(3)
+	_check("a shot without a mood uses the map's", art.mood_id == "interior")
+	d.play_shot("ep01_kitchen_disaster", 1, false)
+	await _frames(3)
+	_check("playing the shot again restores its mood", art.mood_id == "golden_hour")
+	d.stop(true)
+	await _frames(2)
+	_check("stopping returns to the map mood", art.mood_id == "interior" and art.shot_mood == "")
+	shot.erase("mood")
+	d.dirty = false
+	# Look tab
+	main.hud.open_world("Look")
+	await _frames(2)
+	_check("Look tab shows a card per mood", main.hud.mood_grid.get_child_count() == art.mood_order.size())
+	await _tap(KEY_ESCAPE)
+	# Studio Vinyl round trip rebuilds map and cast
+	main.clear_cast()
+	main.spawn_character("chaotic_frog")
+	await _frames(2)
+	art.set_style("vinyl")
+	await _frames(3)
+	_check("Studio Vinyl puts back the cel materials", Look.style == "vinyl" and _first_material(main.cast[0]) is StandardMaterial3D and main.env.background_mode == Environment.BG_COLOR)
+	_check("the cast survives a style switch", main.cast.size() == 1 and main.find_actor("chaotic_frog") != null)
+	art.set_style("illustrated")
+	await _frames(3)
+	_check("back to Illustrated Ink", _first_material(main.cast[0]) is ShaderMaterial and main.sun.shadow_enabled)
+	if was != Look.style:
+		art.set_style(was)
+	main.clear_cast()
+
+func _first_material(n: Node) -> Material:
+	if n is MeshInstance3D and (n as MeshInstance3D).mesh != null and not (n is InkStroke):
+		var m := (n as MeshInstance3D).get_active_material(0)
+		if m != null:
+			return m
+	for c in n.get_children():
+		var m := _first_material(c)
+		if m != null:
+			return m
+	return null

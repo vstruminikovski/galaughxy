@@ -28,6 +28,8 @@ const BINDINGS := {
 	# windows
 	"tb_camera": [KEY_F1], "tb_character": [KEY_F2], "maps": [KEY_M, KEY_F4], "cast": [KEY_I], "director": [KEY_P],
 	"controls": [KEY_SLASH, KEY_F5], "hide_all": [KEY_QUOTELEFT], "cancel": [KEY_ESCAPE],
+	# look
+	"mood_next": [KEY_F6],
 }
 
 ## One-shot actions: handled on press.
@@ -39,7 +41,7 @@ const TRIGGERS := ["hop", "next_actor", "fly",
 	"cam_static", "cam_slider", "cam_drone",
 	"path_pin", "path_undo", "path_finish", "path_preview", "path_shorter", "path_longer",
 	"timeline", "play_pause", "overdub", "take_toggle", "take_merge", "take_discard", "cam_key",
-	"tb_camera", "tb_character", "maps", "cast", "director", "controls", "hide_all", "cancel"]
+	"tb_camera", "tb_character", "maps", "cast", "director", "controls", "hide_all", "cancel", "mood_next"]
 
 ## Allowed while free-flying (Minecraft-style: move, look, rise, plus windows and the camera path).
 const FLY_OK := ["move_left", "move_right", "move_forward", "move_back", "talk", "fly", "fly_up", "fly_down",
@@ -88,9 +90,10 @@ const INFO := {
 	"director": ["Windows", "Director toolbox", "Menu ▸ Director"], "controls": ["Windows", "Controls reference", "Menu ▸ ?"],
 	"hide_all": ["Windows", "Hide / show all toolboxes", "Menu ▸ Hide All"],
 	"cancel": ["Windows", "Close windows · stop clean playback · cancel aiming", "Tap the screen during clean playback"],
+	"mood_next": ["Look", "Next mood (lighting preset); while an episode is open it is saved into the shot", "World ▸ Look ▸ mood cards"],
 }
 
-const CATEGORY_ORDER := ["Movement", "Character", "Abilities", "Map chaos", "Camera", "Camera path", "Timeline", "Windows"]
+const CATEGORY_ORDER := ["Movement", "Character", "Abilities", "Map chaos", "Camera", "Camera path", "Timeline", "Look", "Windows"]
 
 ## Friendlier keycap text for punctuation keys (matched case-insensitively).
 const KEYCAPS := {"quoteleft": "`", "bracketleft": "[", "bracketright": "]", "backslash": "\\", "apostrophe": "'",

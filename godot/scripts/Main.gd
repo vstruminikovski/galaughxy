@@ -42,6 +42,7 @@ var sun: DirectionalLight3D
 var cam: Camera3D
 var voice: Voice
 var director: DirectorController
+var art: Look              # the look: style, moods, sky, depth of field (Look.gd)
 
 var scene_name := ""
 var rig := "static"
@@ -120,10 +121,15 @@ var _talk_held := false
 var _shot_mode := false   # screenshot / movie runs ignore the keyboard and never take focus
 
 func _ready() -> void:
+	Look.load_style()
 	Controls.setup()
 	_load_registries()
 	_setup_environment()
 	_setup_camera()
+	art = Look.new(self)
+	art.name = "Look"
+	add_child(art)
+	art.setup()
 	map_container = Node3D.new()
 	map_container.name = "MapContainer"
 	add_child(map_container)
@@ -160,6 +166,8 @@ func _ready() -> void:
 	if args.has("--expand"):
 		for e in maps[scene_name].get("expansions", []):
 			set_expansion(String(e["id"]), true)
+	if args.has("--mood"):
+		art.pick(String(args[args.find("--mood") + 1]))
 	if args.has("--roster"):
 		for i in char_order.size():
 			var p := spawn_character(String(char_order[i]))
@@ -186,6 +194,7 @@ func _ready() -> void:
 				"maps": hud.open_world("Maps")
 				"controls": hud.open_world("Controls")
 				"settings": hud.open_world("Settings")
+				"look": hud.open_world("Look")
 				_: hud.set_box(what, true)
 	if args.has("--aim"):
 		builder.begin(String(args[args.find("--aim") + 1]))
@@ -281,7 +290,12 @@ func _setup_environment() -> void:
 	we.environment = env
 	add_child(we)
 
+## Illustrated Ink lights the map with its mood (Look); Studio Vinyl uses the map's own sun and ambient.
 func _apply_lighting(info: Dictionary) -> void:
+	_base_sky = Color(String(info["sky"]))
+	art.map_changed(info)
+	if Look.illustrated():
+		return
 	var s: Dictionary = info.get("sun", {"rot": [-50, 35, 0], "color": "#ffffff", "energy": 0.4})
 	sun.rotation_degrees = v3(s["rot"])
 	sun.light_color = Color(String(s["color"]))
@@ -376,8 +390,8 @@ func _piece(mesh: ArrayMesh, _ink_col: Color, thick := 0.009, occ: Dictionary = 
 	n.add_child(Ink.rim(mesh, thick, occ.get("c", []), occ.get("r", [])))
 	return n
 
-func _lit() -> StandardMaterial3D:
-	return Style.toon(Color.WHITE, true)
+func _lit() -> Material:
+	return Style.toon(Color.WHITE, true, {"kind": "character"})
 
 ## One smooth part as a node on its pivot: surface, glow (emissive) or lit, plus ink strokes.
 func _smooth_part(part: Dictionary, thick: float, occ: Dictionary = {}) -> Node3D:
@@ -393,6 +407,9 @@ func _smooth_part(part: Dictionary, thick: float, occ: Dictionary = {}) -> Node3
 		m.emission_enabled = true
 		m.emission_energy_multiplier = 1.6
 		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		if Look.illustrated():   # past white, so it blooms
+			m.albedo_color = Color(1.56, 1.56, 1.56)
+		m.set_meta("glow", true)
 		g.material_override = m
 		n.add_child(g)
 		return n
@@ -413,7 +430,7 @@ func _portal(at: Vector3, yaw: float, to: String) -> void:
 	m.emission_enabled = true
 	m.emission = Color("#7fd4ff")
 	m.emission_energy_multiplier = 0.6
-	door.material_override = m
+	door.material_override = Style.glow(Color("#7fd4ff"), 0.6) if Look.illustrated() else m
 	door.position = Vector3(0, 1.05, 0.01)
 	p.add_child(door)
 	portal_nodes.append({"node": p, "to": to, "at": at})
@@ -547,6 +564,19 @@ func clear_cast() -> void:
 		_take_control(host)
 	_update_hud()
 
+## After a look switch: rebuild the map and the cast with the new materials, keeping everyone's place.
+func rebuild_look() -> void:
+	var keep: Array = []
+	for p in cast:
+		if is_instance_valid(p) and _has(p):
+			keep.append([id_of(p), motion[p]["pos"], motion[p]["yaw"], p == actor])
+	clear_cast()
+	load_scene(scene_name)
+	for k in keep:
+		var p := spawn_character(String(k[0]), bool(k[3]))
+		p.scale = Vector3.ONE
+		place(p, k[1], k[2])
+
 func _take_control(n: Node3D) -> void:
 	if n == null or n == actor:
 		return
@@ -647,6 +677,7 @@ func _trigger(action: String) -> void:
 		"cast": hud.toggle_box("cast")
 		"director": hud.toggle_box("director")
 		"hide_all": hud.toggle_hide_all()
+		"mood_next": art.cycle()
 		"play_pause": director.toggle_pause()
 		"overdub": director.toggle_overdub()
 		"take_toggle": director.toggle_take()
@@ -814,6 +845,7 @@ func _process(dt: float) -> void:
 		_update_camera(dt)
 	if chaos_shake > 0.0 and rig != "free":
 		cam.position += Vector3(sin(t * 37.0) + sin(t * 23.0), sin(t * 29.0 + 1.0), sin(t * 31.0 + 2.0)) * 0.025 * chaos_shake
+	art.tick(dt)
 	_update_portals()
 	hud.sync()
 	_update_context()
@@ -828,8 +860,7 @@ func _step(dt: float, live: bool) -> void:
 	light_scale = 1.0
 	flash = 0.0
 	ability_flood = 0.0
-	env.fog_enabled = false
-	env.fog_density = 0.0
+	art.reset_fog()
 	director.process_shot(dt)
 	_update_actors(dt, live)
 	world.chaos_tick(t, self)
@@ -963,6 +994,9 @@ func _update_flood(dt: float) -> void:
 
 ## Blackouts dim the set and the sky; lightning flashes everything bright for a beat.
 func _apply_chaos_light() -> void:
+	if Look.illustrated():
+		art.apply_light(light_scale, flash)
+		return
 	env.ambient_light_energy = _base_ambient * light_scale + flash * 1.2
 	sun.light_energy = _base_sun * light_scale + flash * 1.4
 	var sky := _base_sky.darkened(1.0 - lerpf(0.25, 1.0, light_scale)).lerp(Color.WHITE, clampf(flash, 0.0, 1.0) * 0.8)

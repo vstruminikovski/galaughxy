@@ -102,10 +102,7 @@ func _lights() -> void:
 	sphere.radial_segments = 24
 	sphere.rings = 12
 	var mm := Builders.scatter(sphere, bulbs, AMBER)
-	var m := mm.material_override as StandardMaterial3D
-	m.emission_enabled = true
-	m.emission = AMBER
-	m.emission_energy_multiplier = 2.5
+	mm.material_override = Style.glow(AMBER, 2.5)
 	add_child(mm)
 
 func _skyline() -> void:

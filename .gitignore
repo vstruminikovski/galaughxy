@@ -6,3 +6,6 @@ android
 ios
 .claude/settings.local.json
 godot/.godot/
+
+# agent worktrees
+.claude/worktrees/

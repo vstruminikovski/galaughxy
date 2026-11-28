@@ -161,9 +161,7 @@ func _terrain() -> MeshInstance3D:
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
-	var m := Style.toon(Color.WHITE, true)
-	m.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mi.material_override = m
+	mi.material_override = Style.toon(Color.WHITE, true, {"double": true, "kind": "flat"})
 	return mi
 
 func _ground_color(v: Vector3, n: Vector3) -> Color:

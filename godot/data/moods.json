@@ -1,0 +1,388 @@
+{
+  "about": "Illustrated Ink moods (CLAUDE.md section 24). light = lit-side multiplier, shadow = shadow-side multiplier (ambient), both sRGB: a white surface shows exactly these colours. sun = key light angle (pitch, yaw in degrees). Sky, fog, grade and post values feed the sky, environment and finishing shaders.",
+  "moods": [
+    {
+      "id": "blue_hour",
+      "name": "Blue Hour",
+      "icon": "🌆",
+      "sun": {
+        "pitch": -11,
+        "yaw": 150
+      },
+      "light": "#FFF2E2",
+      "shadow": "#9FA8DA",
+      "rim": 1.0,
+      "rim_color": "#FFAE6E",
+      "rim_glow": 1.35,
+      "hatch": 1.0,
+      "ink": "#1C1A26",
+      "ink_alpha": 0.85,
+      "sky": {
+        "zenith": "#3B4C93",
+        "horizon": "#F2A883",
+        "ground": "#4B5A96",
+        "sun_disc": "#FFE2B5",
+        "sun_glow": "#FF9E62",
+        "cloud_lit": "#FFC6A8",
+        "cloud_shade": "#9E8CC0",
+        "cloud_cover": 0.3,
+        "haze": 0.5,
+        "sun_size": 0.035,
+        "glow_size": 8.0,
+        "horizon_away": "#B7A2D2"
+      },
+      "fog": {
+        "color": "#8F9BD0",
+        "begin": 6.0,
+        "end": 50.0,
+        "amount": 0.55
+      },
+      "grade": {
+        "shadow": [
+          0.36,
+          0.4,
+          0.62
+        ],
+        "light": [
+          0.6,
+          0.53,
+          0.45
+        ],
+        "amount": 0.25
+      },
+      "dof": 0.08,
+      "grain": 0.035,
+      "vignette": 0.25,
+      "bloom": 0.5
+    },
+    {
+      "id": "golden_hour",
+      "name": "Golden Hour",
+      "icon": "🌇",
+      "sun": {
+        "pitch": -14,
+        "yaw": -60
+      },
+      "light": "#FFE9CC",
+      "shadow": "#A898CB",
+      "rim": 1.0,
+      "rim_color": "#FFA45C",
+      "rim_glow": 1.35,
+      "hatch": 1.0,
+      "ink": "#221A24",
+      "ink_alpha": 0.85,
+      "sky": {
+        "zenith": "#5867AE",
+        "horizon": "#FFB877",
+        "ground": "#5E5482",
+        "sun_disc": "#FFF0C2",
+        "sun_glow": "#FF9A4D",
+        "cloud_lit": "#FFD9A3",
+        "cloud_shade": "#B98DB0",
+        "cloud_cover": 0.28,
+        "haze": 0.55,
+        "sun_size": 0.04,
+        "glow_size": 6.0,
+        "horizon_away": "#D9A2B2"
+      },
+      "fog": {
+        "color": "#D9AE9F",
+        "begin": 6.0,
+        "end": 55.0,
+        "amount": 0.5
+      },
+      "grade": {
+        "shadow": [
+          0.42,
+          0.37,
+          0.6
+        ],
+        "light": [
+          0.64,
+          0.54,
+          0.42
+        ],
+        "amount": 0.25
+      },
+      "dof": 0.08,
+      "grain": 0.035,
+      "vignette": 0.25,
+      "bloom": 0.55
+    },
+    {
+      "id": "daylight",
+      "name": "Daylight",
+      "icon": "☀️",
+      "sun": {
+        "pitch": -52,
+        "yaw": 35
+      },
+      "light": "#FFFBF2",
+      "shadow": "#AEBDE6",
+      "rim": 0.45,
+      "rim_color": "#FFF1D6",
+      "rim_glow": 1.1,
+      "hatch": 0.85,
+      "ink": "#1C1C28",
+      "ink_alpha": 0.8,
+      "sky": {
+        "zenith": "#4F7FD2",
+        "horizon": "#C3DAF2",
+        "ground": "#7F92BA",
+        "sun_disc": "#FFFFF0",
+        "sun_glow": "#FFF4D6",
+        "cloud_lit": "#FFFFFF",
+        "cloud_shade": "#BFCBEA",
+        "cloud_cover": 0.3,
+        "haze": 0.35,
+        "sun_size": 0.03,
+        "glow_size": 16.0,
+        "horizon_away": "#CFE0F4"
+      },
+      "fog": {
+        "color": "#C2D3EE",
+        "begin": 10.0,
+        "end": 70.0,
+        "amount": 0.35
+      },
+      "grade": {
+        "shadow": [
+          0.42,
+          0.45,
+          0.6
+        ],
+        "light": [
+          0.55,
+          0.53,
+          0.5
+        ],
+        "amount": 0.15
+      },
+      "dof": 0.06,
+      "grain": 0.03,
+      "vignette": 0.18,
+      "bloom": 0.35
+    },
+    {
+      "id": "interior",
+      "name": "Interior",
+      "icon": "🏫",
+      "sun": {
+        "pitch": -45,
+        "yaw": 60
+      },
+      "light": "#F6F3EC",
+      "shadow": "#8F9CCB",
+      "rim": 0.5,
+      "rim_color": "#D9E2FF",
+      "rim_glow": 1.1,
+      "hatch": 1.0,
+      "ink": "#1A1A28",
+      "ink_alpha": 0.85,
+      "sky": {
+        "zenith": "#252F5C",
+        "horizon": "#5A69A6",
+        "ground": "#1E2547",
+        "sun_disc": "#F6F3EC",
+        "sun_glow": "#7A88C2",
+        "cloud_lit": "#7A88C2",
+        "cloud_shade": "#3A4478",
+        "cloud_cover": 0.0,
+        "haze": 0.3,
+        "sun_size": 0.0,
+        "glow_size": 8.0,
+        "horizon_away": "#4A588F"
+      },
+      "fog": {
+        "color": "#6E7CB4",
+        "begin": 8.0,
+        "end": 40.0,
+        "amount": 0.35
+      },
+      "grade": {
+        "shadow": [
+          0.38,
+          0.42,
+          0.64
+        ],
+        "light": [
+          0.56,
+          0.54,
+          0.5
+        ],
+        "amount": 0.22
+      },
+      "dof": 0.07,
+      "grain": 0.035,
+      "vignette": 0.25,
+      "bloom": 0.5
+    },
+    {
+      "id": "lamplight",
+      "name": "Lamplight",
+      "icon": "🛋",
+      "sun": {
+        "pitch": -58,
+        "yaw": -30
+      },
+      "light": "#FFE8CB",
+      "shadow": "#9288BF",
+      "rim": 0.6,
+      "rim_color": "#FFC48A",
+      "rim_glow": 1.2,
+      "hatch": 1.0,
+      "ink": "#221A26",
+      "ink_alpha": 0.85,
+      "sky": {
+        "zenith": "#2A2D57",
+        "horizon": "#8C6E9E",
+        "ground": "#211F3E",
+        "sun_disc": "#FFE8CB",
+        "sun_glow": "#B57E8E",
+        "cloud_lit": "#B58A9E",
+        "cloud_shade": "#6E5E92",
+        "cloud_cover": 0.2,
+        "haze": 0.35,
+        "sun_size": 0.0,
+        "glow_size": 8.0,
+        "horizon_away": "#6E5E92"
+      },
+      "fog": {
+        "color": "#8A7FB0",
+        "begin": 8.0,
+        "end": 40.0,
+        "amount": 0.35
+      },
+      "grade": {
+        "shadow": [
+          0.42,
+          0.38,
+          0.62
+        ],
+        "light": [
+          0.62,
+          0.54,
+          0.44
+        ],
+        "amount": 0.25
+      },
+      "dof": 0.08,
+      "grain": 0.035,
+      "vignette": 0.28,
+      "bloom": 0.65
+    },
+    {
+      "id": "night",
+      "name": "Night",
+      "icon": "🌙",
+      "sun": {
+        "pitch": -32,
+        "yaw": -150
+      },
+      "light": "#C8D2F5",
+      "shadow": "#4A5488",
+      "rim": 1.2,
+      "rim_color": "#9EC0FF",
+      "rim_glow": 1.3,
+      "hatch": 1.0,
+      "ink": "#0E1024",
+      "ink_alpha": 0.9,
+      "sky": {
+        "zenith": "#0E1330",
+        "horizon": "#2E3A75",
+        "ground": "#10142B",
+        "sun_disc": "#E8EEFF",
+        "sun_glow": "#5A6FB8",
+        "cloud_lit": "#5D6CAE",
+        "cloud_shade": "#2A3462",
+        "cloud_cover": 0.22,
+        "haze": 0.35,
+        "sun_size": 0.025,
+        "glow_size": 10.0,
+        "horizon_away": "#26316A"
+      },
+      "fog": {
+        "color": "#26305F",
+        "begin": 4.0,
+        "end": 32.0,
+        "amount": 0.6
+      },
+      "grade": {
+        "shadow": [
+          0.33,
+          0.38,
+          0.66
+        ],
+        "light": [
+          0.52,
+          0.53,
+          0.58
+        ],
+        "amount": 0.3
+      },
+      "dof": 0.08,
+      "grain": 0.045,
+      "vignette": 0.32,
+      "bloom": 1.0
+    },
+    {
+      "id": "underwater",
+      "name": "Underwater",
+      "icon": "🌊",
+      "sun": {
+        "pitch": -78,
+        "yaw": 10
+      },
+      "light": "#D2F3EC",
+      "shadow": "#3F7F88",
+      "rim": 0.7,
+      "rim_color": "#BFFFF2",
+      "rim_glow": 1.2,
+      "hatch": 0.9,
+      "ink": "#10303A",
+      "ink_alpha": 0.85,
+      "sky": {
+        "zenith": "#7FD0CC",
+        "horizon": "#2C6F79",
+        "ground": "#0F343B",
+        "sun_disc": "#EFFFFA",
+        "sun_glow": "#9BE3D8",
+        "cloud_lit": "#9BE3D8",
+        "cloud_shade": "#2C6F79",
+        "cloud_cover": 0.0,
+        "haze": 0.6,
+        "sun_size": 0.05,
+        "glow_size": 4.0,
+        "horizon_away": "#2C6F79"
+      },
+      "fog": {
+        "color": "#2D757D",
+        "begin": 1.0,
+        "end": 14.0,
+        "amount": 0.85
+      },
+      "grade": {
+        "shadow": [
+          0.3,
+          0.46,
+          0.52
+        ],
+        "light": [
+          0.5,
+          0.58,
+          0.55
+        ],
+        "amount": 0.3
+      },
+      "dof": 0.1,
+      "grain": 0.05,
+      "vignette": 0.3,
+      "bloom": 0.6
+    }
+  ],
+  "map_defaults": {
+    "Indoor": "interior",
+    "Outdoor": "blue_hour",
+    "Sci-Fi & Wild": "night"
+  }
+}

@@ -47,7 +47,7 @@ static func create(data: Dictionary) -> Puppet:
 	p.model = scene.instantiate() as Node3D
 	p.model.scale = Vector3.ONE * float(data.get("scale", 1.0))
 	p.add_child(p.model)
-	Style.restyle(p.model)
+	Style.restyle(p.model, "character")
 	p._index(p.model)
 	p._ink(p.model)
 	return p
@@ -100,12 +100,12 @@ func _ink(n: Node) -> void:
 		return
 	if mi.mesh.get_aabb().get_longest_axis_size() < 0.045:
 		return
-	var mat := mi.get_active_material(0) as BaseMaterial3D
-	if mat and (mat.emission_enabled or mat.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED):
+	var mat := mi.get_active_material(0)
+	if Style.is_glow(mat) or Style.is_clear(mat):
 		return
 	if mi.mesh is ArrayMesh:
 		var rim := Ink.rim(mi.mesh as ArrayMesh)
-		Ink.calm(rim, mat)
+		Ink.calm(rim, Style.color_of(mat))
 		mi.add_child(rim)
 
 # ── posing helpers ──────────────────────────────────────────────────────────────

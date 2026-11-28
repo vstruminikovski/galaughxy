@@ -221,9 +221,7 @@ func _apply(a: Dictionary, fx: Dictionary, e: float, dur: float, env: float, dt:
 			if env > 0.4:
 				main.slippery = true
 		"fog":
-			main.env.fog_enabled = true
-			main.env.fog_light_color = Style.snap(Color(String(fx.get("color", "#F5F2EB"))))
-			main.env.fog_density = maxf(main.env.fog_density if main.env.fog_enabled else 0.0, float(fx.get("density", 0.1)) * env)
+			main.art.add_fog(Style.snap(Color(String(fx.get("color", "#F5F2EB")))), float(fx.get("density", 0.1)) * env)
 		"dim":
 			main.light_scale = minf(main.light_scale, lerpf(1.0, float(fx.get("amount", 0.2)), env))
 		"flash":
@@ -269,9 +267,7 @@ func _particles(a: Dictionary, fx: Dictionary, e: float, dur: float) -> void:
 			inst.multimesh.transform_format = MultiMesh.TRANSFORM_3D
 			inst.multimesh.use_colors = true
 			inst.multimesh.mesh = mesh
-			var mat := Style.toon(Color.WHITE)
-			mat.vertex_color_use_as_albedo = true
-			inst.material_override = mat
+			inst.material_override = Style.toon(Color.WHITE, true)
 			add_child(inst)
 		inst.multimesh.instance_count = count
 		var cols: Array = fx.get("colors", ["#F5F2EB"])

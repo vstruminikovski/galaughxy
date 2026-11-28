@@ -106,7 +106,8 @@
     "color": "#ffffff",
     "energy": 0.4
    },
-   "category": "Indoor"
+   "category": "Indoor",
+   "mood": "interior"
   },
   {
    "id": "mac_garage_lab",
@@ -199,7 +200,8 @@
     "color": "#ffffff",
     "energy": 0.4
    },
-   "category": "Sci-Fi & Wild"
+   "category": "Sci-Fi & Wild",
+   "mood": "interior"
   },
   {
    "id": "rooftop_terrace",
@@ -292,7 +294,8 @@
      "bounds": []
     }
    ],
-   "category": "Outdoor"
+   "category": "Outdoor",
+   "mood": "golden_hour"
   },
   {
    "id": "pond_life",
@@ -398,7 +401,8 @@
     "color": "#ffffff",
     "energy": 0.4
    },
-   "category": "Sci-Fi & Wild"
+   "category": "Sci-Fi & Wild",
+   "mood": "golden_hour"
   },
   {
    "id": "backyard_garden",
@@ -495,7 +499,8 @@
     "color": "#ffffff",
     "energy": 0.4
    },
-   "category": "Outdoor"
+   "category": "Outdoor",
+   "mood": "blue_hour"
   },
   {
    "id": "apple_store_showroom",
@@ -666,7 +671,8 @@
     0,
     1.9
    ],
-   "category": "Indoor"
+   "category": "Indoor",
+   "mood": "interior"
   },
   {
    "id": "chaotic_supermarket",
@@ -814,7 +820,8 @@
     0,
     1.9
    ],
-   "category": "Indoor"
+   "category": "Indoor",
+   "mood": "interior"
   },
   {
    "id": "retro_diner",
@@ -993,7 +1000,8 @@
     0,
     1.9
    ],
-   "category": "Indoor"
+   "category": "Indoor",
+   "mood": "lamplight"
   },
   {
    "id": "podcast_studio",
@@ -1152,7 +1160,8 @@
     0,
     1.9
    ],
-   "category": "Indoor"
+   "category": "Indoor",
+   "mood": "interior"
   },
   {
    "id": "lunar_moon_base",
@@ -1305,7 +1314,8 @@
     0,
     1.9
    ],
-   "category": "Sci-Fi & Wild"
+   "category": "Sci-Fi & Wild",
+   "mood": "night"
   },
   {
    "id": "suburban_cul_de_sac",
@@ -1476,7 +1486,8 @@
     0,
     1.9
    ],
-   "category": "Outdoor"
+   "category": "Outdoor",
+   "mood": "blue_hour"
   },
   {
    "id": "cozy_living_room",
@@ -1644,7 +1655,8 @@
     0,
     1.9
    ],
-   "category": "Indoor"
+   "category": "Indoor",
+   "mood": "lamplight"
   },
   {
    "id": "mad_science_hospital",
@@ -1792,7 +1804,8 @@
     0,
     1.9
    ],
-   "category": "Sci-Fi & Wild"
+   "category": "Sci-Fi & Wild",
+   "mood": "interior"
   },
   {
    "id": "corporate_office",
@@ -1972,7 +1985,8 @@
     0,
     1.9
    ],
-   "category": "Indoor"
+   "category": "Indoor",
+   "mood": "interior"
   },
   {
    "id": "beach_boardwalk",
@@ -2129,7 +2143,8 @@
     0,
     1.9
    ],
-   "category": "Outdoor"
+   "category": "Outdoor",
+   "mood": "blue_hour"
   },
   {
    "id": "retro_arcade",
@@ -2316,7 +2331,8 @@
     0,
     1.9
    ],
-   "category": "Indoor"
+   "category": "Indoor",
+   "mood": "night"
   },
   {
    "id": "train_dining_car",
@@ -2496,7 +2512,8 @@
      "amp": 0.006,
      "speed": 11
     }
-   ]
+   ],
+   "mood": "lamplight"
   },
   {
    "id": "courtroom_drama",
@@ -2669,7 +2686,8 @@
      "title": "+ Jury Deliberation Room",
      "bounds": []
     }
-   ]
+   ],
+   "mood": "interior"
   },
   {
    "id": "art_gallery_heist",
@@ -2829,7 +2847,8 @@
    ],
    "hidden": [
     "shutters"
-   ]
+   ],
+   "mood": "night"
   },
   {
    "id": "haunted_attic",
@@ -3000,7 +3019,8 @@
      "amp": 0.04,
      "speed": 1.4
     }
-   ]
+   ],
+   "mood": "night"
   }
  ]
 }

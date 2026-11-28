@@ -4,8 +4,8 @@ extends RefCounted
 ## Node helpers for smooth stylised scenery (surfaces from signed distance fields, plus
 ## MultiMesh scatter for small repeated pieces such as reeds, pads and flowers).
 
-static func lit_material() -> StandardMaterial3D:
-	return Style.toon(Color.WHITE, true)
+static func lit_material() -> Material:
+	return Style.toon(Color.WHITE, true, {"kind": "set"})
 
 static func ink_material(c: Color) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()

@@ -23,7 +23,7 @@ var _idle: Array = []
 var _hidden: Array = []
 var _swarms := {}      # fx key -> MultiMeshInstance3D
 var _glow_dirty := false
-var _glow_dark: StandardMaterial3D
+var _glow_dark: Material
 
 func build() -> void:
 	var path := "res://assets/maps/%s/%s.glb" % [map_id, map_id]
@@ -46,7 +46,7 @@ func spawn_points() -> Array:
 
 ## Studio Vinyl materials, ink on the outer shapes, and an index of props / glows / spawns.
 func _dress(root: Node) -> void:
-	Style.restyle(root)
+	Style.restyle(root, "set")
 	_walk(root)
 
 func _walk(n: Node) -> void:
@@ -62,15 +62,14 @@ func _walk(n: Node) -> void:
 		_spawns.append((n as Node3D).global_position if n.is_inside_tree() else _world_pos(n))
 	var mi := n as MeshInstance3D
 	if mi and mi.mesh:
-		var mat := mi.get_active_material(0) as BaseMaterial3D
-		var glowing := mat != null and mat.emission_enabled
-		if glowing:
+		var mat := mi.get_active_material(0)
+		if Style.is_glow(mat):
 			_glows.append(mi)
 			_glow_base[mi] = mat
 		elif not name.begins_with("Flat") and mi.mesh is ArrayMesh and mi.mesh.get_aabb().get_longest_axis_size() > 0.045:
-			if mat == null or mat.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED:
+			if not Style.is_clear(mat):
 				var rim := Ink.rim(mi.mesh as ArrayMesh)
-				Ink.calm(rim, mat)
+				Ink.calm(rim, Style.color_of(mat))
 				mi.add_child(rim)
 	for c in n.get_children():
 		_walk(c)
@@ -126,7 +125,7 @@ func _reset(main: Node) -> void:
 	main.slippery = false
 	main.light_scale = 1.0
 	main.flash = 0.0
-	main.env.fog_enabled = false
+	main.art.reset_fog()
 	_glow_dirty = false
 
 ## Called every studio step: rest pose, then every active FX in order.
@@ -143,7 +142,6 @@ func chaos_tick(now: float, main: Node) -> void:
 		for mi in _glow_base:
 			(mi as MeshInstance3D).set_surface_override_material(0, _glow_base[mi])
 		_glow_dirty = false
-	var fog := false
 	var used_swarms := {}
 	for fx in _idle:
 		_fx(fx, now, main, used_swarms)
@@ -151,10 +149,7 @@ func chaos_tick(now: float, main: Node) -> void:
 		if k - 1 >= _stages.size():
 			break
 		for fx in _stages[k - 1].get("fx", []):
-			if _fx(fx, now - _t0[k], main, used_swarms):
-				fog = true
-	if not fog:
-		main.env.fog_enabled = false
+			_fx(fx, now - _t0[k], main, used_swarms)
 	for key in _swarms:
 		(_swarms[key] as Node3D).visible = used_swarms.has(key)
 
@@ -326,9 +321,7 @@ func _fx(fx: Dictionary, e: float, main: Node, used_swarms: Dictionary) -> bool:
 		"slip":
 			main.slippery = true
 		"fog":
-			main.env.fog_enabled = true
-			main.env.fog_light_color = Style.snap(Color(String(fx.get("color", "#F5F2EB"))))
-			main.env.fog_density = float(fx.get("density", 0.06)) * smoothstep(0.0, 1.5, e)
+			main.art.add_fog(Style.snap(Color(String(fx.get("color", "#F5F2EB")))), float(fx.get("density", 0.06)) * smoothstep(0.0, 1.5, e))
 			return true
 		"swarm":
 			var key := "%s:%s" % [fx.get("color", ""), fx.get("count", 0)]
@@ -359,9 +352,7 @@ func _swarm(key: String, fx: Dictionary, e: float) -> void:
 			mm.instance_count = count
 			for i in count:
 				mm.set_instance_color(i, Style.snap(Color(String(palette[i % palette.size()]))))
-			var mat := Style.toon(Color.WHITE)
-			mat.vertex_color_use_as_albedo = true
-			mm_inst.material_override = mat
+			mm_inst.material_override = Style.toon(Color.WHITE, true)
 		add_child(mm_inst)
 		_swarms[key] = mm_inst
 	var c: Array = fx.get("center", [0, 0])

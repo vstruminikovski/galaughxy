@@ -248,6 +248,7 @@ func _enter_shot(i: int) -> void:
 		_pending_abilities = null
 	if main.host:
 		main.host.visible = _actor_ids().has("host")
+	main.art.set_shot_mood(String(shot.get("mood", "")))
 	trauma = 0.0
 	cam_cut(String(shot.get("cam", "wide_static")), String(shot.get("cam_target", "")),
 		float(shot.get("cut", 0.0)), shot.get("push", [0.0, 100.0]), float(shot.get("shake", 0.0)))
@@ -318,6 +319,7 @@ func stop(take_over := true) -> void:
 	paused = false
 	released = true
 	main.voice.stop_all()
+	main.art.set_shot_mood("")
 	main.on_director_stop(take_over)
 	changed.emit()
 

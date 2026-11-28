@@ -14,3 +14,37 @@ window/stretch/mode="canvas_items"
 [rendering]
 anti_aliasing/quality/msaa_3d=3
 textures/vram_compression/import_etc2_astc=true
+lights_and_shadows/directional_shadow/size=4096
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=1
+camera/depth_of_field/depth_of_field_bokeh_quality=1
+
+[shader_globals]
+
+ill_sun_dir={
+"type": "vec3",
+"value": Vector3(0.49, 0.19, -0.85)
+}
+ill_ink={
+"type": "vec4",
+"value": Vector4(0.012, 0.01, 0.018, 0.85)
+}
+ill_rim={
+"type": "float",
+"value": 1.0
+}
+ill_rim_color={
+"type": "vec3",
+"value": Vector3(1.3, 0.55, 0.25)
+}
+ill_hatch={
+"type": "float",
+"value": 1.0
+}
+ill_time={
+"type": "float",
+"value": 0.0
+}
+ill_boil={
+"type": "float",
+"value": 0.0
+}

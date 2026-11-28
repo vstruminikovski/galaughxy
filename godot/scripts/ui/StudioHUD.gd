@@ -5,7 +5,8 @@ extends CanvasLayer
 ##   🎥 Camera     1. Drone · 2. Static · 3. Sliders (map rigs + the waypoint path builder)
 ##   🎭 Character  Move · Emotions · Emotes · Abilities (+ map gags), TALK, Next
 ##   ⏱ Timeline   shot pills, play/pause, scrubber, loop, overdub, live take → merge, save
-##   🗺 World      Maps (category filters, expansions) · Controls (live InputMap reference) · Settings
+##   🗺 World      Maps (category filters, expansions) · Look (style, moods, toggles) · Controls (live
+##                InputMap reference) · Settings
 ##   👥 Cast       spawn roster characters      🎬 Director  episodes, play / loop / retake
 ## Every button taps an InputMap action or calls the same studio function the keys use.
 ## Panels stop the mouse / touch; passive overlays ignore it; buttons never take focus.
@@ -64,6 +65,10 @@ var maps_filter := "All"
 var controls_list: VBoxContainer
 var controls_search: LineEdit
 var tips_toggle: CheckButton
+var look_target: Label
+var look_style := {}
+var look_toggles := {}
+var mood_grid: GridContainer
 # cast / director
 var cast_cards: Array = []
 var cast_filter := "All"
@@ -595,8 +600,8 @@ func _sync_timeline() -> void:
 
 # ── World toolbox: Maps · Controls · Settings ─────────────────────────────────────
 func _build_world() -> void:
-	var t := _box("world", "🗺 World · maps, controls, settings", 1000, Vector2(140, 124))
-	world_tabs = t.tabs(["Maps", "Controls", "Settings"])
+	var t := _box("world", "🗺 World · maps, look, controls, settings", 1000, Vector2(140, 124))
+	world_tabs = t.tabs(["Maps", "Look", "Controls", "Settings"])
 	# Maps
 	var mp: VBoxContainer = world_tabs["pages"]["Maps"]
 	var pills := HBoxContainer.new()
@@ -619,6 +624,7 @@ func _build_world() -> void:
 	maps_list = _grid(2)
 	maps_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(maps_list)
+	_build_look(world_tabs["pages"]["Look"])
 	# Controls (built from InputMap at runtime)
 	var cp: VBoxContainer = world_tabs["pages"]["Controls"]
 	controls_search = LineEdit.new()
@@ -646,6 +652,82 @@ func _build_world() -> void:
 	st.add_child(reset)
 	st.add_child(small("Tips show the live keys for what you are doing; ✕ on a tip hides that tip for good."))
 
+## Look tab: the style (Illustrated Ink / Studio Vinyl), one card per mood, and the finishing toggles.
+func _build_look(lk: VBoxContainer) -> void:
+	var sty := HBoxContainer.new()
+	sty.add_theme_constant_override("separation", 8)
+	var group := ButtonGroup.new()
+	for st in Look.STYLES:
+		var b := btn(String(Look.STYLES[st]), Vector2(0, 42))
+		b.toggle_mode = true
+		b.button_group = group
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var sid := String(st)
+		b.pressed.connect(func(): main.art.set_style(sid))
+		sty.add_child(b)
+		look_style[sid] = b
+	lk.add_child(sty)
+	look_target = small("", 13, 0.85)
+	lk.add_child(look_target)
+	mood_grid = _grid(4)
+	lk.add_child(mood_grid)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var reset := btn("↺ Map default", Vector2(0, 40))
+	reset.pressed.connect(func(): main.art.clear_pick())
+	row.add_child(reset)
+	for k in Look.TOGGLES:
+		var tog := CheckButton.new()
+		tog.text = String(Look.TOGGLES[k])
+		tog.focus_mode = Control.FOCUS_NONE
+		var kid := String(k)
+		tog.toggled.connect(func(on: bool): main.art.set_toggle(kid, on))
+		row.add_child(tog)
+		look_toggles[kid] = tog
+	lk.add_child(row)
+	lk.add_child(small("Illustrated Ink: flat colour under a warm key light with cool shadows, ink that follows the light, hatching in the shadows, a painted sky, haze, depth of field and grain. Studio Vinyl: the Mac Studio cel look. While an episode is open, a mood click belongs to the current shot (💾 Save in the Timeline keeps it). F6 = next mood."))
+	main.art.changed.connect(refresh_look)
+	refresh_look()
+
+func refresh_look() -> void:
+	if mood_grid == null:
+		return
+	for st in look_style:
+		(look_style[st] as Button).set_pressed_no_signal(st == Look.style)
+	for k in look_toggles:
+		var tog: CheckButton = look_toggles[k]
+		tog.set_pressed_no_signal(main.art.toggles[k])
+		tog.disabled = not Look.illustrated()
+	var now: Dictionary = main.art.moods.get(main.art.mood_id, {})
+	look_target.text = "%s   ·   now: %s %s" % [main.art.target_text(), now.get("icon", ""), now.get("name", "")]
+	for c in mood_grid.get_children():
+		mood_grid.remove_child(c)
+		c.queue_free()
+	for id in main.art.mood_order:
+		var m: Dictionary = main.art.moods[id]
+		var card := VBoxContainer.new()
+		card.add_theme_constant_override("separation", 0)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var b := btn("%s %s" % [m["icon"], m["name"]], Vector2(0, 44))
+		b.toggle_mode = true
+		b.button_pressed = id == main.art.mood_id
+		b.disabled = not Look.illustrated()
+		var mid := String(id)
+		b.pressed.connect(func(): main.art.pick(mid))
+		card.add_child(b)
+		var strip := HBoxContainer.new()
+		strip.add_theme_constant_override("separation", 0)
+		var sky: Dictionary = m.get("sky", {})
+		for col in [sky.get("zenith", "#000000"), sky.get("horizon", "#000000"), m["light"], m["shadow"], m.get("rim_color", "#FFAE6E")]:
+			var r := ColorRect.new()
+			r.color = Color(String(col))
+			r.custom_minimum_size = Vector2(0, 8)
+			r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			strip.add_child(r)
+		card.add_child(strip)
+		mood_grid.add_child(card)
+
 func open_world(tab: String) -> void:
 	set_box("world", true)
 	(boxes["world"] as Toolbox).select_tab(world_tabs, tab)
@@ -653,6 +735,8 @@ func open_world(tab: String) -> void:
 		refresh_controls()
 	if tab == "Settings":
 		tips_toggle.set_pressed_no_signal(banner.enabled)
+	if tab == "Look":
+		refresh_look()
 
 func refresh_maps() -> void:
 	if maps_list == null:
