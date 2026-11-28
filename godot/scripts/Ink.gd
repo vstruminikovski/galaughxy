@@ -16,6 +16,16 @@ static func material() -> ShaderMaterial:
 ## Outline traced on the GPU every frame from the camera (see InkStroke.gd). `thick` is kept for callers;
 ## the drawn width is in screen pixels (shader `width_px`). `occ_c`/`occ_r` are body ellipsoids
 ## (body space) that hide this object's strokes; the body itself passes none.
+## Calm ink for very dark surfaces: on a black part the dark line merges with the body, so any boil
+## or width wobble reads as a bumpy, jagged silhouette. These lines stay still and even instead.
+static func calm(rim_node: MeshInstance3D, surface: BaseMaterial3D) -> void:
+	if surface == null or surface.albedo_color.get_luminance() > 0.2:
+		return
+	var m := rim_node.material_override as ShaderMaterial
+	m.set_shader_parameter("boil_px", 0.0)
+	m.set_shader_parameter("pressure_min", 1.0)
+	m.set_shader_parameter("width_px", 1.8)
+
 static func rim(mesh: ArrayMesh, _thick: float = 0.0, occ_c: Array = [], occ_r: Array = []) -> MeshInstance3D:
 	var s := InkStroke.new()
 	s.setup(mesh)

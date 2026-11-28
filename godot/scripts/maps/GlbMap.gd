@@ -69,7 +69,9 @@ func _walk(n: Node) -> void:
 			_glow_base[mi] = mat
 		elif not name.begins_with("Flat") and mi.mesh is ArrayMesh and mi.mesh.get_aabb().get_longest_axis_size() > 0.045:
 			if mat == null or mat.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED:
-				mi.add_child(Ink.rim(mi.mesh as ArrayMesh))
+				var rim := Ink.rim(mi.mesh as ArrayMesh)
+				Ink.calm(rim, mat)
+				mi.add_child(rim)
 	for c in n.get_children():
 		_walk(c)
 

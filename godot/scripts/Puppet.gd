@@ -104,7 +104,9 @@ func _ink(n: Node) -> void:
 	if mat and (mat.emission_enabled or mat.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED):
 		return
 	if mi.mesh is ArrayMesh:
-		mi.add_child(Ink.rim(mi.mesh as ArrayMesh))
+		var rim := Ink.rim(mi.mesh as ArrayMesh)
+		Ink.calm(rim, mat)
+		mi.add_child(rim)
 
 # ── posing helpers ──────────────────────────────────────────────────────────────
 func _has(n: String) -> bool:

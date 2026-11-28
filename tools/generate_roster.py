@@ -37,8 +37,9 @@ INK = "#101114"
 
 
 def segs(r):
-    """Sphere segments scaled to size: big shapes stay perfectly round, tiny ones stay light."""
-    return max(16, min(48, int(r * 420)))
+    """Segments around a round shape: never fewer than 32 (small black details stayed jagged at 16),
+    up to 64 for big shapes, so every silhouette reads as a smooth curve."""
+    return max(32, min(64, int(r * 700)))
 
 
 def srgb_to_linear(c):
@@ -163,7 +164,7 @@ class Char:
         return self._place(o, joint, name, c, rot, hexc, emit, alpha, True)
 
     def cyl(self, joint, name, c, radius, half_h, hexc, rot=None, bevel=0.012, emit=0.0, alpha=1.0, verts=64):
-        bpy.ops.mesh.primitive_cylinder_add(vertices=min(verts, max(20, segs(radius * 1.6))), radius=1.0, depth=2.0)
+        bpy.ops.mesh.primitive_cylinder_add(vertices=min(verts, max(40, segs(radius * 1.6))), radius=1.0, depth=2.0)
         o = self._new()
         self._apply_scale(o, (radius, radius, half_h))
         if bevel > 0:
@@ -176,7 +177,7 @@ class Char:
         return self._place(o, joint, name, c, rot, hexc, emit, alpha, True)
 
     def cone(self, joint, name, c, r1, r2, half_h, hexc, rot=None, emit=0.0):
-        bpy.ops.mesh.primitive_cone_add(vertices=max(20, segs(max(r1, r2) * 1.6)), radius1=r1, radius2=r2, depth=2.0 * half_h)
+        bpy.ops.mesh.primitive_cone_add(vertices=max(40, segs(max(r1, r2) * 1.6)), radius1=r1, radius2=r2, depth=2.0 * half_h)
         o = self._new()
         bv = o.modifiers.new("Bevel", "BEVEL")
         bv.width = min(0.008, half_h * 0.4, max(r1, r2) * 0.4)
@@ -186,29 +187,24 @@ class Char:
         return self._place(o, joint, name, c, rot, hexc, emit, 1.0, True)
 
     def torus(self, joint, name, c, major, minor, hexc, rot=None, emit=0.0):
-        bpy.ops.mesh.primitive_torus_add(major_radius=major, minor_radius=minor, major_segments=segs(major * 1.5), minor_segments=max(10, segs(minor * 3) // 2))
+        bpy.ops.mesh.primitive_torus_add(major_radius=major, minor_radius=minor, major_segments=segs(major * 1.5), minor_segments=max(16, segs(minor * 3) // 2))
         o = self._new()
         return self._place(o, joint, name, c, rot, hexc, emit, 1.0, False)
 
     def cap(self, joint, name, a, b, r, hexc, emit=0.0):
-        """Capsule from a to b (one smooth mesh: cylinder plus two hemispherical ends)."""
+        """Capsule from a to b as ONE continuous surface: a UV sphere split at its equator and
+        stretched, so there are no overlapping pieces inside and no shading seam where the
+        rounded ends meet the body."""
         a = Vector(a)
         b = Vector(b)
         d = b - a
-        length = d.length
+        half = d.length / 2
         n = segs(r * 2.5)
-        bpy.ops.mesh.primitive_cylinder_add(vertices=n, radius=r, depth=length)
-        body = self._new()
-        parts = [body]
-        for z in (-length / 2, length / 2):
-            bpy.ops.mesh.primitive_uv_sphere_add(segments=n, ring_count=n // 2, radius=r, location=(0, 0, z))
-            parts.append(bpy.context.active_object)
-        bpy.ops.object.select_all(action="DESELECT")
-        for p in parts:
-            p.select_set(True)
-        bpy.context.view_layer.objects.active = body
-        bpy.ops.object.join()
-        o = bpy.context.active_object
+        rings = max(16, (n // 2) // 2 * 2)   # even, so there is a ring exactly on the equator
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=n, ring_count=rings, radius=r)
+        o = self._new()
+        for v in o.data.vertices:
+            v.co.z += half if v.co.z >= -1e-6 else -half
         q = Vector((0, 0, 1)).rotation_difference(d.normalized())
         return self._place(o, joint, name, (a + b) / 2, (q.w, q.x, q.y, q.z), hexc, emit, 1.0, False)
 
@@ -249,8 +245,84 @@ class Char:
         j = self.joint("Mouth", head, center)
         self.ell(j, "MouthGlow", center, (w, 0.006, h), hexc, emit=3.0)
 
+    # ── melt: fuse overlapping same-colour parts of one joint into one surface ──
+    melt_parts = True
+
+    def melt(self):
+        """Parts that share a joint (so they never move apart) and a colour, and overlap, are fused
+        into one surface like clay: modifiers applied, joined, voxel-remeshed, the crease between
+        them softened, and decimated back to a light mesh. They then shade as one area, with no
+        line or band where one piece used to cut into another. Glowing and glass parts stay apart."""
+        for jname, j in list(self.joints.items()):
+            meshes = [o for o in j.children if o.type == "MESH" and o.data.materials]
+            groups = {}
+            for o in meshes:
+                m = o.data.materials[0].name
+                if "_glow" in m or "_glass" in m:
+                    continue
+                groups.setdefault(m, []).append(o)
+            for objs in groups.values():
+                for cluster in self._overlaps(objs):
+                    if len(cluster) >= 2:
+                        self._fuse(cluster)
+
+    @staticmethod
+    def _bounds(o):
+        pts = [o.matrix_world @ Vector(c) for c in o.bound_box]
+        lo = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
+        hi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
+        return lo, hi
+
+    def _overlaps(self, objs):
+        bpy.context.view_layer.update()
+        boxes = [self._bounds(o) for o in objs]
+        parent = list(range(len(objs)))
+
+        def find(i):
+            while parent[i] != i:
+                parent[i] = parent[parent[i]]
+                i = parent[i]
+            return i
+        for i in range(len(objs)):
+            for k in range(i + 1, len(objs)):
+                (alo, ahi), (blo, bhi) = boxes[i], boxes[k]
+                if all(alo[x] < bhi[x] and blo[x] < ahi[x] for x in range(3)):
+                    parent[find(i)] = find(k)
+        clusters = {}
+        for i, o in enumerate(objs):
+            clusters.setdefault(find(i), []).append(o)
+        return list(clusters.values())
+
+    def _fuse(self, objs):
+        bpy.ops.object.select_all(action="DESELECT")
+        for o in objs:
+            o.select_set(True)
+        bpy.context.view_layer.objects.active = objs[0]
+        bpy.ops.object.convert(target="MESH")          # bake bevels / weighted normals first
+        bpy.ops.object.join()
+        o = bpy.context.active_object
+        size = max(o.dimensions)
+        rm = o.modifiers.new("Remesh", "REMESH")
+        rm.mode = "VOXEL"
+        rm.voxel_size = min(0.004, max(0.0012, size / 150.0))
+        rm.use_smooth_shade = True
+        sm = o.modifiers.new("Soften", "CORRECTIVE_SMOOTH")
+        sm.factor = 0.6
+        sm.iterations = 8
+        sm.use_only_smooth = False
+        bpy.ops.object.convert(target="MESH")
+        faces = len(o.data.polygons)
+        if faces > 6000:
+            dec = o.modifiers.new("Decimate", "DECIMATE")
+            dec.ratio = 6000.0 / faces
+            bpy.ops.object.convert(target="MESH")
+        for p in o.data.polygons:
+            p.use_smooth = True
+
     # ── export ─────────────────────────────────────────────────────────────────
     def export(self, out_dir):
+        if self.melt_parts:
+            self.melt()
         os.makedirs(out_dir, exist_ok=True)
         path = os.path.join(out_dir, self.id + ".glb")
         bpy.ops.object.select_all(action="SELECT")

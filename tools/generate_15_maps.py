@@ -49,6 +49,8 @@ def bl(p):
 class Map(Char):
     """Char kit with Godot coordinates, set / prop / glow groups and spawn marks."""
 
+    melt_parts = False   # sets keep their pieces; only characters melt (see generate_roster.Char.melt)
+
     def __init__(self, mid):
         super().__init__(mid)
         for g in ("Set", "Props", "Glow", "Spawns"):

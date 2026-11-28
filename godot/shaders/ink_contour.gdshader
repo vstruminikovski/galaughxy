@@ -11,8 +11,8 @@ render_mode unshaded, cull_disabled, blend_mix, depth_draw_never, skip_vertex_tr
 
 uniform vec4 ink_color : source_color = vec4(0.48, 0.12, 0.12, 1.0);
 uniform float width_px = 2.4;       // full line width at 1080p (scales with frame height)
-uniform float pressure_min = 0.75;
-uniform float boil_px = 0.5;
+uniform float pressure_min = 0.85;
+uniform float boil_px = 0.35;
 uniform float boil_fps = 12.0;
 uniform float noise_scale = 9.0;
 uniform float depth_bias = 0.004;   // pull the line toward the camera (share of distance)
