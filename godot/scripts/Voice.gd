@@ -4,7 +4,8 @@ extends Node
 ## Dialogue audio for every character.
 ## DialogueBus = PitchShift -> BandPassFilter -> SpectrumAnalyzer. When a character speaks, its
 ## characters.json preset ({pitch, filter}) is applied to the bus, and the analyzer's energy in
-## 200-3000 Hz drives that character's mouth, sampled 12 times a second (On Twos).
+## 200-3000 Hz drives that character's mouth every frame through a fast-attack / slower-release
+## smoother, so lips move organically at the render rate (30 fps+).
 ## Sources: an episode clip (.wav / .ogg under res://assets/audio/), or live test input: holding
 ## Talk plays a synthesized babble voice through the same chain. A line whose clip is not recorded
 ## yet lasts 0.065 s per character of its text and uses the procedural talk bounce.
@@ -16,7 +17,8 @@ const BUS := "DialogueBus"
 const FX_PITCH := 0
 const FX_BAND := 1
 const FX_SPECTRUM := 2
-const LIPSYNC_FPS := 12.0
+const ATTACK := 30.0    # how fast the mouth opens toward louder speech (1/s)
+const RELEASE := 14.0   # how fast it closes again
 const BABBLE_RATE := 16000.0
 const SEC_PER_CHAR := 0.065
 
@@ -35,7 +37,6 @@ var last_speaker: Node3D = null
 var manifest := {}
 var _lines := {}        # node -> {player, start, until, path, voice, procedural}
 var _levels := {}       # node -> mouth level 0..1, held between 12fps samples
-var _sample_t := 0.0
 var _live_node: Node3D = null
 var _live_player: AudioStreamPlayer
 var _live_playback: AudioStreamGeneratorPlayback
@@ -192,25 +193,24 @@ func _process(_dt: float) -> void:
 			var s := _babble.next(BABBLE_RATE)
 			_live_playback.push_frame(Vector2(s, s))
 
-## Studio clock step: ends lines, samples the spectrum 12 times a second.
+## Studio clock step: ends lines and samples the spectrum every frame, smoothed.
 func tick(dt: float) -> void:
 	clock += dt
 	for n in _lines.keys():
 		if not is_instance_valid(n) or clock >= float(_lines[n]["until"]):
 			stop(n)
-	_sample_t += dt
-	if _sample_t < 1.0 / LIPSYNC_FPS:
-		return
-	_sample_t = 0.0
 	var energy := 0.0
 	var spec := AudioServer.get_bus_effect_instance(bus_idx, FX_SPECTRUM) as AudioEffectSpectrumAnalyzerInstance
 	if spec and not silent:
 		var m := spec.get_magnitude_for_frequency_range(200.0, 3000.0)
 		energy = clampf((linear_to_db((m.x + m.y) * 0.5) + 62.0) / 40.0, 0.0, 1.0)
-	for n in _lines:
-		_levels[n] = energy
+	var speakers: Array = _lines.keys()
 	if _live_node:
-		_levels[_live_node] = energy
+		speakers.append(_live_node)
+	for n in speakers:
+		var cur: float = _levels.get(n, 0.0)
+		var rate := ATTACK if energy > cur else RELEASE
+		_levels[n] = lerpf(cur, energy, 1.0 - exp(-rate * dt))
 
 ## Formant babble: a buzzy source through two vowel resonators, chopped into syllables.
 class Babble:

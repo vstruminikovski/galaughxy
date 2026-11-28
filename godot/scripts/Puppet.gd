@@ -35,6 +35,8 @@ var _wheel := 0.0
 var _rotor := 0.0
 var _prev_yaw := 0.0
 var _turn := 0.0
+var _bob := 0.0       # head bob spring: position and velocity (spring-damper, organic bounce)
+var _bob_v := 0.0
 
 static func create(data: Dictionary) -> Puppet:
 	var p := Puppet.new()
@@ -67,6 +69,8 @@ func reset_state() -> void:
 	_turn = 0.0
 	_emote = ""
 	_emote_t = 0.0
+	_bob = 0.0
+	_bob_v = 0.0
 	talk = false
 	talk_level = -1.0
 	moving = 0.0
@@ -121,7 +125,7 @@ func _each(prefix: String) -> Array:
 	return out
 
 # ── per frame ───────────────────────────────────────────────────────────────────
-## ta: animation time (stepped when "on twos"); dt: time since the last animation step.
+## ta: animation time; dt: frame time. Runs every frame (smooth 30 fps+).
 func animate(ta: float, dt: float) -> void:
 	var expr: String = EXPRS[expr_i]
 	var panic := expr == "PANIC" or expr == "SHOCKED"
@@ -162,7 +166,16 @@ func animate(ta: float, dt: float) -> void:
 	var hy := sin(ta * 30.0) * 0.12 if expr == "PANIC" else 0.0
 	var hz := 0.14 if expr == "SMIRK" else (sin(ta * 6.0) * 0.05 if expr == "HAPPY" else 0.0)
 	var head_rot := Vector3(hx, hy, hz).lerp(_emote_head(ta), ew)
-	_pose("Head", Vector3(0, 0.012 if expr == "SHOCKED" else 0.0, 0), head_rot)
+	# spring-damper head bob: talking pushes the target, the spring follows with a little overshoot
+	var bob_target := _talk_amt * 0.022 + (0.012 if expr == "SHOCKED" else 0.0)
+	var stiff := 260.0
+	var damp := 2.0 * sqrt(stiff) * 0.55
+	var steps := maxi(1, int(ceil(dt / 0.008)))
+	for i in steps:
+		var h := dt / steps
+		_bob_v += (stiff * (bob_target - _bob) - damp * _bob_v) * h
+		_bob += _bob_v * h
+	_pose("Head", Vector3(0, _bob, 0), head_rot + Vector3(_bob_v * 0.04, 0, 0))
 
 	# arms and legs: waddle, flail, wave
 	for s in [1.0, -1.0]:

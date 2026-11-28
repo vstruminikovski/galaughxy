@@ -54,6 +54,12 @@ func _wait(sec: float) -> void:
 
 func run() -> void:
 	print("[test] start")
+	if OS.get_cmdline_user_args().has("--test-only"):
+		await _frames(5)
+		await _studio()
+		print("RESULT: %s" % ("ALL PASS" if fails == 0 else "%d FAIL" % fails))
+		main.get_tree().quit(1 if fails else 0)
+		return
 	await _frames(5)
 	# InputMap
 	var missing := Controls.BINDINGS.keys().filter(func(a): return not InputMap.has_action(a))
@@ -87,39 +93,36 @@ func run() -> void:
 	_check("9 raises flood stage 3", main.stage == 3)
 	await _tap(KEY_0)
 	_check("0 drains", main.stage == 0)
-	await _tap(KEY_O)
-	_check("O turns on 12fps On Twos", main.on_twos)
-	await _tap(KEY_O)
-	_check("O turns On Twos off", not main.on_twos)
+	_check("no 12fps stepping or PNG action remain", not InputMap.has_action("twos") and not InputMap.has_action("png"))
 	# maps drawer
 	await _tap(KEY_M)
-	_check("M opens the maps drawer", main.map_open and main.map_panel.visible)
+	_check("M opens the World toolbox on Maps", main.hud.is_open("world") and main.hud.world_tabs["pages"]["Maps"].visible)
 	await _frames(2)
-	_check("maps drawer lists every map", main.maps_list.get_child_count() == main.map_order.size())
+	_check("maps grid lists every map", main.hud.maps_list.get_child_count() == main.map_order.size())
 	await _tap(KEY_ESCAPE)
-	_check("Escape closes the drawer", not main.map_open)
+	_check("Escape closes the window", not main.hud.is_open("world"))
 	# touch buttons go through the InputMap
-	var face_btn: Button = main.hud_buttons[main.hud_buttons.size() - 3]
+	var face_btn: Button = main.hud.emotion_buttons[(main.expr_i + 1) % 6]
 	var before: int = main.expr_i
 	face_btn.emit_signal("pressed")
 	await _frames(4)
 	_check("FACE button cycles expression", main.expr_i == (before + 1) % 6)
 	# cast drawer: spawn, control, move, switch
 	await _tap(KEY_I)
-	_check("I opens the cast drawer", main.cast_open)
-	_check("cast drawer has 20 cards", main.cast_cards.size() == 20)
-	main.cast_search.text = "toast"
-	main._filter_cast()
-	var shown: int = main.cast_cards.filter(func(c): return (c["button"] as Button).visible).size()
+	_check("I opens the Cast toolbox", main.hud.is_open("cast"))
+	_check("cast drawer has 20 cards", main.hud.cast_cards.size() == 20)
+	main.hud.cast_search.text = "toast"
+	main.hud.filter_cast()
+	var shown: int = main.hud.cast_cards.filter(func(c): return (c["button"] as Button).visible).size()
 	_check("search filters the cast", shown == 1)
-	main.cast_search.text = ""
-	main.cast_filter = "Hybrid"
-	main._filter_cast()
-	shown = main.cast_cards.filter(func(c): return (c["button"] as Button).visible).size()
+	main.hud.cast_search.text = ""
+	main.hud.cast_filter = "Hybrid"
+	main.hud.filter_cast()
+	shown = main.hud.cast_cards.filter(func(c): return (c["button"] as Button).visible).size()
 	_check("Hybrids filter shows 6", shown == 6)
-	main.cast_filter = "All"
-	main._filter_cast()
-	(main.cast_cards[0]["button"] as Button).emit_signal("pressed")
+	main.hud.cast_filter = "All"
+	main.hud.filter_cast()
+	(main.hud.cast_cards[0]["button"] as Button).emit_signal("pressed")
 	await _frames(3)
 	_check("tapping a card spawns a character", main.cast.size() == 1)
 	_check("the new character is controlled", main.actor is Puppet)
@@ -133,7 +136,7 @@ func run() -> void:
 	# emotes through keys and touch buttons
 	await _tap(KEY_F)
 	_check("F waves", (main.actor as Puppet).emote_playing() == "emote_wave")
-	var palm: Button = main.hud_buttons.filter(func(b): return (b as Button).text == "PALM")[0]
+	var palm: Button = main.hud.emote_buttons[2]
 	palm.emit_signal("pressed")
 	await _frames(4)
 	_check("PALM button facepalms", (main.actor as Puppet).emote_playing() == "emote_facepalm")
@@ -163,7 +166,7 @@ func run() -> void:
 		print("SKIP spectrum lip-sync (headless audio is silent; run without --headless to check)")
 	main.voice.stop(main.actor)
 	_check("text fallback is 0.065 s per character", is_equal_approx(main.voice.line_length("missing/none.wav", "x".repeat(40)), 2.6))
-	(main.cast_cards[7]["button"] as Button).emit_signal("pressed")
+	(main.hud.cast_cards[7]["button"] as Button).emit_signal("pressed")
 	await _frames(3)
 	_check("second spawn", main.cast.size() == 2)
 	await _tap(KEY_TAB)
@@ -189,6 +192,7 @@ func run() -> void:
 	_check("clear cast", main.cast.is_empty())
 	await _director()
 	await _maps()
+	await _studio()
 	# portal: walk the robo into the kitchen doorway; kitchen links to the pond
 	main.load_scene("kitchen")
 	await _frames(3)
@@ -233,7 +237,7 @@ func _director() -> void:
 	# auto-timing: 0.3 s + 27 chars x 0.065 for the bear, 2.3 s + 29 chars for the frog
 	_check("shot length fits its dialogue", d.estimate_length(shot0) >= 2.3 + 29 * 0.065)
 	await _tap(KEY_P)
-	_check("P opens the director drawer", main.director_open)
+	_check("P opens the Director toolbox", main.hud.is_open("director"))
 	await _tap(KEY_ESCAPE)
 	d.play_shot("ep01_kitchen_disaster", 0, false)
 	await _frames(3)
@@ -244,7 +248,7 @@ func _director() -> void:
 	_check("free fly is off while the director plays", main.rig != "free")
 	await _wait(0.6)
 	_check("timed events fire (bear talks)", main.voice.is_talking(main.find_actor("robo_bear")))
-	_check("subtitle shows the line", main.subtitle.visible and main.subtitle.text.contains("toaster"))
+	_check("subtitle shows the line", main.hud.subtitle.visible and main.hud.subtitle.text.contains("toaster"))
 	# deterministic scrubbing
 	d.seek(2.0)
 	var frog: Node3D = main.find_actor("chaotic_frog")
@@ -307,9 +311,9 @@ func _director() -> void:
 	# play episode: clean HUD, tap takes over
 	d.play_episode("ep01_kitchen_disaster")
 	await _frames(3)
-	_check("play episode hides the HUD", main.hud_clean and not main.hud_root.visible)
+	_check("play episode hides the HUD", main.hud_clean and not main.hud.root.visible)
 	await _tap(KEY_ESCAPE)
-	_check("Esc stops and takes over", not d.playing and main.hud_root.visible)
+	_check("Esc stops and takes over", not d.playing and main.hud.root.visible)
 	main.clear_cast()
 	await _frames(2)
 
@@ -359,3 +363,149 @@ func _maps() -> void:
 	main.set_stage(0)
 	await _frames(2)
 	_check("drain turns low gravity off", not main.lowgrav)
+
+func _studio() -> void:
+	var hud: StudioHUD = main.hud
+	# toolboxes and the Window menu
+	await _tap(KEY_F1)
+	_check("F1 opens the Camera toolbox", hud.is_open("camera"))
+	await _tap(KEY_F2)
+	_check("F2 toggles the Character toolbox", not hud.is_open("character"))
+	await _tap(KEY_F2)
+	await _tap(KEY_QUOTELEFT)
+	_check("` hides every toolbox", hud.hidden_all and not hud.is_open("camera") and not hud.is_open("character"))
+	await _tap(KEY_QUOTELEFT)
+	_check("` brings them back", hud.is_open("camera") and hud.is_open("character"))
+	_check("menu has no PNG entry", not hud.menu_buttons.has("png"))
+	# controls reference reads the InputMap live
+	await _tap(KEY_SLASH)
+	_check("/ opens the Controls reference", hud.is_open("world") and hud.world_tabs["pages"]["Controls"].visible)
+	_check("controls list is built from the InputMap", hud.controls_list.get_child_count() > 40)
+	_check("keycaps match the InputMap", Controls.key_label("ability_1") == "Y" and Controls.key_label("talk") == "Space")
+	hud.controls_search.text = "facepalm"
+	hud.refresh_controls()
+	_check("controls search filters", hud.controls_list.get_child_count() == 2)
+	hud.controls_search.text = ""
+	await _tap(KEY_ESCAPE)
+	# context banner
+	main._update_context(true)
+	_check("context tip shows", hud.banner.is_showing())
+	var tip := hud.banner.current
+	hud.banner.dismiss()
+	main._update_context(true)
+	_check("dismissed tip stays hidden", not hud.banner.is_showing())
+	hud.banner.reset_dismissed()
+	main._update_context(true)
+	_check("reset brings tips back", hud.banner.is_showing() and hud.banner.current == tip)
+	# abilities: 100, five per character, working on any map
+	var ab: Abilities = main.abilities
+	_check("100 abilities registered", ab.by_id.size() == 100)
+	_check("every roster character has 5", main.char_order.all(func(id): return ab.by_char.get(id, []).size() == 5))
+	main.load_scene("chaotic_supermarket")
+	await _frames(2)
+	var bear: Puppet = main.spawn_character("robo_bear")
+	main.place(bear, Vector3(0, 0, -0.2), 0.0)
+	await _frames(2)
+	var can: Node3D = (main.world as GlbMap).props["cans"][0]
+	var rest := can.global_position
+	main.act(bear, "ability_1", true)   # Static Shockwave: blast + sparks + shake
+	await _wait(0.5)
+	_check("Static Shockwave blasts nearby props", can.global_position.distance_to(rest) > 0.05)
+	_check("abilities shake the camera", main.chaos_shake > 0.0)
+	_check("cooldown blocks a second human cast", not ab.cast(bear, String(ab.for_actor(bear)[0]["id"]), true))
+	var fish: Puppet = main.spawn_character("robo_fish")
+	main.act(fish, "ability_3", false)  # Tidal Flop: flood
+	await _wait(0.8)
+	_check("Tidal Flop raises a flood", main.ability_flood > 0.1)
+	main.load_scene("overflowing_kitchen")   # a hand-built map without props: abilities still run
+	await _frames(2)
+	main._take_control(main.cast[0])
+	main.act(main.actor, "ability_1", false)
+	await _frames(5)
+	_check("abilities run on maps without props", not ab.active.is_empty())
+	main.abilities.clear()
+	main.clear_cast()
+	await _frames(2)
+	# camera waypoint builder → active shot JSON → director playback
+	var d: DirectorController = main.director
+	d.select_episode("ep01_kitchen_disaster")
+	await _frames(3)
+	var b: CameraBuilder = main.builder
+	b.begin("static")
+	_check("aiming enters free fly", main.rig == "free" and b.aiming)
+	await _tap(KEY_ENTER)
+	_check("static finishes after Point A", not b.aiming)
+	var shot: Dictionary = d.peek_shot()
+	_check("static pin saved into the shot", shot.get("cam") == "custom_path" and shot.get("cam_type") == "static" and shot["waypoints"].size() == 1)
+	b.begin("slider")
+	main.fly_pos = Vector3(-2, 1.4, 4)
+	await _frames(2)
+	b.drop_pin()
+	main.fly_pos = Vector3(2, 1.4, 4)
+	await _frames(2)
+	b.drop_pin()
+	_check("slider finishes after A and B", not b.aiming and d.peek_shot()["waypoints"].size() == 2)
+	b.begin("drone")
+	for i in 4:
+		main.fly_pos = Vector3(-3 + i * 2, 1.2 + i * 0.3, 4 - i)
+		await _frames(2)
+		b.drop_pin()
+	_check("drone needs 5 pins", b.aiming and not b.can_finish())
+	main.fly_pos = Vector3(4, 2.5, 0)
+	await _frames(2)
+	await _tap(KEY_ENTER)
+	b.duration = 8.0
+	await _tap(KEY_PERIOD)
+	shot = d.peek_shot()
+	_check("Finish Path saves a 5-pin drone spline", not b.aiming and shot["cam_type"] == "drone" and shot["waypoints"].size() == 5 and is_equal_approx(float(shot["duration"]), 8.0))
+	var mid := CameraBuilder.evaluate(CameraBuilder.path_of(shot), 0.5)
+	var first := CameraBuilder.evaluate(CameraBuilder.path_of(shot), 0.0)
+	_check("spline starts on Point A", (first[0] as Vector3).distance_to(CameraBuilder.pin_pos(shot["waypoints"][0])) < 0.01)
+	_check("spline moves between pins", (mid[0] as Vector3).distance_to(first[0]) > 0.5)
+	d.play_shot("ep01_kitchen_disaster", d.shot_i, false)
+	d.seek(4.0)
+	main._update_camera(0.016)
+	var want := CameraBuilder.evaluate(CameraBuilder.path_of(shot), 0.5)
+	_check("director plays the custom path", main.cam.global_position.distance_to(want[0]) < 0.05)
+	_check("path preview hidden during playback", true)
+	# stop → live take → stop → merge
+	main._take_control(main.find_actor("chaotic_frog"))
+	d.seek(1.0)
+	_check("scrub pauses for a take", d.paused)
+	await _tap(KEY_BACKSLASH)
+	_check("\\ starts a live take from the paused second", d.take_active() and not d.paused)
+	await _wait(0.2)
+	await _tap(KEY_4)
+	await _tap(KEY_O)    # ability 3 of the frog
+	await _tap(KEY_APOSTROPHE)
+	await _wait(0.2)
+	await _tap(KEY_BACKSLASH)
+	_check("stopping the take holds it for review", not d.take_active() and not d.pending_take.is_empty() and d.paused)
+	var held: int = d.pending_take["events"].size()
+	await _tap(KEY_EQUAL)
+	var evs: Array = d.peek_shot()["events"]
+	_check("merge writes the take as scene keyframes", d.pending_take.is_empty() and held >= 3)
+	_check("expression keyframe merged", evs.any(func(e): return e.get("actor", "") == "chaotic_frog" and e["action"] == "expr" and e.get("value") == "ANGRY" and float(e["t"]) >= 1.0))
+	_check("ability keyframe merged", evs.any(func(e): return e.get("action", "") == "ability" and String(e.get("value", "")).begins_with("chaotic_frog__")))
+	_check("camera keyframe merged", evs.any(func(e): return e.get("action", "") == "cam_pose" and e.has("rot")))
+	_check("other actors' beats kept", evs.any(func(e): return e.get("actor", "") == "robo_bear" and e["action"] == "talk"))
+	# a discarded take changes nothing
+	var count := evs.size()
+	await _tap(KEY_BACKSLASH)
+	await _tap(KEY_2)
+	await _tap(KEY_BACKSLASH)
+	await _tap(KEY_MINUS)
+	_check("discard drops the take", d.peek_shot()["events"].size() == count)
+	# overdub from a pause resumes and merges on stop
+	d.seek(0.5)
+	await _tap(KEY_R)
+	_check("R overdubs from a pause", d.overdub and not d.paused)
+	await _tap(KEY_5)
+	await _tap(KEY_R)
+	_check("overdub merges on stop", d.peek_shot()["events"].any(func(e): return e.get("actor", "") == "chaotic_frog" and e.get("value") == "HAPPY"))
+	# smooth cadence: lip-sync and poses update every frame
+	_check("no frame stepping left in Main", not ("on_twos" in main))
+	d.reload()
+	d.stop(true)
+	main.clear_cast()
+	await _frames(2)

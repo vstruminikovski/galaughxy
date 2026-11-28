@@ -1,0 +1,2626 @@
+{
+ "abilities": [
+  {
+   "id": "robo_bear__static_shockwave",
+   "character": "robo_bear",
+   "slot": 1,
+   "name": "Static Shockwave",
+   "desc": "blast, particles, shake",
+   "cooldown": 6,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "blast",
+     "radius": 3.0,
+     "force": 1.6,
+     "height": 0.8
+    },
+    {
+     "type": "particles",
+     "kind": "burst",
+     "colors": [
+      "#FFBD2E",
+      "#4A90E2"
+     ],
+     "count": 30,
+     "size": 0.06,
+     "radius": 2.0,
+     "height": 1.5
+    },
+    {
+     "type": "shake",
+     "amount": 0.5
+    }
+   ]
+  },
+  {
+   "id": "robo_bear__crt_blackout",
+   "character": "robo_bear",
+   "slot": 2,
+   "name": "CRT Blackout",
+   "desc": "dim, glitch, particles",
+   "cooldown": 9,
+   "duration": 4.0,
+   "emote": "emote_facepalm",
+   "expr": "SHOCKED",
+   "fx": [
+    {
+     "type": "dim",
+     "amount": 0.15
+    },
+    {
+     "type": "glitch",
+     "colors": [
+      "#4A90E2",
+      "#27C93F"
+     ]
+    },
+    {
+     "type": "particles",
+     "kind": "orbit",
+     "colors": [
+      "#96BFEE"
+     ],
+     "count": 16,
+     "size": 0.05,
+     "radius": 1.2,
+     "height": 1.0
+    }
+   ]
+  },
+  {
+   "id": "robo_bear__antenna_lightning",
+   "character": "robo_bear",
+   "slot": 3,
+   "name": "Antenna Lightning",
+   "desc": "flash, particles, shocked",
+   "cooldown": 7,
+   "duration": 3.0,
+   "emote": "emote_facepalm",
+   "expr": "SHOCKED",
+   "fx": [
+    {
+     "type": "flash",
+     "every": 0.9,
+     "strength": 1.1
+    },
+    {
+     "type": "shocked",
+     "radius": 2.5
+    },
+    {
+     "type": "particles",
+     "kind": "rain",
+     "colors": [
+      "#96BFEE"
+     ],
+     "count": 30,
+     "size": 0.04,
+     "radius": 2.5,
+     "height": 3.0
+    }
+   ]
+  },
+  {
+   "id": "robo_bear__bear_hug_magnet",
+   "character": "robo_bear",
+   "slot": 4,
+   "name": "Bear Hug Magnet",
+   "desc": "magnet, pull",
+   "cooldown": 7,
+   "duration": 3.0,
+   "emote": "emote_wave",
+   "expr": "SMIRK",
+   "fx": [
+    {
+     "type": "magnet",
+     "radius": 4.0
+    },
+    {
+     "type": "pull",
+     "radius": 3.0
+    }
+   ]
+  },
+  {
+   "id": "robo_bear__ursa_quake",
+   "character": "robo_bear",
+   "slot": 5,
+   "name": "Ursa Quake",
+   "desc": "knockback, quake, shake",
+   "cooldown": 8,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "quake",
+     "radius": 5.0,
+     "amp": 0.25
+    },
+    {
+     "type": "knockback",
+     "radius": 2.5,
+     "force": 1.8
+    },
+    {
+     "type": "shake",
+     "amount": 0.8
+    }
+   ]
+  },
+  {
+   "id": "robo_fish__spring_splash",
+   "character": "robo_fish",
+   "slot": 1,
+   "name": "Spring Splash",
+   "desc": "flood, particles",
+   "cooldown": 6,
+   "duration": 3.0,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "flood",
+     "level": 0.25,
+     "color": "#96BFEE"
+    },
+    {
+     "type": "particles",
+     "kind": "fountain",
+     "colors": [
+      "#96BFEE"
+     ],
+     "count": 30,
+     "size": 0.05,
+     "radius": 1.6,
+     "height": 1.4
+    }
+   ]
+  },
+  {
+   "id": "robo_fish__wind_up_whirlpool",
+   "character": "robo_fish",
+   "slot": 2,
+   "name": "Wind-Up Whirlpool",
+   "desc": "flood, spin actors, spin props",
+   "cooldown": 8,
+   "duration": 3.5,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "spin_props",
+     "radius": 3.0,
+     "speed": 9.0
+    },
+    {
+     "type": "spin_actors",
+     "radius": 3.0
+    },
+    {
+     "type": "flood",
+     "level": 0.15,
+     "color": "#96BFEE"
+    }
+   ]
+  },
+  {
+   "id": "robo_fish__tidal_flop",
+   "character": "robo_fish",
+   "slot": 3,
+   "name": "Tidal Flop",
+   "desc": "flood, knockback, push",
+   "cooldown": 9,
+   "duration": 3.5,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "flood",
+     "level": 0.5,
+     "color": "#96BFEE"
+    },
+    {
+     "type": "push",
+     "radius": 4.0,
+     "strength": 1.8
+    },
+    {
+     "type": "knockback",
+     "radius": 2.5,
+     "force": 1.8
+    }
+   ]
+  },
+  {
+   "id": "robo_fish__bubble_barrage",
+   "character": "robo_fish",
+   "slot": 4,
+   "name": "Bubble Barrage",
+   "desc": "levitate, particles",
+   "cooldown": 6,
+   "duration": 3.0,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "particles",
+     "kind": "fountain",
+     "colors": [
+      "#F5F2EB",
+      "#96BFEE"
+     ],
+     "count": 40,
+     "size": 0.07,
+     "radius": 2.0,
+     "height": 1.8
+    },
+    {
+     "type": "levitate",
+     "radius": 2.5,
+     "height": 0.4
+    }
+   ]
+  },
+  {
+   "id": "robo_fish__coral_reef_slick",
+   "character": "robo_fish",
+   "slot": 5,
+   "name": "Coral Reef Slick",
+   "desc": "flood, slip",
+   "cooldown": 7,
+   "duration": 4.0,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "slip"
+    },
+    {
+     "type": "flood",
+     "level": 0.06,
+     "color": "#FFA29D"
+    }
+   ]
+  },
+  {
+   "id": "toaster_bot__toast_volley",
+   "character": "toaster_bot",
+   "slot": 1,
+   "name": "Toast Volley",
+   "desc": "launch, particles",
+   "cooldown": 5,
+   "duration": 2.5,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "launch",
+     "radius": 3.0,
+     "height": 1.2
+    },
+    {
+     "type": "particles",
+     "kind": "burst",
+     "colors": [
+      "#FFBD2E"
+     ],
+     "count": 12,
+     "size": 0.1,
+     "radius": 2.5,
+     "height": 1.6
+    }
+   ]
+  },
+  {
+   "id": "toaster_bot__crumb_storm",
+   "character": "toaster_bot",
+   "slot": 2,
+   "name": "Crumb Storm",
+   "desc": "fog, particles",
+   "cooldown": 7,
+   "duration": 4.0,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "particles",
+     "kind": "rain",
+     "colors": [
+      "#AD811F"
+     ],
+     "count": 40,
+     "size": 0.035,
+     "radius": 3.0,
+     "height": 3.0
+    },
+    {
+     "type": "fog",
+     "color": "#FFD986",
+     "density": 0.05
+    }
+   ]
+  },
+  {
+   "id": "toaster_bot__overheat_pulse",
+   "character": "toaster_bot",
+   "slot": 3,
+   "name": "Overheat Pulse",
+   "desc": "blast, flash, particles",
+   "cooldown": 7,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "blast",
+     "radius": 2.5,
+     "force": 1.6,
+     "height": 0.8
+    },
+    {
+     "type": "particles",
+     "kind": "burst",
+     "colors": [
+      "#FF5F56",
+      "#FFBD2E"
+     ],
+     "count": 30,
+     "size": 0.06,
+     "radius": 2.0,
+     "height": 1.5
+    },
+    {
+     "type": "flash",
+     "every": 1.0,
+     "strength": 0.8
+    }
+   ]
+  },
+  {
+   "id": "toaster_bot__pop_up_launch",
+   "character": "toaster_bot",
+   "slot": 4,
+   "name": "Pop-Up Launch",
+   "desc": "hop actors, launch",
+   "cooldown": 6,
+   "duration": 2.5,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "hop_actors",
+     "radius": 4.0
+    },
+    {
+     "type": "launch",
+     "radius": 2.0,
+     "height": 1.2
+    }
+   ]
+  },
+  {
+   "id": "toaster_bot__burnt_smoke_screen",
+   "character": "toaster_bot",
+   "slot": 5,
+   "name": "Burnt Smoke Screen",
+   "desc": "dim, fog",
+   "cooldown": 9,
+   "duration": 4.5,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "fog",
+     "color": "#858689",
+     "density": 0.14
+    },
+    {
+     "type": "dim",
+     "amount": 0.6
+    }
+   ]
+  },
+  {
+   "id": "coffee_bot__espresso_geyser",
+   "character": "coffee_bot",
+   "slot": 1,
+   "name": "Espresso Geyser",
+   "desc": "flood, particles",
+   "cooldown": 6,
+   "duration": 3.0,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "particles",
+     "kind": "fountain",
+     "colors": [
+      "#AD811F"
+     ],
+     "count": 36,
+     "size": 0.05,
+     "radius": 1.2,
+     "height": 2.2
+    },
+    {
+     "type": "flood",
+     "level": 0.1,
+     "color": "#AD811F"
+    }
+   ]
+  },
+  {
+   "id": "coffee_bot__steam_cloud",
+   "character": "coffee_bot",
+   "slot": 2,
+   "name": "Steam Cloud",
+   "desc": "fog, levitate",
+   "cooldown": 7,
+   "duration": 4.0,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "fog",
+     "color": "#F5F2EB",
+     "density": 0.12
+    },
+    {
+     "type": "levitate",
+     "radius": 2.0,
+     "height": 0.3
+    }
+   ]
+  },
+  {
+   "id": "coffee_bot__caffeine_jitters",
+   "character": "coffee_bot",
+   "slot": 3,
+   "name": "Caffeine Jitters",
+   "desc": "quake, shake, spin actors",
+   "cooldown": 8,
+   "duration": 3.0,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "quake",
+     "radius": 6.0,
+     "amp": 0.18
+    },
+    {
+     "type": "spin_actors",
+     "radius": 4.0
+    },
+    {
+     "type": "shake",
+     "amount": 0.3
+    }
+   ]
+  },
+  {
+   "id": "coffee_bot__spill_slick",
+   "character": "coffee_bot",
+   "slot": 4,
+   "name": "Spill Slick",
+   "desc": "flood, slip",
+   "cooldown": 6,
+   "duration": 4.0,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "slip"
+    },
+    {
+     "type": "flood",
+     "level": 0.05,
+     "color": "#AD811F"
+    }
+   ]
+  },
+  {
+   "id": "coffee_bot__boil_over_blast",
+   "character": "coffee_bot",
+   "slot": 5,
+   "name": "Boil-Over Blast",
+   "desc": "blast, particles, shake",
+   "cooldown": 8,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "blast",
+     "radius": 3.0,
+     "force": 1.6,
+     "height": 0.8
+    },
+    {
+     "type": "particles",
+     "kind": "burst",
+     "colors": [
+      "#F5F2EB"
+     ],
+     "count": 30,
+     "size": 0.06,
+     "radius": 2.0,
+     "height": 1.5
+    },
+    {
+     "type": "shake",
+     "amount": 0.5
+    }
+   ]
+  },
+  {
+   "id": "roomba_dog__suction_vortex",
+   "character": "roomba_dog",
+   "slot": 1,
+   "name": "Suction Vortex",
+   "desc": "magnet, pull",
+   "cooldown": 7,
+   "duration": 3.5,
+   "emote": "emote_wave",
+   "expr": "SMIRK",
+   "fx": [
+    {
+     "type": "magnet",
+     "radius": 5.0
+    },
+    {
+     "type": "pull",
+     "radius": 3.0
+    }
+   ]
+  },
+  {
+   "id": "roomba_dog__dust_devil",
+   "character": "roomba_dog",
+   "slot": 2,
+   "name": "Dust Devil",
+   "desc": "particles, push",
+   "cooldown": 7,
+   "duration": 3.5,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "particles",
+     "kind": "spiral",
+     "colors": [
+      "#E5E7EB"
+     ],
+     "count": 30,
+     "size": 0.05,
+     "radius": 1.2,
+     "height": 2.4
+    },
+    {
+     "type": "push",
+     "radius": 3.0,
+     "strength": 1.8
+    }
+   ]
+  },
+  {
+   "id": "roomba_dog__turbo_zoomies",
+   "character": "roomba_dog",
+   "slot": 3,
+   "name": "Turbo Zoomies",
+   "desc": "knockback, spin actors",
+   "cooldown": 6,
+   "duration": 3.0,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "spin_actors",
+     "radius": 3.0
+    },
+    {
+     "type": "knockback",
+     "radius": 2.0,
+     "force": 1.8
+    }
+   ]
+  },
+  {
+   "id": "roomba_dog__bumper_bounce",
+   "character": "roomba_dog",
+   "slot": 4,
+   "name": "Bumper Bounce",
+   "desc": "hop actors, knockback",
+   "cooldown": 6,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "knockback",
+     "radius": 3.0,
+     "force": 1.8
+    },
+    {
+     "type": "hop_actors",
+     "radius": 3.0
+    }
+   ]
+  },
+  {
+   "id": "roomba_dog__mop_slide",
+   "character": "roomba_dog",
+   "slot": 5,
+   "name": "Mop Slide",
+   "desc": "flood, slip",
+   "cooldown": 7,
+   "duration": 4.0,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "slip"
+    },
+    {
+     "type": "flood",
+     "level": 0.04,
+     "color": "#96BFEE"
+    }
+   ]
+  },
+  {
+   "id": "tv_head__channel_glitch",
+   "character": "tv_head",
+   "slot": 1,
+   "name": "Channel Glitch",
+   "desc": "flash, glitch",
+   "cooldown": 6,
+   "duration": 3.0,
+   "emote": "emote_facepalm",
+   "expr": "SHOCKED",
+   "fx": [
+    {
+     "type": "glitch",
+     "colors": [
+      "#FF5F56",
+      "#FFBD2E",
+      "#27C93F",
+      "#4A90E2",
+      "#F5F2EB"
+     ]
+    },
+    {
+     "type": "flash",
+     "every": 0.6,
+     "strength": 0.5
+    }
+   ]
+  },
+  {
+   "id": "tv_head__static_snow",
+   "character": "tv_head",
+   "slot": 2,
+   "name": "Static Snow",
+   "desc": "dim, particles",
+   "cooldown": 7,
+   "duration": 4.0,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "particles",
+     "kind": "rain",
+     "colors": [
+      "#F0F1F3"
+     ],
+     "count": 44,
+     "size": 0.035,
+     "radius": 3.0,
+     "height": 3.0
+    },
+    {
+     "type": "dim",
+     "amount": 0.5
+    }
+   ]
+  },
+  {
+   "id": "tv_head__rabbit_ear_signal",
+   "character": "tv_head",
+   "slot": 3,
+   "name": "Rabbit-Ear Signal",
+   "desc": "levitate, particles",
+   "cooldown": 7,
+   "duration": 3.0,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "levitate",
+     "radius": 3.0,
+     "height": 0.5
+    },
+    {
+     "type": "particles",
+     "kind": "ring",
+     "colors": [
+      "#96BFEE"
+     ],
+     "count": 24,
+     "size": 0.06,
+     "radius": 3.0,
+     "height": 0.2
+    }
+   ]
+  },
+  {
+   "id": "tv_head__commercial_break",
+   "character": "tv_head",
+   "slot": 4,
+   "name": "Commercial Break",
+   "desc": "dim, shocked",
+   "cooldown": 10,
+   "duration": 3.5,
+   "emote": "emote_facepalm",
+   "expr": "SHOCKED",
+   "fx": [
+    {
+     "type": "dim",
+     "amount": 0.1
+    },
+    {
+     "type": "shocked",
+     "radius": 4.0
+    }
+   ]
+  },
+  {
+   "id": "tv_head__hypno_test_pattern",
+   "character": "tv_head",
+   "slot": 5,
+   "name": "Hypno Test Pattern",
+   "desc": "glitch, spin actors",
+   "cooldown": 8,
+   "duration": 3.5,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "spin_actors",
+     "radius": 4.0
+    },
+    {
+     "type": "glitch",
+     "colors": [
+      "#FF5F56",
+      "#FFBD2E",
+      "#27C93F",
+      "#4A90E2",
+      "#F5F2EB"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "gumball_bot__gumball_barrage",
+   "character": "gumball_bot",
+   "slot": 1,
+   "name": "Gumball Barrage",
+   "desc": "blast, particles",
+   "cooldown": 6,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "particles",
+     "kind": "burst",
+     "colors": [
+      "#FF5F56",
+      "#FFBD2E",
+      "#27C93F",
+      "#4A90E2",
+      "#F5F2EB"
+     ],
+     "count": 30,
+     "size": 0.08,
+     "radius": 3.0,
+     "height": 1.6
+    },
+    {
+     "type": "blast",
+     "radius": 2.0,
+     "force": 1.6,
+     "height": 0.8
+    }
+   ]
+  },
+  {
+   "id": "gumball_bot__bubblegum_slick",
+   "character": "gumball_bot",
+   "slot": 2,
+   "name": "Bubblegum Slick",
+   "desc": "flood, slip",
+   "cooldown": 7,
+   "duration": 4.0,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "slip"
+    },
+    {
+     "type": "flood",
+     "level": 0.03,
+     "color": "#FFA29D"
+    }
+   ]
+  },
+  {
+   "id": "gumball_bot__sugar_rush",
+   "character": "gumball_bot",
+   "slot": 3,
+   "name": "Sugar Rush",
+   "desc": "hop actors, spin actors",
+   "cooldown": 7,
+   "duration": 3.0,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "hop_actors",
+     "radius": 5.0
+    },
+    {
+     "type": "spin_actors",
+     "radius": 3.0
+    }
+   ]
+  },
+  {
+   "id": "gumball_bot__coin_slot_magnet",
+   "character": "gumball_bot",
+   "slot": 4,
+   "name": "Coin Slot Magnet",
+   "desc": "magnet",
+   "cooldown": 7,
+   "duration": 3.0,
+   "emote": "emote_wave",
+   "expr": "SMIRK",
+   "fx": [
+    {
+     "type": "magnet",
+     "radius": 4.0
+    }
+   ]
+  },
+  {
+   "id": "gumball_bot__jawbreaker_quake",
+   "character": "gumball_bot",
+   "slot": 5,
+   "name": "Jawbreaker Quake",
+   "desc": "launch, quake, shake",
+   "cooldown": 8,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "quake",
+     "radius": 5.0,
+     "amp": 0.25
+    },
+    {
+     "type": "shake",
+     "amount": 0.6
+    },
+    {
+     "type": "launch",
+     "radius": 2.0,
+     "height": 1.2
+    }
+   ]
+  },
+  {
+   "id": "chaotic_frog__tongue_lash",
+   "character": "chaotic_frog",
+   "slot": 1,
+   "name": "Tongue Lash",
+   "desc": "magnet, pull",
+   "cooldown": 6,
+   "duration": 2.5,
+   "emote": "emote_wave",
+   "expr": "SMIRK",
+   "fx": [
+    {
+     "type": "pull",
+     "radius": 4.0
+    },
+    {
+     "type": "magnet",
+     "radius": 3.0
+    }
+   ]
+  },
+  {
+   "id": "chaotic_frog__pond_surge",
+   "character": "chaotic_frog",
+   "slot": 2,
+   "name": "Pond Surge",
+   "desc": "flood, particles",
+   "cooldown": 8,
+   "duration": 4.0,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "flood",
+     "level": 0.45,
+     "color": "#82E090"
+    },
+    {
+     "type": "particles",
+     "kind": "fountain",
+     "colors": [
+      "#96BFEE"
+     ],
+     "count": 30,
+     "size": 0.05,
+     "radius": 1.6,
+     "height": 1.4
+    }
+   ]
+  },
+  {
+   "id": "chaotic_frog__croak_shockwave",
+   "character": "chaotic_frog",
+   "slot": 3,
+   "name": "Croak Shockwave",
+   "desc": "blast, particles, shake",
+   "cooldown": 7,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "blast",
+     "radius": 3.5,
+     "force": 1.6,
+     "height": 0.8
+    },
+    {
+     "type": "shake",
+     "amount": 0.6
+    },
+    {
+     "type": "particles",
+     "kind": "ring",
+     "colors": [
+      "#27C93F"
+     ],
+     "count": 28,
+     "size": 0.06,
+     "radius": 3.5,
+     "height": 0.2
+    }
+   ]
+  },
+  {
+   "id": "chaotic_frog__swamp_fog",
+   "character": "chaotic_frog",
+   "slot": 4,
+   "name": "Swamp Fog",
+   "desc": "fog",
+   "cooldown": 8,
+   "duration": 4.5,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "fog",
+     "color": "#82E090",
+     "density": 0.12
+    }
+   ]
+  },
+  {
+   "id": "chaotic_frog__lily_leap",
+   "character": "chaotic_frog",
+   "slot": 5,
+   "name": "Lily Leap",
+   "desc": "hop actors, lowgrav",
+   "cooldown": 6,
+   "duration": 3.5,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "hop_actors",
+     "radius": 5.0
+    },
+    {
+     "type": "lowgrav"
+    }
+   ]
+  },
+  {
+   "id": "grumpy_duck__quack_blast",
+   "character": "grumpy_duck",
+   "slot": 1,
+   "name": "Quack Blast",
+   "desc": "blast, particles, shake",
+   "cooldown": 6,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "blast",
+     "radius": 3.0,
+     "force": 1.6,
+     "height": 0.8
+    },
+    {
+     "type": "shake",
+     "amount": 0.5
+    },
+    {
+     "type": "particles",
+     "kind": "ring",
+     "colors": [
+      "#F5F2EB"
+     ],
+     "count": 24,
+     "size": 0.06,
+     "radius": 3.0,
+     "height": 0.3
+    }
+   ]
+  },
+  {
+   "id": "grumpy_duck__puddle_stomp",
+   "character": "grumpy_duck",
+   "slot": 2,
+   "name": "Puddle Stomp",
+   "desc": "flood, knockback",
+   "cooldown": 6,
+   "duration": 3.0,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "flood",
+     "level": 0.12,
+     "color": "#96BFEE"
+    },
+    {
+     "type": "knockback",
+     "radius": 2.0,
+     "force": 1.8
+    }
+   ]
+  },
+  {
+   "id": "grumpy_duck__beret_toss",
+   "character": "grumpy_duck",
+   "slot": 3,
+   "name": "Beret Toss",
+   "desc": "launch",
+   "cooldown": 6,
+   "duration": 2.5,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "launch",
+     "radius": 3.0,
+     "height": 1.2
+    }
+   ]
+  },
+  {
+   "id": "grumpy_duck__feather_flurry",
+   "character": "grumpy_duck",
+   "slot": 4,
+   "name": "Feather Flurry",
+   "desc": "particles, push",
+   "cooldown": 7,
+   "duration": 3.5,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "particles",
+     "kind": "rain",
+     "colors": [
+      "#F5F2EB"
+     ],
+     "count": 36,
+     "size": 0.06,
+     "radius": 2.5,
+     "height": 2.6
+    },
+    {
+     "type": "push",
+     "radius": 3.0,
+     "strength": 1.8
+    }
+   ]
+  },
+  {
+   "id": "grumpy_duck__grumpy_gust",
+   "character": "grumpy_duck",
+   "slot": 5,
+   "name": "Grumpy Gust",
+   "desc": "knockback, push",
+   "cooldown": 8,
+   "duration": 3.0,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "push",
+     "radius": 5.0,
+     "strength": 2.4
+    },
+    {
+     "type": "knockback",
+     "radius": 3.0,
+     "force": 1.8
+    }
+   ]
+  },
+  {
+   "id": "chonk_cat__loaf_drop",
+   "character": "chonk_cat",
+   "slot": 1,
+   "name": "Loaf Drop",
+   "desc": "hop actors, quake, shake",
+   "cooldown": 7,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "quake",
+     "radius": 4.0,
+     "amp": 0.25
+    },
+    {
+     "type": "shake",
+     "amount": 0.7
+    },
+    {
+     "type": "hop_actors",
+     "radius": 4.0
+    }
+   ]
+  },
+  {
+   "id": "chonk_cat__hairball_hurl",
+   "character": "chonk_cat",
+   "slot": 2,
+   "name": "Hairball Hurl",
+   "desc": "knockback, particles",
+   "cooldown": 6,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "particles",
+     "kind": "burst",
+     "colors": [
+      "#2C2E33"
+     ],
+     "count": 18,
+     "size": 0.07,
+     "radius": 2.0,
+     "height": 1.2
+    },
+    {
+     "type": "knockback",
+     "radius": 2.0,
+     "force": 1.8
+    }
+   ]
+  },
+  {
+   "id": "chonk_cat__3am_zoomies",
+   "character": "chonk_cat",
+   "slot": 3,
+   "name": "3AM Zoomies",
+   "desc": "dim, spin actors",
+   "cooldown": 7,
+   "duration": 3.5,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "spin_actors",
+     "radius": 4.0
+    },
+    {
+     "type": "dim",
+     "amount": 0.4
+    }
+   ]
+  },
+  {
+   "id": "chonk_cat__nine_lives",
+   "character": "chonk_cat",
+   "slot": 4,
+   "name": "Nine Lives",
+   "desc": "levitate, lowgrav",
+   "cooldown": 9,
+   "duration": 4.0,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "levitate",
+     "radius": 3.0,
+     "height": 0.6
+    },
+    {
+     "type": "lowgrav"
+    }
+   ]
+  },
+  {
+   "id": "chonk_cat__knock_it_off_the_table",
+   "character": "chonk_cat",
+   "slot": 5,
+   "name": "Knock It Off The Table",
+   "desc": "launch, push",
+   "cooldown": 6,
+   "duration": 3.0,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "push",
+     "radius": 3.0,
+     "strength": 2.5
+    },
+    {
+     "type": "launch",
+     "radius": 2.0,
+     "height": 1.2
+    }
+   ]
+  },
+  {
+   "id": "pigeon_chef__flour_bomb",
+   "character": "pigeon_chef",
+   "slot": 1,
+   "name": "Flour Bomb",
+   "desc": "fog, particles",
+   "cooldown": 7,
+   "duration": 4.0,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "fog",
+     "color": "#F5F2EB",
+     "density": 0.14
+    },
+    {
+     "type": "particles",
+     "kind": "burst",
+     "colors": [
+      "#F5F2EB"
+     ],
+     "count": 30,
+     "size": 0.06,
+     "radius": 2.0,
+     "height": 1.5
+    }
+   ]
+  },
+  {
+   "id": "pigeon_chef__bread_crumb_swarm",
+   "character": "pigeon_chef",
+   "slot": 2,
+   "name": "Bread Crumb Swarm",
+   "desc": "magnet, particles",
+   "cooldown": 6,
+   "duration": 3.5,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "particles",
+     "kind": "orbit",
+     "colors": [
+      "#FFBD2E"
+     ],
+     "count": 24,
+     "size": 0.05,
+     "radius": 1.6,
+     "height": 1.0
+    },
+    {
+     "type": "magnet",
+     "radius": 3.0
+    }
+   ]
+  },
+  {
+   "id": "pigeon_chef__soup_splash",
+   "character": "pigeon_chef",
+   "slot": 3,
+   "name": "Soup Splash",
+   "desc": "flood, particles",
+   "cooldown": 7,
+   "duration": 3.0,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "flood",
+     "level": 0.15,
+     "color": "#FFD986"
+    },
+    {
+     "type": "particles",
+     "kind": "fountain",
+     "colors": [
+      "#FFBD2E"
+     ],
+     "count": 26,
+     "size": 0.05,
+     "radius": 1.4,
+     "height": 1.4
+    }
+   ]
+  },
+  {
+   "id": "pigeon_chef__wing_flap_gust",
+   "character": "pigeon_chef",
+   "slot": 4,
+   "name": "Wing Flap Gust",
+   "desc": "knockback, push",
+   "cooldown": 6,
+   "duration": 3.0,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "push",
+     "radius": 4.0,
+     "strength": 1.8
+    },
+    {
+     "type": "knockback",
+     "radius": 2.0,
+     "force": 1.8
+    }
+   ]
+  },
+  {
+   "id": "pigeon_chef__flambé_flare",
+   "character": "pigeon_chef",
+   "slot": 5,
+   "name": "Flambé Flare",
+   "desc": "blast, flash, particles",
+   "cooldown": 8,
+   "duration": 2.5,
+   "emote": "emote_facepalm",
+   "expr": "SHOCKED",
+   "fx": [
+    {
+     "type": "flash",
+     "every": 1.0,
+     "strength": 1.0
+    },
+    {
+     "type": "particles",
+     "kind": "fountain",
+     "colors": [
+      "#FF5F56",
+      "#FFBD2E"
+     ],
+     "count": 30,
+     "size": 0.06,
+     "radius": 1.0,
+     "height": 2.0
+    },
+    {
+     "type": "blast",
+     "radius": 2.0,
+     "force": 1.6,
+     "height": 0.8
+    }
+   ]
+  },
+  {
+   "id": "panic_hamster__wheel_spin",
+   "character": "panic_hamster",
+   "slot": 1,
+   "name": "Wheel Spin",
+   "desc": "spin actors, spin props",
+   "cooldown": 6,
+   "duration": 3.0,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "spin_props",
+     "radius": 3.0,
+     "speed": 9.0
+    },
+    {
+     "type": "spin_actors",
+     "radius": 3.0
+    }
+   ]
+  },
+  {
+   "id": "panic_hamster__cheek_cannon",
+   "character": "panic_hamster",
+   "slot": 2,
+   "name": "Cheek Cannon",
+   "desc": "knockback, particles",
+   "cooldown": 6,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "particles",
+     "kind": "burst",
+     "colors": [
+      "#FFD986"
+     ],
+     "count": 24,
+     "size": 0.06,
+     "radius": 2.5,
+     "height": 1.2
+    },
+    {
+     "type": "knockback",
+     "radius": 2.0,
+     "force": 1.8
+    }
+   ]
+  },
+  {
+   "id": "panic_hamster__panic_stampede",
+   "character": "panic_hamster",
+   "slot": 3,
+   "name": "Panic Stampede",
+   "desc": "hop actors, shake, shocked",
+   "cooldown": 8,
+   "duration": 3.0,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "hop_actors",
+     "radius": 5.0
+    },
+    {
+     "type": "shocked",
+     "radius": 5.0
+    },
+    {
+     "type": "shake",
+     "amount": 0.3
+    }
+   ]
+  },
+  {
+   "id": "panic_hamster__bedding_blizzard",
+   "character": "panic_hamster",
+   "slot": 4,
+   "name": "Bedding Blizzard",
+   "desc": "fog, particles",
+   "cooldown": 7,
+   "duration": 4.0,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "particles",
+     "kind": "rain",
+     "colors": [
+      "#F5F2EB"
+     ],
+     "count": 40,
+     "size": 0.05,
+     "radius": 3.0,
+     "height": 3.0
+    },
+    {
+     "type": "fog",
+     "color": "#F5F2EB",
+     "density": 0.06
+    }
+   ]
+  },
+  {
+   "id": "panic_hamster__tiny_tornado",
+   "character": "panic_hamster",
+   "slot": 5,
+   "name": "Tiny Tornado",
+   "desc": "particles, push, spin actors",
+   "cooldown": 8,
+   "duration": 3.5,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "particles",
+     "kind": "spiral",
+     "colors": [
+      "#FFBD2E"
+     ],
+     "count": 30,
+     "size": 0.05,
+     "radius": 1.0,
+     "height": 2.4
+    },
+    {
+     "type": "push",
+     "radius": 3.0,
+     "strength": 1.8
+    },
+    {
+     "type": "spin_actors",
+     "radius": 2.0
+    }
+   ]
+  },
+  {
+   "id": "long_dachshund__long_body_sweep",
+   "character": "long_dachshund",
+   "slot": 1,
+   "name": "Long Body Sweep",
+   "desc": "knockback, push",
+   "cooldown": 7,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "push",
+     "radius": 5.0,
+     "strength": 2.0
+    },
+    {
+     "type": "knockback",
+     "radius": 3.0,
+     "force": 1.8
+    }
+   ]
+  },
+  {
+   "id": "long_dachshund__sausage_roll",
+   "character": "long_dachshund",
+   "slot": 2,
+   "name": "Sausage Roll",
+   "desc": "knockback, quake",
+   "cooldown": 6,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "quake",
+     "radius": 3.0,
+     "amp": 0.25
+    },
+    {
+     "type": "knockback",
+     "radius": 2.0,
+     "force": 1.8
+    }
+   ]
+  },
+  {
+   "id": "long_dachshund__bark_shockwave",
+   "character": "long_dachshund",
+   "slot": 3,
+   "name": "Bark Shockwave",
+   "desc": "blast, particles, shake",
+   "cooldown": 7,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "blast",
+     "radius": 3.0,
+     "force": 1.6,
+     "height": 0.8
+    },
+    {
+     "type": "shake",
+     "amount": 0.5
+    },
+    {
+     "type": "particles",
+     "kind": "ring",
+     "colors": [
+      "#AD811F"
+     ],
+     "count": 24,
+     "size": 0.06,
+     "radius": 3.0,
+     "height": 0.2
+    }
+   ]
+  },
+  {
+   "id": "long_dachshund__dig_dig_dig",
+   "character": "long_dachshund",
+   "slot": 4,
+   "name": "Dig Dig Dig",
+   "desc": "particles, quake",
+   "cooldown": 6,
+   "duration": 3.0,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "particles",
+     "kind": "fountain",
+     "colors": [
+      "#AD811F"
+     ],
+     "count": 30,
+     "size": 0.06,
+     "radius": 1.2,
+     "height": 1.2
+    },
+    {
+     "type": "quake",
+     "radius": 2.0,
+     "amp": 0.25
+    }
+   ]
+  },
+  {
+   "id": "long_dachshund__wiener_whirl",
+   "character": "long_dachshund",
+   "slot": 5,
+   "name": "Wiener Whirl",
+   "desc": "spin actors, spin props",
+   "cooldown": 7,
+   "duration": 3.0,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "spin_actors",
+     "radius": 3.0
+    },
+    {
+     "type": "spin_props",
+     "radius": 3.0,
+     "speed": 9.0
+    }
+   ]
+  },
+  {
+   "id": "grumpy_landlord__rent_hike",
+   "character": "grumpy_landlord",
+   "slot": 1,
+   "name": "Rent Hike",
+   "desc": "launch",
+   "cooldown": 7,
+   "duration": 3.0,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "launch",
+     "radius": 4.0,
+     "height": 1.5
+    }
+   ]
+  },
+  {
+   "id": "grumpy_landlord__eviction_notice",
+   "character": "grumpy_landlord",
+   "slot": 2,
+   "name": "Eviction Notice",
+   "desc": "knockback, particles",
+   "cooldown": 8,
+   "duration": 3.0,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "knockback",
+     "radius": 5.0,
+     "force": 2.2
+    },
+    {
+     "type": "particles",
+     "kind": "burst",
+     "colors": [
+      "#F5F2EB"
+     ],
+     "count": 24,
+     "size": 0.07,
+     "radius": 3.0,
+     "height": 1.6
+    }
+   ]
+  },
+  {
+   "id": "grumpy_landlord__mustache_twister",
+   "character": "grumpy_landlord",
+   "slot": 3,
+   "name": "Mustache Twister",
+   "desc": "particles, push",
+   "cooldown": 8,
+   "duration": 3.5,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "particles",
+     "kind": "spiral",
+     "colors": [
+      "#2C2E33"
+     ],
+     "count": 30,
+     "size": 0.05,
+     "radius": 1.2,
+     "height": 2.4
+    },
+    {
+     "type": "push",
+     "radius": 3.0,
+     "strength": 1.8
+    }
+   ]
+  },
+  {
+   "id": "grumpy_landlord__heating_shut_off",
+   "character": "grumpy_landlord",
+   "slot": 4,
+   "name": "Heating Shut-Off",
+   "desc": "dim, fog, slip",
+   "cooldown": 9,
+   "duration": 4.5,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "fog",
+     "color": "#F0F1F3",
+     "density": 0.1
+    },
+    {
+     "type": "dim",
+     "amount": 0.5
+    },
+    {
+     "type": "slip"
+    }
+   ]
+  },
+  {
+   "id": "grumpy_landlord__lease_lockdown",
+   "character": "grumpy_landlord",
+   "slot": 5,
+   "name": "Lease Lockdown",
+   "desc": "glitch, shocked",
+   "cooldown": 9,
+   "duration": 3.5,
+   "emote": "emote_facepalm",
+   "expr": "SHOCKED",
+   "fx": [
+    {
+     "type": "shocked",
+     "radius": 5.0
+    },
+    {
+     "type": "glitch",
+     "colors": [
+      "#FF5F56",
+      "#2C2E33"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "cyber_penguin__jetpack_thrust",
+   "character": "cyber_penguin",
+   "slot": 1,
+   "name": "Jetpack Thrust",
+   "desc": "levitate, particles",
+   "cooldown": 6,
+   "duration": 3.0,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "levitate",
+     "radius": 2.0,
+     "height": 0.8
+    },
+    {
+     "type": "particles",
+     "kind": "fountain",
+     "colors": [
+      "#FF5F56"
+     ],
+     "count": 24,
+     "size": 0.05,
+     "radius": 0.6,
+     "height": 0.8
+    }
+   ]
+  },
+  {
+   "id": "cyber_penguin__ice_slide",
+   "character": "cyber_penguin",
+   "slot": 2,
+   "name": "Ice Slide",
+   "desc": "flood, slip",
+   "cooldown": 7,
+   "duration": 4.0,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "slip"
+    },
+    {
+     "type": "flood",
+     "level": 0.05,
+     "color": "#F0F1F3"
+    }
+   ]
+  },
+  {
+   "id": "cyber_penguin__visor_laser",
+   "character": "cyber_penguin",
+   "slot": 3,
+   "name": "Visor Laser",
+   "desc": "blast, flash, particles",
+   "cooldown": 7,
+   "duration": 2.5,
+   "emote": "emote_facepalm",
+   "expr": "SHOCKED",
+   "fx": [
+    {
+     "type": "flash",
+     "every": 1.0,
+     "strength": 0.9
+    },
+    {
+     "type": "blast",
+     "radius": 2.0,
+     "force": 1.6,
+     "height": 0.8
+    },
+    {
+     "type": "particles",
+     "kind": "burst",
+     "colors": [
+      "#4A90E2"
+     ],
+     "count": 24,
+     "size": 0.06,
+     "radius": 2.0,
+     "height": 1.5
+    }
+   ]
+  },
+  {
+   "id": "cyber_penguin__blizzard_protocol",
+   "character": "cyber_penguin",
+   "slot": 4,
+   "name": "Blizzard Protocol",
+   "desc": "fog, particles, push",
+   "cooldown": 9,
+   "duration": 4.5,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "particles",
+     "kind": "rain",
+     "colors": [
+      "#F5F2EB"
+     ],
+     "count": 44,
+     "size": 0.05,
+     "radius": 3.5,
+     "height": 3.0
+    },
+    {
+     "type": "fog",
+     "color": "#F0F1F3",
+     "density": 0.08
+    },
+    {
+     "type": "push",
+     "radius": 4.0,
+     "strength": 1.8
+    }
+   ]
+  },
+  {
+   "id": "cyber_penguin__zero_kelvin_freeze",
+   "character": "cyber_penguin",
+   "slot": 5,
+   "name": "Zero-Kelvin Freeze",
+   "desc": "dim, shocked",
+   "cooldown": 9,
+   "duration": 3.5,
+   "emote": "emote_facepalm",
+   "expr": "SHOCKED",
+   "fx": [
+    {
+     "type": "shocked",
+     "radius": 4.0
+    },
+    {
+     "type": "dim",
+     "amount": 0.7
+    }
+   ]
+  },
+  {
+   "id": "mecha_bunny__spring_hop",
+   "character": "mecha_bunny",
+   "slot": 1,
+   "name": "Spring Hop",
+   "desc": "hop actors, lowgrav",
+   "cooldown": 6,
+   "duration": 3.5,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "hop_actors",
+     "radius": 6.0
+    },
+    {
+     "type": "lowgrav"
+    }
+   ]
+  },
+  {
+   "id": "mecha_bunny__battery_surge",
+   "character": "mecha_bunny",
+   "slot": 2,
+   "name": "Battery Surge",
+   "desc": "flash, glitch",
+   "cooldown": 7,
+   "duration": 3.0,
+   "emote": "emote_facepalm",
+   "expr": "SHOCKED",
+   "fx": [
+    {
+     "type": "glitch",
+     "colors": [
+      "#27C93F",
+      "#82E090"
+     ]
+    },
+    {
+     "type": "flash",
+     "every": 0.8,
+     "strength": 0.8
+    }
+   ]
+  },
+  {
+   "id": "mecha_bunny__carrot_missile",
+   "character": "mecha_bunny",
+   "slot": 3,
+   "name": "Carrot Missile",
+   "desc": "blast, particles",
+   "cooldown": 7,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "blast",
+     "radius": 3.0,
+     "force": 1.6,
+     "height": 0.8
+    },
+    {
+     "type": "particles",
+     "kind": "burst",
+     "colors": [
+      "#FFBD2E"
+     ],
+     "count": 24,
+     "size": 0.06,
+     "radius": 2.0,
+     "height": 1.5
+    }
+   ]
+  },
+  {
+   "id": "mecha_bunny__coil_bounce",
+   "character": "mecha_bunny",
+   "slot": 4,
+   "name": "Coil Bounce",
+   "desc": "launch, levitate",
+   "cooldown": 6,
+   "duration": 3.0,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "launch",
+     "radius": 3.0,
+     "height": 1.2
+    },
+    {
+     "type": "levitate",
+     "radius": 2.0,
+     "height": 0.4
+    }
+   ]
+  },
+  {
+   "id": "mecha_bunny__hare_trigger_shock",
+   "character": "mecha_bunny",
+   "slot": 5,
+   "name": "Hare-Trigger Shock",
+   "desc": "particles, shake, shocked",
+   "cooldown": 8,
+   "duration": 3.0,
+   "emote": "emote_facepalm",
+   "expr": "SHOCKED",
+   "fx": [
+    {
+     "type": "shocked",
+     "radius": 3.0
+    },
+    {
+     "type": "particles",
+     "kind": "ring",
+     "colors": [
+      "#27C93F"
+     ],
+     "count": 28,
+     "size": 0.06,
+     "radius": 3.0,
+     "height": 0.3
+    },
+    {
+     "type": "shake",
+     "amount": 0.4
+    }
+   ]
+  },
+  {
+   "id": "bot_octopus__ink_cloud",
+   "character": "bot_octopus",
+   "slot": 1,
+   "name": "Ink Cloud",
+   "desc": "dim, fog",
+   "cooldown": 8,
+   "duration": 4.5,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "fog",
+     "color": "#2C2E33",
+     "density": 0.16
+    },
+    {
+     "type": "dim",
+     "amount": 0.5
+    }
+   ]
+  },
+  {
+   "id": "bot_octopus__tentacle_grab",
+   "character": "bot_octopus",
+   "slot": 2,
+   "name": "Tentacle Grab",
+   "desc": "magnet, pull",
+   "cooldown": 7,
+   "duration": 3.0,
+   "emote": "emote_wave",
+   "expr": "SMIRK",
+   "fx": [
+    {
+     "type": "pull",
+     "radius": 4.0
+    },
+    {
+     "type": "magnet",
+     "radius": 4.0
+    }
+   ]
+  },
+  {
+   "id": "bot_octopus__riptide",
+   "character": "bot_octopus",
+   "slot": 3,
+   "name": "Riptide",
+   "desc": "flood, push",
+   "cooldown": 8,
+   "duration": 4.0,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "flood",
+     "level": 0.35,
+     "color": "#96BFEE"
+    },
+    {
+     "type": "push",
+     "radius": 4.0,
+     "strength": 1.8
+    }
+   ]
+  },
+  {
+   "id": "bot_octopus__eight_arm_juggle",
+   "character": "bot_octopus",
+   "slot": 4,
+   "name": "Eight-Arm Juggle",
+   "desc": "launch, spin props",
+   "cooldown": 7,
+   "duration": 3.0,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "launch",
+     "radius": 3.0,
+     "height": 1.2
+    },
+    {
+     "type": "spin_props",
+     "radius": 3.0,
+     "speed": 9.0
+    }
+   ]
+  },
+  {
+   "id": "bot_octopus__kraken_quake",
+   "character": "bot_octopus",
+   "slot": 5,
+   "name": "Kraken Quake",
+   "desc": "flood, quake, shake",
+   "cooldown": 10,
+   "duration": 3.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "quake",
+     "radius": 6.0,
+     "amp": 0.25
+    },
+    {
+     "type": "shake",
+     "amount": 0.8
+    },
+    {
+     "type": "flood",
+     "level": 0.2,
+     "color": "#96BFEE"
+    }
+   ]
+  },
+  {
+   "id": "turbo_turtle__shell_spin",
+   "character": "turbo_turtle",
+   "slot": 1,
+   "name": "Shell Spin",
+   "desc": "knockback, spin actors",
+   "cooldown": 6,
+   "duration": 3.0,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "spin_actors",
+     "radius": 3.0
+    },
+    {
+     "type": "knockback",
+     "radius": 3.0,
+     "force": 1.8
+    }
+   ]
+  },
+  {
+   "id": "turbo_turtle__turbo_wheels",
+   "character": "turbo_turtle",
+   "slot": 2,
+   "name": "Turbo Wheels",
+   "desc": "particles, push",
+   "cooldown": 6,
+   "duration": 3.0,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "push",
+     "radius": 4.0,
+     "strength": 2.0
+    },
+    {
+     "type": "particles",
+     "kind": "orbit",
+     "colors": [
+      "#E5E7EB"
+     ],
+     "count": 20,
+     "size": 0.05,
+     "radius": 1.0,
+     "height": 0.3
+    }
+   ]
+  },
+  {
+   "id": "turbo_turtle__slow_mo_field",
+   "character": "turbo_turtle",
+   "slot": 3,
+   "name": "Slow-Mo Field",
+   "desc": "levitate, lowgrav",
+   "cooldown": 9,
+   "duration": 4.5,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "lowgrav"
+    },
+    {
+     "type": "levitate",
+     "radius": 3.0,
+     "height": 0.3
+    }
+   ]
+  },
+  {
+   "id": "turbo_turtle__shell_shock",
+   "character": "turbo_turtle",
+   "slot": 4,
+   "name": "Shell Shock",
+   "desc": "blast, shake",
+   "cooldown": 7,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "blast",
+     "radius": 3.0,
+     "force": 1.6,
+     "height": 0.8
+    },
+    {
+     "type": "shake",
+     "amount": 0.6
+    }
+   ]
+  },
+  {
+   "id": "turbo_turtle__ocean_memory",
+   "character": "turbo_turtle",
+   "slot": 5,
+   "name": "Ocean Memory",
+   "desc": "flood, particles",
+   "cooldown": 9,
+   "duration": 4.0,
+   "emote": "emote_shrug",
+   "expr": "DEADPAN",
+   "fx": [
+    {
+     "type": "flood",
+     "level": 0.3,
+     "color": "#96BFEE"
+    },
+    {
+     "type": "particles",
+     "kind": "fountain",
+     "colors": [
+      "#96BFEE"
+     ],
+     "count": 30,
+     "size": 0.05,
+     "radius": 1.6,
+     "height": 1.4
+    }
+   ]
+  },
+  {
+   "id": "owl_drone__rotor_wash",
+   "character": "owl_drone",
+   "slot": 1,
+   "name": "Rotor Wash",
+   "desc": "particles, push",
+   "cooldown": 6,
+   "duration": 3.5,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "push",
+     "radius": 5.0,
+     "strength": 1.8
+    },
+    {
+     "type": "particles",
+     "kind": "spiral",
+     "colors": [
+      "#F5F2EB"
+     ],
+     "count": 30,
+     "size": 0.05,
+     "radius": 1.4,
+     "height": 2.0
+    }
+   ]
+  },
+  {
+   "id": "owl_drone__night_vision",
+   "character": "owl_drone",
+   "slot": 2,
+   "name": "Night Vision",
+   "desc": "dim, glitch",
+   "cooldown": 8,
+   "duration": 4.0,
+   "emote": "emote_facepalm",
+   "expr": "SHOCKED",
+   "fx": [
+    {
+     "type": "dim",
+     "amount": 0.2
+    },
+    {
+     "type": "glitch",
+     "colors": [
+      "#27C93F"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "owl_drone__hoot_shockwave",
+   "character": "owl_drone",
+   "slot": 3,
+   "name": "Hoot Shockwave",
+   "desc": "blast, particles",
+   "cooldown": 7,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "blast",
+     "radius": 3.0,
+     "force": 1.6,
+     "height": 0.8
+    },
+    {
+     "type": "particles",
+     "kind": "ring",
+     "colors": [
+      "#4A90E2"
+     ],
+     "count": 28,
+     "size": 0.06,
+     "radius": 3.0,
+     "height": 0.3
+    }
+   ]
+  },
+  {
+   "id": "owl_drone__talon_lift",
+   "character": "owl_drone",
+   "slot": 4,
+   "name": "Talon Lift",
+   "desc": "launch, levitate",
+   "cooldown": 7,
+   "duration": 3.0,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "launch",
+     "radius": 3.0,
+     "height": 1.4
+    },
+    {
+     "type": "levitate",
+     "radius": 2.0,
+     "height": 0.5
+    }
+   ]
+  },
+  {
+   "id": "owl_drone__spotlight_sweep",
+   "character": "owl_drone",
+   "slot": 5,
+   "name": "Spotlight Sweep",
+   "desc": "flash, shocked",
+   "cooldown": 8,
+   "duration": 3.5,
+   "emote": "emote_facepalm",
+   "expr": "SHOCKED",
+   "fx": [
+    {
+     "type": "flash",
+     "every": 0.8,
+     "strength": 0.9
+    },
+    {
+     "type": "shocked",
+     "radius": 3.0
+    }
+   ]
+  },
+  {
+   "id": "dino_mech__meteor_stomp",
+   "character": "dino_mech",
+   "slot": 1,
+   "name": "Meteor Stomp",
+   "desc": "knockback, quake, shake",
+   "cooldown": 8,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "ANGRY",
+   "fx": [
+    {
+     "type": "quake",
+     "radius": 6.0,
+     "amp": 0.3
+    },
+    {
+     "type": "shake",
+     "amount": 1.0
+    },
+    {
+     "type": "knockback",
+     "radius": 3.0,
+     "force": 1.8
+    }
+   ]
+  },
+  {
+   "id": "dino_mech__tail_whip",
+   "character": "dino_mech",
+   "slot": 2,
+   "name": "Tail Whip",
+   "desc": "knockback, push",
+   "cooldown": 6,
+   "duration": 2.5,
+   "emote": "emote_point",
+   "expr": "PANIC",
+   "fx": [
+    {
+     "type": "push",
+     "radius": 4.0,
+     "strength": 2.4
+    },
+    {
+     "type": "knockback",
+     "radius": 2.0,
+     "force": 1.8
+    }
+   ]
+  },
+  {
+   "id": "dino_mech__led_roar",
+   "character": "dino_mech",
+   "slot": 3,
+   "name": "LED Roar",
+   "desc": "blast, flash, particles",
+   "cooldown": 7,
+   "duration": 2.5,
+   "emote": "emote_facepalm",
+   "expr": "SHOCKED",
+   "fx": [
+    {
+     "type": "flash",
+     "every": 1.0,
+     "strength": 0.9
+    },
+    {
+     "type": "blast",
+     "radius": 3.0,
+     "force": 1.6,
+     "height": 0.8
+    },
+    {
+     "type": "particles",
+     "kind": "ring",
+     "colors": [
+      "#FFBD2E"
+     ],
+     "count": 28,
+     "size": 0.07,
+     "radius": 3.0,
+     "height": 0.3
+    }
+   ]
+  },
+  {
+   "id": "dino_mech__extinction_event",
+   "character": "dino_mech",
+   "slot": 4,
+   "name": "Extinction Event",
+   "desc": "dim, flood, particles, shake",
+   "cooldown": 12,
+   "duration": 4.5,
+   "emote": "emote_facepalm",
+   "expr": "SHOCKED",
+   "fx": [
+    {
+     "type": "dim",
+     "amount": 0.3
+    },
+    {
+     "type": "particles",
+     "kind": "rain",
+     "colors": [
+      "#FF5F56",
+      "#FFBD2E"
+     ],
+     "count": 40,
+     "size": 0.07,
+     "radius": 3.5,
+     "height": 3.0
+    },
+    {
+     "type": "shake",
+     "amount": 0.5
+    },
+    {
+     "type": "flood",
+     "level": 0.2,
+     "color": "#FFA29D"
+    }
+   ]
+  },
+  {
+   "id": "dino_mech__jurassic_leap",
+   "character": "dino_mech",
+   "slot": 5,
+   "name": "Jurassic Leap",
+   "desc": "hop actors, launch, lowgrav",
+   "cooldown": 7,
+   "duration": 3.5,
+   "emote": "emote_wave",
+   "expr": "HAPPY",
+   "fx": [
+    {
+     "type": "hop_actors",
+     "radius": 5.0
+    },
+    {
+     "type": "lowgrav"
+    },
+    {
+     "type": "launch",
+     "radius": 2.0,
+     "height": 1.2
+    }
+   ]
+  }
+ ],
+ "host_alias": {
+  "robo": "robo_bear",
+  "frog": "chaotic_frog"
+ }
+}
