@@ -19,7 +19,7 @@ const BINDINGS := {
 	# map chaos
 	"chaos_1": [KEY_Q, KEY_7], "chaos_2": [KEY_E, KEY_8], "chaos_3": [KEY_9], "chaos_drain": [KEY_0], "chaos_next": [],
 	# cameras
-	"cam_static": [KEY_Z], "cam_slider": [KEY_X], "cam_drone": [KEY_C],
+	"cam_static": [KEY_Z], "cam_slider": [KEY_X], "cam_drone": [KEY_C], "cam_follow": [KEY_SEMICOLON],
 	"path_pin": [KEY_ENTER, KEY_KP_ENTER], "path_undo": [KEY_BACKSPACE], "path_finish": [KEY_PERIOD],
 	"path_preview": [KEY_COMMA], "path_shorter": [KEY_BRACKETLEFT], "path_longer": [KEY_BRACKETRIGHT],
 	# timeline and takes
@@ -30,6 +30,10 @@ const BINDINGS := {
 	"controls": [KEY_SLASH, KEY_F5], "hide_all": [KEY_QUOTELEFT], "cancel": [KEY_ESCAPE],
 	# look
 	"mood_next": [KEY_F6],
+	# reaction bubbles (keypad)
+	"bubble_exclaim": [KEY_KP_1], "bubble_question": [KEY_KP_2], "bubble_heart": [KEY_KP_3], "bubble_sweat": [KEY_KP_4],
+	"bubble_anger": [KEY_KP_5], "bubble_dizzy": [KEY_KP_6], "bubble_dots": [KEY_KP_7], "bubble_idea": [KEY_KP_8],
+	"bubble_note": [KEY_KP_9], "bubble_sparkle": [KEY_KP_0],
 }
 
 ## One-shot actions: handled on press.
@@ -38,7 +42,9 @@ const TRIGGERS := ["hop", "next_actor", "fly",
 	"emote_wave", "emote_point", "emote_facepalm", "emote_shrug",
 	"ability_1", "ability_2", "ability_3", "ability_4", "ability_5",
 	"chaos_1", "chaos_2", "chaos_3", "chaos_drain", "chaos_next",
-	"cam_static", "cam_slider", "cam_drone",
+	"cam_static", "cam_slider", "cam_drone", "cam_follow",
+	"bubble_exclaim", "bubble_question", "bubble_heart", "bubble_sweat", "bubble_anger",
+	"bubble_dizzy", "bubble_dots", "bubble_idea", "bubble_note", "bubble_sparkle",
 	"path_pin", "path_undo", "path_finish", "path_preview", "path_shorter", "path_longer",
 	"timeline", "play_pause", "overdub", "take_toggle", "take_merge", "take_discard", "cam_key",
 	"tb_camera", "tb_character", "maps", "cast", "director", "controls", "hide_all", "cancel", "mood_next"]
@@ -72,6 +78,12 @@ const INFO := {
 	"chaos_3": ["Map chaos", "Map gag, stage 3", "Character ▸ Abilities ▸ Map gags"], "chaos_drain": ["Map chaos", "Reset the map", "Character ▸ Abilities ▸ Map gags"],
 	"cam_static": ["Camera", "Map camera: Static (during playback: cut + record)", "Camera ▸ 2. Static"],
 	"cam_slider": ["Camera", "Map camera: Slider", "Camera ▸ 3. Sliders"], "cam_drone": ["Camera", "Map camera: Drone", "Camera ▸ 1. Drone"],
+	"cam_follow": ["Camera", "Follow camera: frames you and the nearest character, pushes in when you stand still (during playback: cut to a two-shot)", "Camera ▸ 4. Follow"],
+	"bubble_exclaim": ["Bubbles", "Bubble: ! surprise", "Character ▸ Emotes ▸ bubbles"], "bubble_question": ["Bubbles", "Bubble: ? huh", "Character ▸ Emotes ▸ bubbles"],
+	"bubble_heart": ["Bubbles", "Bubble: heart", "Character ▸ Emotes ▸ bubbles"], "bubble_sweat": ["Bubbles", "Bubble: nervous sweat", "Character ▸ Emotes ▸ bubbles"],
+	"bubble_anger": ["Bubbles", "Bubble: anger mark", "Character ▸ Emotes ▸ bubbles"], "bubble_dizzy": ["Bubbles", "Bubble: dizzy spiral", "Character ▸ Emotes ▸ bubbles"],
+	"bubble_dots": ["Bubbles", "Bubble: … speechless", "Character ▸ Emotes ▸ bubbles"], "bubble_idea": ["Bubbles", "Bubble: idea", "Character ▸ Emotes ▸ bubbles"],
+	"bubble_note": ["Bubbles", "Bubble: humming", "Character ▸ Emotes ▸ bubbles"], "bubble_sparkle": ["Bubbles", "Bubble: sparkle", "Character ▸ Emotes ▸ bubbles"],
 	"path_pin": ["Camera path", "Drop a pin at the current view", "Path bar ▸ Drop Pin"],
 	"path_undo": ["Camera path", "Undo the last pin", "Path bar ▸ Undo Pin"],
 	"path_finish": ["Camera path", "Finish the path and save it into the shot", "Path bar ▸ Finish Path"],
@@ -93,11 +105,12 @@ const INFO := {
 	"mood_next": ["Look", "Next mood (lighting preset); while an episode is open it is saved into the shot", "World ▸ Look ▸ mood cards"],
 }
 
-const CATEGORY_ORDER := ["Movement", "Character", "Abilities", "Map chaos", "Camera", "Camera path", "Timeline", "Look", "Windows"]
+const CATEGORY_ORDER := ["Movement", "Character", "Bubbles", "Abilities", "Map chaos", "Camera", "Camera path", "Timeline", "Look", "Windows"]
 
 ## Friendlier keycap text for punctuation keys (matched case-insensitively).
 const KEYCAPS := {"quoteleft": "`", "bracketleft": "[", "bracketright": "]", "backslash": "\\", "apostrophe": "'",
-	"period": ".", "comma": ",", "slash": "/", "equal": "=", "minus": "-", "kp enter": "Num Enter", "backspace": "⌫"}
+	"period": ".", "comma": ",", "slash": "/", "equal": "=", "minus": "-", "kp enter": "Num Enter", "backspace": "⌫",
+	"semicolon": ";"}
 
 static func setup() -> void:
 	for action in BINDINGS:
@@ -120,6 +133,8 @@ static func keys(action: String) -> PackedStringArray:
 			if k == 0:
 				k = (ev as InputEventKey).physical_keycode
 			var name := OS.get_keycode_string(k)
+			if name.to_lower().begins_with("kp ") and name.length() == 4:
+				name = "Num " + name.substr(3)
 			out.append(KEYCAPS.get(name.to_lower(), name))
 	return out
 

@@ -13,6 +13,8 @@ shader_type spatial;
 // field keeps it as sharp as the object it outlines.
 render_mode unshaded, cull_disabled, blend_mix, depth_draw_always, skip_vertex_transform, shadows_disabled;
 
+#include "res://shaders/ill_common.gdshaderinc"
+
 uniform vec4 ink_color : source_color = vec4(0.48, 0.12, 0.12, 1.0);
 uniform float width_px = 2.4;       // full line width at 1080p (scales with frame height)
 uniform float pressure_min = 0.85;
@@ -27,10 +29,12 @@ uniform mat4 to_body = mat4(1.0);
 uniform float light_weight = 0.0;   // 1 = Illustrated Ink weight and glow (see above)
 uniform float rim_line = 0.0;
 uniform float use_global_ink = 0.0; // 1 = take the ink colour from the mood (ill_ink)
+uniform float wind_amt = 0.0;       // the surface's sway (corner weights arrive in COLOR.rgb)
 
 global uniform vec3 ill_sun_dir;
 global uniform vec3 ill_rim_color;
 global uniform vec4 ill_ink;
+global uniform float ill_time;
 
 varying vec3 wpos;
 varying vec2 seg_uv;     // x along the segment, y across, in pixels
@@ -69,6 +73,11 @@ void vertex() {
 	vec3 p0 = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	vec3 p1 = (MODEL_MATRIX * vec4(CUSTOM0.xyz, 1.0)).xyz;
 	vec3 p2 = (MODEL_MATRIX * vec4(CUSTOM1.zw, CUSTOM2.x, 1.0)).xyz;
+	if (wind_amt > 0.0) {   // sway exactly like the surface underneath
+		p0 += ill_wind_offset(p0, wind_amt * COLOR.r, ill_time);
+		p1 += ill_wind_offset(p1, wind_amt * COLOR.g, ill_time);
+		p2 += ill_wind_offset(p2, wind_amt * COLOR.b, ill_time);
+	}
 	vec3 n0 = MODEL_NORMAL_MATRIX * NORMAL;
 	vec3 n1 = MODEL_NORMAL_MATRIX * vec3(CUSTOM0.w, CUSTOM1.xy);
 	vec3 n2 = MODEL_NORMAL_MATRIX * CUSTOM2.yzw;
@@ -156,6 +165,9 @@ void vertex() {
 }
 
 void fragment() {
+	if (ill_near_discard(length(wpos - CAMERA_POSITION_WORLD), FRAGCOORD.xy)) {
+		discard;
+	}
 	for (int i = 0; i < 4; i++) {
 		if (i >= occ_n) break;
 		vec3 q = (((to_body * vec4(wpos, 1.0)).xyz) - occ_c[i].xyz) / occ_r[i].xyz;

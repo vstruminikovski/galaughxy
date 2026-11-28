@@ -1,5 +1,5 @@
 {
-  "about": "Illustrated Ink moods (CLAUDE.md section 24). light = lit-side multiplier, shadow = shadow-side multiplier (ambient), both sRGB: a white surface shows exactly these colours. sun = key light angle (pitch, yaw in degrees). Sky, fog, grade and post values feed the sky, environment and finishing shaders.",
+  "about": "Illustrated Ink moods (CLAUDE.md section 24). light = lit-side multiplier, shadow = shadow-side multiplier (ambient), both sRGB: a white surface shows exactly these colours. sun = key light angle (pitch, yaw in degrees). Sky, fog, grade and post values feed the sky, environment and finishing shaders. wind = leaf sway in metres at the top of a plant; snow = snow cover on up-facing surfaces and falling flakes (0..1).",
   "moods": [
     {
       "id": "blue_hour",
@@ -53,7 +53,9 @@
       "dof": 0.08,
       "grain": 0.035,
       "vignette": 0.25,
-      "bloom": 0.5
+      "bloom": 0.5,
+      "wind": 0.045,
+      "snow": 0.0
     },
     {
       "id": "golden_hour",
@@ -107,7 +109,9 @@
       "dof": 0.08,
       "grain": 0.035,
       "vignette": 0.25,
-      "bloom": 0.55
+      "bloom": 0.55,
+      "wind": 0.04,
+      "snow": 0.0
     },
     {
       "id": "daylight",
@@ -161,7 +165,65 @@
       "dof": 0.06,
       "grain": 0.03,
       "vignette": 0.18,
-      "bloom": 0.35
+      "bloom": 0.35,
+      "wind": 0.055,
+      "snow": 0.0
+    },
+    {
+      "id": "snowfall",
+      "name": "Snowfall",
+      "icon": "❄️",
+      "sun": {
+        "pitch": -34,
+        "yaw": 25
+      },
+      "light": "#F8F9FC",
+      "shadow": "#A8B4DC",
+      "rim": 0.35,
+      "rim_color": "#FFF4E6",
+      "rim_glow": 1.1,
+      "hatch": 0.8,
+      "ink": "#1E2030",
+      "ink_alpha": 0.85,
+      "sky": {
+        "zenith": "#8E9BC8",
+        "horizon": "#DDE1EF",
+        "horizon_away": "#D0D2E8",
+        "ground": "#C7CCE0",
+        "sun_disc": "#FFFFFF",
+        "sun_glow": "#E8E6F2",
+        "cloud_lit": "#F3F3F8",
+        "cloud_shade": "#B6BAD6",
+        "cloud_cover": 0.75,
+        "haze": 0.7,
+        "sun_size": 0.0,
+        "glow_size": 6.0
+      },
+      "fog": {
+        "color": "#CDD3E6",
+        "begin": 3.0,
+        "end": 36.0,
+        "amount": 0.6
+      },
+      "grade": {
+        "shadow": [
+          0.4,
+          0.45,
+          0.62
+        ],
+        "light": [
+          0.53,
+          0.53,
+          0.55
+        ],
+        "amount": 0.2
+      },
+      "dof": 0.08,
+      "grain": 0.04,
+      "vignette": 0.22,
+      "bloom": 0.3,
+      "wind": 0.025,
+      "snow": 1.0
     },
     {
       "id": "interior",
@@ -215,7 +277,9 @@
       "dof": 0.07,
       "grain": 0.035,
       "vignette": 0.25,
-      "bloom": 0.5
+      "bloom": 0.5,
+      "wind": 0.0,
+      "snow": 0.0
     },
     {
       "id": "lamplight",
@@ -269,7 +333,9 @@
       "dof": 0.08,
       "grain": 0.035,
       "vignette": 0.28,
-      "bloom": 0.65
+      "bloom": 0.65,
+      "wind": 0.0,
+      "snow": 0.0
     },
     {
       "id": "night",
@@ -323,7 +389,9 @@
       "dof": 0.08,
       "grain": 0.045,
       "vignette": 0.32,
-      "bloom": 1.0
+      "bloom": 1.0,
+      "wind": 0.03,
+      "snow": 0.0
     },
     {
       "id": "underwater",
@@ -377,7 +445,9 @@
       "dof": 0.1,
       "grain": 0.05,
       "vignette": 0.3,
-      "bloom": 0.6
+      "bloom": 0.6,
+      "wind": 0.08,
+      "snow": 0.0
     }
   ],
   "map_defaults": {

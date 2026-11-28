@@ -57,6 +57,7 @@ func run() -> void:
 	if OS.get_cmdline_user_args().has("--test-look"):
 		await _frames(5)
 		await _look()
+		await _dogwalk()
 		print("RESULT: %s" % ("ALL PASS" if fails == 0 else "%d FAIL" % fails))
 		main.get_tree().quit(1 if fails else 0)
 		return
@@ -200,6 +201,7 @@ func run() -> void:
 	await _maps()
 	await _studio()
 	await _look()
+	await _dogwalk()
 	# portal: walk the robo into the kitchen doorway; kitchen links to the pond
 	main.load_scene("kitchen")
 	await _frames(3)
@@ -469,7 +471,11 @@ func _studio() -> void:
 	_check("controls search filters", hud.controls_list.get_child_count() == 2)
 	hud.controls_search.text = ""
 	await _tap(KEY_ESCAPE)
-	# context banner
+	# context banner (independent of the user's own dismissed tips, which are put back afterwards)
+	var kept_dismissed: Dictionary = hud.banner.dismissed.duplicate()
+	var kept_enabled: bool = hud.banner.enabled
+	hud.banner.enabled = true
+	hud.banner.dismissed.clear()
 	main._update_context(true)
 	_check("context tip shows", hud.banner.is_showing())
 	var tip := hud.banner.current
@@ -479,6 +485,10 @@ func _studio() -> void:
 	hud.banner.reset_dismissed()
 	main._update_context(true)
 	_check("reset brings tips back", hud.banner.is_showing() and hud.banner.current == tip)
+	hud.banner.dismissed = kept_dismissed
+	hud.banner.enabled = kept_enabled
+	hud.banner._save()
+	main._update_context(true)
 	await _captions()
 	# abilities: 100, five per character, working on any map
 	var ab: Abilities = main.abilities
@@ -679,3 +689,96 @@ func _first_material(n: Node) -> Material:
 		if m != null:
 			return m
 	return null
+
+## DOGWALK-inspired pieces: reaction bubbles (keys, Director events, overdub), snow, wind, bumps, follow camera.
+func _dogwalk() -> void:
+	var d: DirectorController = main.director
+	if d.playing:
+		d.stop(true)
+	main.load_scene("backyard_garden")
+	await _frames(3)
+	main.clear_cast()
+	var bear: Node3D = main.spawn_character("robo_bear")
+	await _frames(3)
+	# bubbles
+	await _tap(KEY_KP_3)
+	_check("keypad 3 shows a heart bubble", main.bubbles.showing(bear) == "heart")
+	await _wait(2.1)
+	_check("the bubble pops away after its time", main.bubbles.showing(bear) == "")
+	d._fire({"action": "bubble", "actor": "robo_bear", "value": "idea"})
+	await _frames(2)
+	_check("a Director event shows a bubble", main.bubbles.showing(bear) == "idea")
+	main.bubbles.clear()
+	main.clear_cast()
+	main.load_scene("overflowing_kitchen")   # the episode's map, so playback doesn't reload it
+	await _frames(3)
+	# overdub records bubbles into the shot
+	d.play_shot("ep01_kitchen_disaster", 0, false)
+	await _frames(3)
+	_check("playing again respawns a cleared cast", main.find_actor("chaotic_frog") != null)
+	main._take_control(main.find_actor("chaotic_frog"))
+	await _frames(2)
+	await _tap(KEY_R)
+	await _wait(0.3)
+	await _tap(KEY_KP_1)
+	await _wait(0.2)
+	await _tap(KEY_R)
+	var evs: Array = d.ep["shots"][0]["events"]
+	var rec := evs.filter(func(e): return e.get("actor", "") == "chaotic_frog" and e["action"] == "bubble" and e.get("value", "") == "exclaim")
+	_check("overdub records a bubble", rec.size() == 1)
+	for e in rec:
+		evs.erase(e)
+	d.dirty = false
+	d.stop(true)
+	await _frames(2)
+	# snow and wind
+	main.art.pick("snowfall")
+	_check("Snowfall mood shows falling snow", main.art.mood_id == "snowfall" and main.art.snowfall.visible)
+	main.art.clear_pick()
+	_check("snow stops with the next mood", not main.art.snowfall.visible or main.art.mood_id == "snowfall")
+	var leaf := Style.toon(Style.swatch("mint"), false, {"kind": "set"}) as ShaderMaterial
+	var body := Style.toon(Style.swatch("mint"), false, {"kind": "character"}) as ShaderMaterial
+	_check("green set pieces sway, characters don't", float(leaf.get_shader_parameter("wind_amt")) == 1.0 and float(body.get_shader_parameter("wind_amt")) == 0.0)
+	_check("ink knows which corners are leaves", InkStroke.leafiness(Style.swatch("mint")) > 0.5 and InkStroke.leafiness(Style.swatch("coral")) == 0.0)
+	# bumps: walk into a prop and it wobbles, then settles
+	main.load_scene("chaotic_supermarket")
+	await _frames(3)
+	var gm := main.world as GlbMap
+	var prop: Node3D = null
+	for n in gm._rest:
+		if (n as Node3D).scale.y > 0.01:
+			prop = n
+			break
+	if prop == null:
+		_check("supermarket has props", false)
+		return
+	var rest: Transform3D = gm._rest[prop]
+	var pp := prop.global_position
+	main.place(main.actor, pp + Vector3(1.2, 0, 0.0), 0.0)
+	main.walk_to(main.actor, pp)
+	var wobbled := false
+	for i in 90:
+		await main.get_tree().process_frame
+		if not prop.transform.is_equal_approx(rest) and gm._bumps.has(prop):
+			wobbled = true
+			break
+	_check("walking into a prop makes it wobble", wobbled)
+	_check("the bump is part of the shot snapshot", gm.chaos_state(main.t).get("bumps", []).size() > 0)
+	main.walk_to(main.actor, pp + Vector3(2.5, 0, 0))
+	await _wait(1.6)
+	_check("the prop settles back to rest", prop.transform.is_equal_approx(rest) or not gm._bumps.has(prop))
+	# follow camera
+	main.load_scene("backyard_garden")
+	await _frames(3)
+	main.spawn_character("chaotic_frog")
+	await _frames(2)
+	await _tap(KEY_SEMICOLON)
+	await _frames(3)
+	_check("; switches to the follow camera", main.rig == "follow" and main.cam.position.is_finite())
+	var pose: Array = main.frame_pair(main.actor, main.partner_of(main.actor))
+	_check("follow framing aims between the pair", (pose[1] as Vector3).distance_to(main.actor.global_position) < 2.0)
+	d.cam_cut("two_shot", "chaotic_frog", 0.0)
+	d.update_camera(main.cam, 0.016)
+	_check("two-shot preset frames a valid shot", main.cam.position.is_finite() and main.cam.fov > 10.0)
+	main._set_rig("static")
+	main.clear_cast()

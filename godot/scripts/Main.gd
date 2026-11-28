@@ -24,7 +24,7 @@ const HOP_TIME := 0.44
 const HOP_HEIGHT := 0.2
 const CATEGORIES := [["All", "All"], ["Robo", "Robos"], ["Animal", "Animals"], ["Hybrid", "Hybrids"]]
 const HOST_VOICE := {"robo": {"pitch": 1.0, "filter": "radio"}, "frog": {"pitch": 0.85, "filter": "none"}}
-const CAM_KEYS := {"cam_static": "wide_static", "cam_slider": "slider_push", "cam_drone": "drone_intro"}
+const CAM_KEYS := {"cam_static": "wide_static", "cam_slider": "slider_push", "cam_drone": "drone_intro", "cam_follow": "two_shot"}
 
 # registries
 var maps := {}
@@ -43,6 +43,7 @@ var cam: Camera3D
 var voice: Voice
 var director: DirectorController
 var art: Look              # the look: style, moods, sky, depth of field (Look.gd)
+var bubbles: Bubbles       # comic reaction bubbles over heads (Bubbles.gd)
 
 var scene_name := ""
 var rig := "static"
@@ -130,6 +131,9 @@ func _ready() -> void:
 	art.name = "Look"
 	add_child(art)
 	art.setup()
+	bubbles = Bubbles.new(self)
+	bubbles.name = "Bubbles"
+	add_child(bubbles)
 	map_container = Node3D.new()
 	map_container.name = "MapContainer"
 	add_child(map_container)
@@ -175,6 +179,13 @@ func _ready() -> void:
 			place(p, Vector3(-1.6 + (i % 5) * 0.8, 0, -0.9 + int(i / 5) * 0.75), 0.0)
 		if host:
 			host.visible = false
+	if args.has("--cast"):   # spawn these roster ids next to each other (screenshots, tests)
+		var ids := String(args[args.find("--cast") + 1]).split(",")
+		for i in ids.size():
+			if chars.has(ids[i]):
+				var p := spawn_character(ids[i])
+				p.scale = Vector3.ONE
+				place(p, Vector3(-0.45 + i * 0.9, 0, 0.6), 0.0)
 	if args.has("--stage"):
 		for k in range(1, int(args[args.find("--stage") + 1]) + 1):
 			set_stage(k)
@@ -200,6 +211,10 @@ func _ready() -> void:
 		builder.begin(String(args[args.find("--aim") + 1]))
 	if args.has("--clean"):
 		set_clean_hud(true)
+	if args.has("--bubbles"):   # every reaction bubble over the cast, for a contact sheet
+		var who := _actors().filter(func(n): return n.visible)
+		for i in mini(Bubbles.IDS.size(), who.size()):
+			bubbles.show_bubble(who[i], String(Bubbles.IDS[i]), 9999.0)
 	if args.has("--shot"):
 		var wait := float(args[args.find("--wait") + 1]) if args.has("--wait") else 1.5
 		_shot_and_quit(String(args[args.find("--shot") + 1]), wait)
@@ -389,7 +404,7 @@ func _piece(mesh: ArrayMesh, _ink_col: Color, thick := 0.009, occ: Dictionary = 
 	body.mesh = mesh
 	body.material_override = _lit()
 	n.add_child(body)
-	n.add_child(Ink.rim(mesh, thick, occ.get("c", []), occ.get("r", [])))
+	n.add_child(Ink.rim(mesh, thick, occ.get("c", []), occ.get("r", []), true))
 	return n
 
 func _lit() -> Material:
@@ -639,6 +654,8 @@ func act(n: Node3D, action: String, human := false) -> void:
 			(n as Puppet).emote(action)
 		else:
 			motion[n]["hop_start"] = t # hosts have no arms: they bounce instead
+	elif action.begins_with("bubble_"):
+		bubbles.show_bubble(n, action.substr(7))
 
 func walk_to(n: Node3D, at: Vector3) -> void:
 	if _has(n):
@@ -659,11 +676,11 @@ func say(n: Node3D, audio: String, text: String, duration := -1.0) -> float:
 
 func _trigger(action: String) -> void:
 	match action:
-		"cam_static", "cam_slider", "cam_drone":
+		"cam_static", "cam_slider", "cam_drone", "cam_follow":
 			if director.drives_camera():
 				director.cam_cut_live(CAM_KEYS[action])
 			else:
-				_set_rig({"cam_static": "static", "cam_slider": "slider", "cam_drone": "drone"}[action])
+				_set_rig({"cam_static": "static", "cam_slider": "slider", "cam_drone": "drone", "cam_follow": "follow"}[action])
 		"fly":
 			if not director.playing or director.paused: # free fly is studio-only: recordings never drift
 				_toggle_fly()
@@ -764,10 +781,75 @@ func _update_camera(dt: float) -> void:
 		cam.look_at(Vector3(custom_cam[3], custom_cam[4], custom_cam[5]), Vector3.UP)
 		cam.fov = custom_cam[6]
 		return
+	if rig == "follow":
+		_update_follow(dt)
+		return
 	var p := rig_pose(rig)
 	cam.position = p[0]
 	cam.look_at(p[1], Vector3.UP)
 	cam.fov = p[2]
+
+# ── follow camera (after DOGWALK's camera, Blender Studio, CC-BY 4.0) ─────────────
+var _idle_t := 0.0
+var _follow: Array = []
+
+## Keeps a subject and a partner in frame. The camera sits in front of the pair and pulls back and
+## tilts down as they separate. push (0..1) dollies in, used for the slow push-in while nobody moves.
+func frame_pair(a: Node3D, b: Node3D, push := 0.0, high := false) -> Array:
+	var pa := a.global_position
+	var pb := b.global_position if b != null else pa
+	var ha := height_of(a)
+	var h := maxf(ha, height_of(b)) if b != null else ha
+	var across := Vector3(pb.x - pa.x, 0, pb.z - pa.z)
+	var sep := across.length()
+	var zoom := clampf(remap(sep, 0.5, 4.0, 0.0, 1.0), 0.0, 1.0)
+	var mid := pa.lerp(pb, lerpf(0.4, 0.5, zoom))
+	var front: Vector3
+	if sep > 0.25:
+		front = Vector3(-across.z, 0, across.x).normalized()
+		if front.z < 0.0:
+			front = -front   # stay on the set's open side
+	else:
+		front = (Vector3(sin(a.rotation.y), 0, cos(a.rotation.y)) + Vector3(0, 0, 1.2)).normalized()
+	var pitch := deg_to_rad(lerpf(24.0, 40.0, zoom) if high else lerpf(13.0, 28.0, zoom))
+	var dist := lerpf(h * 2.7 + 0.7, sep * 1.35 + h * 2.2 + 1.1, zoom) * lerpf(1.0, 0.7, push)
+	var look_at := mid + Vector3(0, h * 0.62, 0)
+	var pos := look_at + front * cos(pitch) * dist + Vector3(0, sin(pitch) * dist, 0)
+	return [pos, look_at, lerpf(42.0, 38.0, zoom)]
+
+## The nearest other visible character within reach, or null.
+func partner_of(a: Node3D, reach := 5.0) -> Node3D:
+	var best: Node3D = null
+	var best_d := reach
+	for n: Node3D in _actors():
+		if n == a or not n.is_visible_in_tree():
+			continue
+		var d: float = n.global_position.distance_to(a.global_position)
+		if d < best_d:
+			best_d = d
+			best = n
+	return best
+
+func _anyone_moving() -> bool:
+	for n in _actors():
+		var m: Dictionary = motion[n]
+		if float(m["moving"]) > 0.05 or float(m["hop"]) > 0.0:
+			return true
+	return false
+
+## Live follow rig: eased toward the pair framing; after a few still seconds it slowly pushes in.
+func _update_follow(dt: float) -> void:
+	if not _has(actor):
+		return
+	var want := frame_pair(actor, partner_of(actor), smoothstep(3.0, 10.0, _idle_t) * 0.85, true)
+	if _follow.is_empty():
+		_follow = want
+	else:
+		var k := 1.0 - exp(-dt * 3.0)
+		_follow = [(_follow[0] as Vector3).lerp(want[0], k), (_follow[1] as Vector3).lerp(want[1], k), lerpf(_follow[2], want[2], k)]
+	cam.position = _follow[0]
+	cam.look_at(_follow[1], Vector3.UP)
+	cam.fov = _follow[2]
 
 func _update_fly(dt: float) -> void:
 	var mv := Input.get_vector("move_left", "move_right", "move_forward", "move_back") + joy_vec
@@ -786,6 +868,8 @@ func _update_fly(dt: float) -> void:
 func _set_rig(r: String) -> void:
 	if r == "free" and rig != "free":
 		_capture_fly()
+	if r == "follow" and rig != "follow":
+		_follow = []
 	rig = r
 	_update_hud()
 
@@ -800,6 +884,7 @@ func _capture_fly() -> void:
 ## Running ability casts keep their elapsed time across the reset.
 func reset_clock() -> void:
 	abilities.shift_time(-t)
+	bubbles.clear()
 	t = 0.0
 	_last_anim_t = 0.0
 	slider_t = 0.0
@@ -845,9 +930,11 @@ func _process(dt: float) -> void:
 		look *= 0.9
 	if not builder.update_preview(cam, dt):
 		_update_camera(dt)
+	_idle_t = 0.0 if _anyone_moving() else _idle_t + dt
 	if chaos_shake > 0.0 and rig != "free":
 		cam.position += Vector3(sin(t * 37.0) + sin(t * 23.0), sin(t * 29.0 + 1.0), sin(t * 31.0 + 2.0)) * 0.025 * chaos_shake
 	art.tick(dt)
+	bubbles.tick()
 	_update_portals()
 	hud.sync()
 	_update_context()

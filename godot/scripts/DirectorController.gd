@@ -138,7 +138,9 @@ func play_episode(id: String, shot_id := "") -> void:
 func play_shot(id: String, i: int, looped := false) -> void:
 	if not episodes.has(id):
 		return
-	_open(id, id != ep_id or snapshots.is_empty())
+	# reopen (respawn the cast) when the episode changed or someone was cleared from the stage
+	var missing := id == ep_id and _actor_ids().any(func(a): return main.find_actor(String(a)) == null)
+	_open(id, id != ep_id or snapshots.is_empty() or missing)
 	mode = "shot"
 	loop = looped
 	_begin(false)
@@ -365,6 +367,9 @@ func _fire(e: Dictionary) -> void:
 		"expr": main.act(n, "expr_%d" % (main.EXPRS.find(String(v)) + 1))
 		"emote": main.act(n, String(v))
 		"hop": main.act(n, "hop")
+		"bubble":
+			if n:
+				main.bubbles.show_bubble(n, String(v), float(e.get("duration", 1.8)))
 		"talk": main.say(n, String(e.get("audio", "")), String(e.get("text", "")), float(e.get("duration", -1.0)))
 		"move":
 			var to: Array = e.get("value", e.get("to", [0, 0, 0]))
@@ -459,6 +464,10 @@ func _desired() -> Array:
 			var h := float(d[2]) * (1.2 - 0.25 * prog)
 			var centre: Vector3 = main.v3(d[0])
 			return [centre + Vector3(sin(a) * r, h, cos(a) * r), centre + Vector3(0, 0.3, 0), float(d[3])]
+		"two_shot":
+			var n2 := _target_node()
+			if n2 and is_instance_valid(n2):
+				return main.frame_pair(n2, main.partner_of(n2))
 		"closeup_actor", "follow_shoulder":
 			var n := _target_node()
 			if n and is_instance_valid(n):
@@ -661,6 +670,8 @@ func record_action(action: String) -> void:
 		_record("emote", action)
 	elif action == "hop":
 		_record("hop", null)
+	elif action.begins_with("bubble_"):
+		_record("bubble", action.substr(7))
 
 func record_chaos(s: int) -> void:
 	_record("chaos", s, "")

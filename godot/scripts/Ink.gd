@@ -39,9 +39,16 @@ static func calm(rim_node: MeshInstance3D, surface_color: Color) -> void:
 	m.set_shader_parameter("pressure_min", 1.0)
 	m.set_shader_parameter("width_px", 2.6 if Look.illustrated() else 1.8)
 
-static func rim(mesh: ArrayMesh, _thick: float = 0.0, occ_c: Array = [], occ_r: Array = []) -> MeshInstance3D:
+## The line sways with its surface: copies the surface material's wind.
+static func follow(rim_node: MeshInstance3D, surface: Material) -> void:
+	if surface is ShaderMaterial:
+		var w = (surface as ShaderMaterial).get_shader_parameter("wind_amt")
+		if w != null and float(w) > 0.0:
+			(rim_node.material_override as ShaderMaterial).set_shader_parameter("wind_amt", float(w))
+
+static func rim(mesh: ArrayMesh, _thick: float = 0.0, occ_c: Array = [], occ_r: Array = [], vcol := false) -> MeshInstance3D:
 	var s := InkStroke.new()
-	s.setup(mesh)
+	s.setup(mesh, vcol)
 	var mat := material().duplicate() as ShaderMaterial
 	var c := []
 	var r := []

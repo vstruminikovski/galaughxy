@@ -70,6 +70,7 @@ func _walk(n: Node) -> void:
 			if not Style.is_clear(mat):
 				var rim := Ink.rim(mi.mesh as ArrayMesh)
 				Ink.calm(rim, Style.color_of(mat))
+				Ink.follow(rim, mat)
 				mi.add_child(rim)
 	for c in n.get_children():
 		_walk(c)
@@ -103,7 +104,12 @@ func chaos_set(stage: int, now: float, main: Node) -> void:
 		_reset(main)
 
 func chaos_state(now: float) -> Dictionary:
-	return {"stage": _stage, "elapsed": [0.0, now - _t0[1], now - _t0[2], now - _t0[3]]}
+	var keys := _rest.keys()
+	var bumps := []
+	for n in _bumps:
+		var b: Array = _bumps[n]
+		bumps.append([keys.find(n), now - float(b[0]), (b[1] as Vector3).x, (b[1] as Vector3).z])
+	return {"stage": _stage, "elapsed": [0.0, now - _t0[1], now - _t0[2], now - _t0[3]], "bumps": bumps}
 
 func chaos_restore(s: Dictionary, now: float, main: Node) -> void:
 	_reset(main)
@@ -111,8 +117,14 @@ func chaos_restore(s: Dictionary, now: float, main: Node) -> void:
 	var el: Array = s.get("elapsed", [0.0, 0.0, 0.0, 0.0])
 	for k in range(1, 4):
 		_t0[k] = now - float(el[k])
+	var keys := _rest.keys()
+	for b in s.get("bumps", []):
+		var i := int(b[0])
+		if i >= 0 and i < keys.size():
+			_bumps[keys[i]] = [now - float(b[1]), Vector3(float(b[2]), 0, float(b[3]))]
 
 func _reset(main: Node) -> void:
+	_bumps.clear()
 	for n in _rest:
 		(n as Node3D).transform = _rest[n]
 	for mi in _glow_base:
@@ -150,8 +162,72 @@ func chaos_tick(now: float, main: Node) -> void:
 			break
 		for fx in _stages[k - 1].get("fx", []):
 			_fx(fx, now - _t0[k], main, used_swarms)
+	_bump_tick(now, main)
 	for key in _swarms:
 		(_swarms[key] as Node3D).visible = used_swarms.has(key)
+
+# ── bumps (after DOGWALK's bushes, Blender Studio, CC-BY 4.0) ─────────────────────
+## A prop that a walking character runs into wobbles back and forth with a little squash and settles
+## within a second. Pure function of time since the bump, so scrubs and retakes replay it, and the
+## bump times are part of the shot snapshot.
+const BUMP_TIME := 1.0
+const BUMP_AMP := 0.2
+const BUMP_FREQ := 4.0
+var _bumps := {}     # prop node -> [start time, push direction]
+var _reach := {}     # prop node -> footprint radius (metres)
+
+func _bump_tick(now: float, main: Node) -> void:
+	for n in _rest:
+		var node := n as Node3D
+		if node.scale.y < 0.01:
+			continue   # hidden prop group
+		var b = _bumps.get(node)
+		if b != null and now - float(b[0]) >= BUMP_TIME:
+			_bumps.erase(node)
+			b = null
+		if b == null:
+			var push := _bump_from(node, main)
+			if push != Vector3.ZERO:
+				b = [now, push]
+				_bumps[node] = b
+		if b == null:
+			continue
+		var p := (now - float(b[0])) / BUMP_TIME
+		var env := (1.0 - p) * (1.0 - p)
+		var wave := sin(p * TAU * BUMP_FREQ)
+		var axis := Vector3.UP.cross(b[1] as Vector3).normalized()
+		var sq := 1.0 + 0.07 * env * cos(p * TAU * BUMP_FREQ)
+		var tr := node.transform
+		node.transform = Transform3D(Basis(axis, BUMP_AMP * env * wave) * tr.basis.scaled(Vector3(sq, 1.0 / sq, sq)), tr.origin)
+
+## The push direction when a moving character overlaps this prop's footprint, else zero.
+func _bump_from(node: Node3D, main: Node) -> Vector3:
+	if not _reach.has(node):
+		var box := _bounds_of(node)
+		_reach[node] = clampf(maxf(box.size.x, box.size.z) * 0.5, 0.08, 1.2)
+	var c := node.global_position
+	for a in main._actors():
+		var m: Dictionary = main.motion[a]
+		if float(m["moving"]) < 0.1:
+			continue
+		var ap: Vector3 = m["pos"]
+		var d := Vector2(c.x - ap.x, c.z - ap.z)
+		if d.length() < float(_reach[node]) + 0.16:
+			return Vector3(d.x, 0, d.y).normalized() if d.length() > 0.001 else Vector3(0, 0, -1)
+	return Vector3.ZERO
+
+## World-space bounds of a node's meshes (at its current pose).
+static func _bounds_of(n: Node) -> AABB:
+	var out := AABB()
+	var first := true
+	for mi in n.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		if m.mesh == null or m is InkStroke:
+			continue
+		var box: AABB = m.global_transform * m.mesh.get_aabb()
+		out = box if first else out.merge(box)
+		first = false
+	return out
 
 static func _h(n: Object, salt: float) -> float:
 	var x := sin(float(String(n.get("name")).hash() % 10007) * 12.9898 + salt * 78.233) * 43758.5453

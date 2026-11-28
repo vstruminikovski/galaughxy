@@ -34,10 +34,10 @@ const VALUES := {"base": 0, "light": 1, "shade": 2}
 ## Hatching per kind of surface (Illustrated Ink). hatch = shadow strokes, texture = strokes on lit
 ## areas, stroke = typical stroke length in metres.
 const KINDS := {
-	"character": {"hatch": 1.0, "texture": 0.35, "stroke": 0.04},
-	"prop": {"hatch": 0.9, "texture": 0.15, "stroke": 0.06},
-	"set": {"hatch": 0.8, "texture": 0.0, "stroke": 0.12},
-	"flat": {"hatch": 0.45, "texture": 0.0, "stroke": 0.16},
+	"character": {"hatch": 1.0, "texture": 0.35, "stroke": 0.04, "snow": 0.3},
+	"prop": {"hatch": 0.9, "texture": 0.15, "stroke": 0.06, "snow": 0.9},
+	"set": {"hatch": 0.8, "texture": 0.0, "stroke": 0.12, "snow": 1.0},
+	"flat": {"hatch": 0.45, "texture": 0.0, "stroke": 0.16, "snow": 1.0},
 }
 
 static var _vinyl: Array = []
@@ -127,9 +127,14 @@ static func toon(color := Color.WHITE, vertex := false, opts := {}) -> Material:
 		sm.set_shader_parameter("hatch_amt", float(opts.get("hatch", k["hatch"])))
 		sm.set_shader_parameter("texture_amt", float(opts.get("texture", k["texture"])))
 		sm.set_shader_parameter("stroke_len", float(opts.get("stroke", k["stroke"])))
+		sm.set_shader_parameter("snow_amt", float(opts.get("snow", k["snow"])))
 		var gloss := 0.5 if (not vertex and c.get_luminance() < 0.22) else 0.0
 		sm.set_shader_parameter("gloss", float(opts.get("gloss", gloss)))
 		sm.set_shader_parameter("stroke_seed", float(opts.get("seed", fmod(c.r * 13.0 + c.g * 7.0 + c.b * 3.0, 10.0))))
+		# leaves sway (set and prop surfaces: green vertices, or a green surface colour)
+		var outdoorsy := String(opts.get("kind", "prop")) in ["set", "prop"]
+		var leafy := vertex or InkStroke.leafiness(c) > 0.5
+		sm.set_shader_parameter("wind_amt", float(opts.get("wind", 1.0 if outdoorsy and leafy else 0.0)))
 		m = sm
 	else:
 		var s := StandardMaterial3D.new()

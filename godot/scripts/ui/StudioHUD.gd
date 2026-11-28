@@ -326,7 +326,7 @@ func _line_cut(clock: float) -> bool:
 # ── Camera toolbox ────────────────────────────────────────────────────────────────
 func _build_camera() -> void:
 	var t := _box("camera", "🎥 Camera", 330, Vector2(12, 124))
-	cam_tabs = t.tabs(["1. Drone", "2. Static", "3. Sliders"])
+	cam_tabs = t.tabs(["1. Drone", "2. Static", "3. Sliders", "4. Follow"])
 	var spec := {"1. Drone": ["drone", "cam_drone", "Fly through 5 or more viewpoints; a smooth spline links them."],
 		"2. Static": ["static", "cam_static", "One locked tripod view (Point A)."],
 		"3. Sliders": ["slider", "cam_slider", "A dolly from Point A to Point B."]}
@@ -348,6 +348,12 @@ func _build_camera() -> void:
 		build.pressed.connect(func(): main.builder.begin(kind))
 		row.add_child(build)
 		page.add_child(row)
+	var fp: VBoxContainer = cam_tabs["pages"]["4. Follow"]
+	if fp:
+		fp.add_child(small("Frames you and the nearest character, pulls back as you separate and pushes in when everyone stands still. During playback it cuts to a two-shot."))
+		var fb := btn("👁 Follow rig [%s]" % Controls.key_label("cam_follow"), Vector2(0, 40))
+		fb.pressed.connect(func(): _tap("cam_follow"))
+		fp.add_child(fb)
 	cam_info = small("", 12, 0.85)
 	t.body.add_child(cam_info)
 	var row2 := HBoxContainer.new()
@@ -512,6 +518,16 @@ func _build_character() -> void:
 		g.add_child(b)
 		emote_buttons.append(b)
 	eo.add_child(g)
+	eo.add_child(small("Reaction bubbles (keypad 1–9, 0)", 12, 0.6))
+	var bg := _grid(5)
+	for id in Bubbles.IDS:
+		var b := btn(String(Bubbles.LABELS[id]), Vector2(0, 42))
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.tooltip_text = "%s [%s]" % [Bubbles.NAMES[id], Controls.key_label("bubble_" + String(id))]
+		var action := "bubble_" + String(id)
+		b.pressed.connect(func(): _tap(action))
+		bg.add_child(b)
+	eo.add_child(bg)
 	# Abilities (+ map gags)
 	var ab: VBoxContainer = char_tabs["pages"]["Abilities"]
 	for i in 5:

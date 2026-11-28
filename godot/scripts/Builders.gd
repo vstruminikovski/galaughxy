@@ -23,7 +23,9 @@ static func sdf_piece(f: Callable, lo: Vector3, hi: Vector3, step: float, color:
 	body.material_override = lit_material()
 	n.add_child(body)
 	if ink and mesh.get_surface_count() > 0:
-		n.add_child(Ink.rim(mesh, thick))
+		var r := Ink.rim(mesh, thick, [], [], true)
+		Ink.follow(r, body.material_override)
+		n.add_child(r)
 	return n
 
 ## A glowing SDF surface (emissive, no ink).

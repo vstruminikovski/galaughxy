@@ -277,3 +277,31 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
   - Universal Animation Library 1+2 (CC0, OpenGameArt) for humanoid clips.
   - Kenney interface pops and swishes (CC0) for caption sounds.
   - Using any of them needs a decision first: humans need skeletal playback and retargeting next to `Puppet.gd`.
+
+## 25. DOGWALK SYSTEMS (current; adapted from Blender Studio's DOGWALK, CC-BY 4.0, see CREDITS.md)
+- **Reaction bubbles** (`scripts/Bubbles.gd`, `shaders/bubble.gdshader`):
+  - A paper bubble with an ink outline and tail, always facing the camera and sitting beside the head. Ten procedural icons: `exclaim question heart sweat anger dizzy dots idea note sparkle`.
+  - Pop-in, wobble, bob and pop-out are pure functions of the studio clock. `reset_clock` clears them.
+  - Triggers: keypad 1–9 and 0 (`bubble_<id>` actions); Character ▸ Emotes ▸ bubble buttons; Director event `{"action": "bubble", "actor": id, "value": "heart", "duration": 1.8}`.
+  - Overdub and Takes record them in their own `bubble` channel.
+  - Debug: `--bubbles` shows every icon over the cast.
+- **Wind** (`shaders/ill_common.gdshaderinc`, mood field `wind` = metres of sway at the top of a plant):
+  - Sway grows with height: none at the ground, full by 1.6 m.
+  - Green set and prop surfaces sway; with vertex colours, only the green vertices (`ill_leafiness`).
+  - The ink shader displaces the same rest positions with the same function, so lines stay glued. InkStroke packs each corner's leaf weight into COLOR.rgb, and `Ink.follow(rim, surface)` copies `wind_amt`.
+  - Characters never sway. Indoor moods have no wind.
+- **Snow:**
+  - Mood `snowfall` (field `snow` 0..1): surfaces facing up turn snow-white with a ragged noise edge (`ill_snow`; `snow_amt` per kind: characters 0.3, so only a dusting).
+  - Hatching thins on snow.
+  - 2400 flakes are placed entirely on the GPU (`shaders/snowfall.gdshader`): they fall with the clock and wrap in a box around the camera.
+- **Near-lens dissolve:**
+  - Geometry closer than `ill_near_fade` (0.6 m) to the lens dissolves through a 4×4 ordered dither, in both the surface and ink shaders.
+  - With the Follow camera, everything nearer than the subject minus 0.9 m dissolves (DOGWALK's trick for keeping the pair visible).
+- **Bumps** (`GlbMap._bump_tick`):
+  - A prop that a walking character runs into wobbles about the axis perpendicular to the push, with a little squash, and settles in 1 s.
+  - Pure function of time since the bump. Bump times are saved in `chaos_state` / `chaos_restore`, so scrubs and retakes replay them.
+- **Follow camera** (`;`, Camera ▸ 4. Follow; `Main.frame_pair`):
+  - Frames the controlled character and the nearest partner: pulls back and tilts down as they separate (24–40° live), and slowly pushes in (up to 30 %) after 3 s of stillness. Eased.
+  - In the Director it is the `two_shot` preset (13–28°, not eased, so it stays deterministic), and `;` during playback cuts to it.
+- **Fixed with it:** replaying an open episode after its cast was cleared now respawns the cast (`play_shot` reopens when a cast member is missing).
+- **Debug:** `--cast id1,id2` spawns those characters side by side. `--clean`, `--mood <id>`, `--look <style>` as before.

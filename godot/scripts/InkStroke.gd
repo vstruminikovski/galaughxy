@@ -13,13 +13,20 @@ extends MeshInstance3D
 ##
 ## Flat regions (all three normals within ~2 degrees) can never hold an outline from a normal
 ## viewpoint, so their triangles are skipped: walls and floors cost almost nothing.
+##
+## COLOR.rgb carries the three corners' wind weights, so a swaying leaf's line sways with it:
+## each corner's "leafiness" when the surface uses vertex colours (vcol), else 1.
 
 const FLAT_COS := 0.9994
 
 static var build_ms := 0.0
 static var builds := 0
 
-func setup(src: ArrayMesh) -> void:
+## Same formula as ill_leafiness() in shaders/ill_common.gdshaderinc.
+static func leafiness(c: Color) -> float:
+	return smoothstep(0.02, 0.06, c.g - maxf(c.r, c.b))
+
+func setup(src: ArrayMesh, vcol := false) -> void:
 	var t0 := Time.get_ticks_usec()
 	var v := PackedVector3Array()
 	var nr := PackedVector3Array()
@@ -27,6 +34,7 @@ func setup(src: ArrayMesh) -> void:
 	var c1 := PackedFloat32Array()
 	var c2 := PackedFloat32Array()
 	var uv := PackedVector2Array()
+	var col := PackedColorArray()
 	var ix := PackedInt32Array()
 	var corners := [Vector2(0, -1), Vector2(0, 1), Vector2(1, -1), Vector2(1, 1)]
 	for s in src.get_surface_count():
@@ -36,6 +44,8 @@ func setup(src: ArrayMesh) -> void:
 		if norms.size() != verts.size():
 			continue
 		var idx: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
+		var cols: PackedColorArray = arrays[Mesh.ARRAY_COLOR] if vcol and arrays[Mesh.ARRAY_COLOR] != null else PackedColorArray()
+		var has_c := cols.size() == verts.size()
 		var count := idx.size() if idx.size() > 0 else verts.size()
 		var k := 0
 		while k + 2 < count:
@@ -52,7 +62,9 @@ func setup(src: ArrayMesh) -> void:
 			var p1 := verts[b]
 			var p2 := verts[c]
 			var base := v.size()
+			var w := Color(leafiness(cols[a]), leafiness(cols[b]), leafiness(cols[c]), 1.0) if has_c else Color(1, 1, 1, 1)
 			for corner in corners:
+				col.append(w)
 				v.append(p0)
 				nr.append(na)
 				c0.append_array([p1.x, p1.y, p1.z, nb.x])
@@ -70,6 +82,7 @@ func setup(src: ArrayMesh) -> void:
 		arr[Mesh.ARRAY_CUSTOM1] = c1
 		arr[Mesh.ARRAY_CUSTOM2] = c2
 		arr[Mesh.ARRAY_TEX_UV] = uv
+		arr[Mesh.ARRAY_COLOR] = col
 		arr[Mesh.ARRAY_INDEX] = ix
 		var flags := (Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT) \
 			| (Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM1_SHIFT) \

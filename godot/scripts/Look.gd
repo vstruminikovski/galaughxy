@@ -41,6 +41,7 @@ var post_layer: CanvasLayer
 var post: ColorRect
 var post_mat: ShaderMaterial
 var attrs: CameraAttributesPractical
+var snowfall: MultiMeshInstance3D
 var base_sun := 0.6
 var base_ambient := 1.0
 var focus := -1.0          # depth-of-field focus distance (metres), eased toward the subject
@@ -93,6 +94,7 @@ func setup() -> void:
 	post.material = post_mat
 	post_layer.add_child(post)
 	add_child(post_layer)
+	_build_snowfall()
 	# debug / profiling: --fx-off shadows,dof,post,glow,hatch
 	var args := OS.get_cmdline_user_args()
 	if args.has("--fx-off"):
@@ -104,10 +106,37 @@ var _fx_off: PackedStringArray = []
 func _off(what: String) -> bool:
 	return _fx_off.has(what)
 
+## Falling snow: 2400 flakes placed entirely on the GPU (shaders/snowfall.gdshader).
+func _build_snowfall() -> void:
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.045, 0.045)
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = quad
+	mm.instance_count = 2400
+	for i in mm.instance_count:
+		mm.set_instance_transform(i, Transform3D.IDENTITY)
+	snowfall = MultiMeshInstance3D.new()
+	snowfall.name = "Snowfall"
+	snowfall.multimesh = mm
+	var m := ShaderMaterial.new()
+	m.shader = load("res://shaders/snowfall.gdshader")
+	snowfall.material_override = m
+	snowfall.custom_aabb = AABB(Vector3(-5000, -5000, -5000), Vector3(10000, 10000, 10000))
+	snowfall.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	snowfall.visible = false
+	add_child(snowfall)
+
 func _apply_style_env() -> void:
 	var env: Environment = main.env
 	var sun: DirectionalLight3D = main.sun
 	var on := illustrated()
+	RenderingServer.global_shader_parameter_set("ill_near_fade", 0.6 if on else 0.0)
+	if not on:
+		RenderingServer.global_shader_parameter_set("ill_wind", 0.0)
+		RenderingServer.global_shader_parameter_set("ill_snow", 0.0)
+		if snowfall:
+			snowfall.visible = false
 	post_layer.visible = on and not _off("post")
 	sun.shadow_enabled = on and not _off("shadows")
 	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
@@ -125,7 +154,7 @@ func _apply_style_env() -> void:
 		env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
 		sun.shadow_bias = 0.04
 		sun.shadow_normal_bias = 1.4
-		sun.shadow_blur = 1.0
+		sun.shadow_blur = 0.5
 		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL   # one pass: sets are small
 		sun.directional_shadow_max_distance = 22.0
 	else:
@@ -240,6 +269,10 @@ func _apply_illustrated() -> void:
 	post_mat.set_shader_parameter("light_tint", _v3(g.get("light", [0.5, 0.5, 0.5])))
 	post_mat.set_shader_parameter("grade", float(g.get("amount", 0.2)))
 	post_mat.set_shader_parameter("vignette", float(_m.get("vignette", 0.22)))
+	var snow := float(_m.get("snow", 0.0))
+	RenderingServer.global_shader_parameter_set("ill_snow", snow)
+	RenderingServer.global_shader_parameter_set("ill_wind", float(_m.get("wind", 0.0)))
+	snowfall.visible = snow > 0.0
 	_apply_toggles()
 	reset_fog()
 
@@ -330,6 +363,8 @@ func tick(dt: float) -> void:
 		return
 	var d: float = main.cam.global_position.distance_to(main.head_pos(subject))
 	focus = d if focus < 0.0 else lerpf(focus, d, 1.0 - exp(-dt * 6.0))
+	# follow camera: like DOGWALK, anything between the lens and the subject dissolves
+	RenderingServer.global_shader_parameter_set("ill_near_fade", maxf(0.6, focus - 0.9) if main.rig == "follow" else 0.6)
 	attrs.dof_blur_far_enabled = true
 	attrs.dof_blur_far_distance = focus * 1.2 + 0.35
 	attrs.dof_blur_far_transition = focus * 1.6 + 0.5

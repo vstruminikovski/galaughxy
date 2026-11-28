@@ -13,6 +13,8 @@ shader_type spatial;
 render_mode cull_back;
 //VARIANT
 
+#include "res://shaders/ill_common.gdshaderinc"
+
 uniform vec4 albedo : source_color = vec4(1.0);
 uniform bool use_vcol = false;       // vertex / MultiMesh instance colours (sRGB) as the local colour
 uniform float hatch_amt = 1.0;       // shadow hatching strength
@@ -20,6 +22,8 @@ uniform float texture_amt = 0.3;     // sparse strokes on lit areas (cloth, fur)
 uniform float stroke_len = 0.045;    // typical stroke length in metres (object scale)
 uniform float gloss = 0.0;           // toon highlight
 uniform float stroke_seed = 0.0;
+uniform float wind_amt = 0.0;        // 1 = leaves sway in the wind (green vertices when use_vcol)
+uniform float snow_amt = 1.0;        // how much snow this surface holds (characters only a dusting)
 
 global uniform vec3 ill_sun_dir;     // toward the key light, world space
 global uniform vec4 ill_ink;         // ink colour (linear rgb) and stroke opacity
@@ -27,6 +31,7 @@ global uniform float ill_rim;        // rim light strength
 global uniform float ill_hatch;      // global hatch strength (0 = off)
 global uniform float ill_time;       // studio clock (deterministic)
 global uniform float ill_boil;       // stroke boil (0 = still)
+global uniform float ill_snow;       // snow lying on surfaces that face up (0..1)
 
 varying vec3 v_obj;                  // object-space position in metres
 
@@ -77,6 +82,11 @@ float strokes(float x, float y, float fw, float coverage, float seed, float px) 
 
 void vertex() {
 	v_obj = VERTEX * length(MODEL_MATRIX[0].xyz);
+	if (wind_amt > 0.0) {
+		float w = wind_amt * (use_vcol ? ill_leafiness(COLOR.rgb) : 1.0);
+		vec3 wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+		VERTEX += (inverse(MODEL_MATRIX) * vec4(ill_wind_offset(wp, w, ill_time), 0.0)).xyz;
+	}
 }
 
 void fragment() {
@@ -85,6 +95,17 @@ void fragment() {
 		base *= to_linear(COLOR.rgb);
 	}
 	vec3 nw = normalize((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
+	if (ill_near_discard(length(VERTEX), FRAGCOORD.xy)) {
+		discard;
+	}
+	// snow settles on everything that faces up, with a soft ragged edge
+	float snow = 0.0;
+	float sa = ill_snow * snow_amt;
+	if (sa > 0.001) {
+		float n = vnoise(v_obj * 11.0 + stroke_seed);
+		snow = smoothstep(0.42, 0.6, nw.y + (n - 0.5) * 0.3 + (sa - 1.0) * 0.5) * min(1.0, sa * 1.6);
+		base = mix(base, vec3(0.9, 0.92, 0.97), snow);
+	}
 	float ndl = dot(nw, normalize(ill_sun_dir));
 	float dark = 1.0 - smoothstep(-0.2, 0.24, ndl);
 	// strokes gather just inside the terminator (the half-tone band), thin out in deep shadow
@@ -98,7 +119,7 @@ void fragment() {
 	float y2 = dot(v_obj, A2);
 	float fw1 = fwidth(x1);
 	float fw2 = fwidth(x2);
-	float amt = ill_hatch * hatch_amt * (1.0 - smoothstep(16.0, 34.0, dist));
+	float amt = ill_hatch * hatch_amt * (1.0 - smoothstep(16.0, 34.0, dist)) * (1.0 - 0.85 * snow);
 	float cov1 = amt * (texture_amt * 0.5 * (1.0 - dark) + 0.34 * band + 0.1 * dark);
 	float cov2 = amt * 0.16 * smoothstep(0.85, 1.0, dark) * step(0.01, texture_amt);
 	float h = strokes(x1, y1, fw1, cov1, stroke_seed, px);
