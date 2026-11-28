@@ -76,6 +76,11 @@ var jaw := 0.0
 var chaos_shake := 0.0   # camera shake from the current chaos stage
 var lowgrav := false     # floaty hops (moon gravity flicker)
 var slippery := false    # characters skid and wobble (grease trap)
+var light_scale := 1.0   # blackout dimming (1 = normal)
+var flash := 0.0         # lightning flash strength
+var _base_ambient := 0.62
+var _base_sun := 0.4
+var _base_sky := Color.WHITE
 var water: Water
 var flood := 0.0
 var flood_target := 0.0
@@ -105,7 +110,9 @@ var cast_panel: Panel
 var director_panel: Panel
 var director_list: VBoxContainer
 var director_status: Label
-var maps_list: VBoxContainer
+var maps_list: GridContainer
+var maps_filter := "All"
+const MAP_CATEGORIES := ["All", "Indoor", "Outdoor", "Sci-Fi & Wild"]
 var cast_grid: GridContainer
 var cast_cards: Array = []
 var cast_filter := "All"
@@ -298,6 +305,9 @@ func _apply_lighting(info: Dictionary) -> void:
 	sun.light_energy = float(s["energy"])
 	env.ambient_light_color = Color(String(info.get("ambient", "#dff1ff")))
 	env.ambient_light_energy = float(info.get("ambient_energy", 0.55))
+	_base_sun = sun.light_energy
+	_base_ambient = env.ambient_light_energy
+	_base_sky = Color(String(info["sky"]))
 	var sky := Color(String(info["sky"]))
 	env.background_color = sky
 	RenderingServer.set_default_clear_color(sky)
@@ -820,6 +830,7 @@ func _step(dt: float, live: bool) -> void:
 	_update_actors(dt, live)
 	_update_flood(dt)
 	world.chaos_tick(t, self)
+	_apply_chaos_light()
 	voice.tick(dt)
 	_animate(dt)
 
@@ -941,6 +952,13 @@ func _animate_host(ta: float, dt: float, expr: String, talking: bool, mv: float)
 func _update_flood(dt: float) -> void:
 	flood = lerpf(flood, flood_target, minf(1.0, dt * 1.2))
 	water.set_level(flood, t)
+
+## Blackouts dim the set and the sky; lightning flashes everything bright for a beat.
+func _apply_chaos_light() -> void:
+	env.ambient_light_energy = _base_ambient * light_scale + flash * 1.2
+	sun.light_energy = _base_sun * light_scale + flash * 1.4
+	var sky := _base_sky.darkened(1.0 - lerpf(0.25, 1.0, light_scale)).lerp(Color.WHITE, clampf(flash, 0.0, 1.0) * 0.8)
+	env.background_color = sky
 
 func set_stage(s: int) -> void:
 	stage = s
@@ -1265,13 +1283,28 @@ func _build_maps_drawer() -> void:
 	map_panel = pv[0]
 	var v: VBoxContainer = pv[1]
 	_drawer_header(v, "🗺 Maps & Expansions", _close_drawers)
+	# category pills with live counts
+	var pills := HBoxContainer.new()
+	pills.add_theme_constant_override("separation", 8)
+	var group := ButtonGroup.new()
+	for cat in MAP_CATEGORIES:
+		var count := map_order.size() if cat == "All" else map_order.filter(func(id): return maps[id].get("category", "") == cat).size()
+		var b := _button("%s (%d)" % [cat, count], Vector2(0, 44))
+		b.toggle_mode = true
+		b.button_group = group
+		b.button_pressed = cat == "All"
+		b.pressed.connect(func(): maps_filter = cat; _refresh_maps_drawer())
+		pills.add_child(b)
+	v.add_child(pills)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	v.add_child(scroll)
-	maps_list = VBoxContainer.new()
+	maps_list = GridContainer.new()
+	maps_list.columns = 2
 	maps_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	maps_list.add_theme_constant_override("separation", 10)
+	maps_list.add_theme_constant_override("h_separation", 10)
+	maps_list.add_theme_constant_override("v_separation", 10)
 	scroll.add_child(maps_list)
 
 func _refresh_maps_drawer() -> void:
@@ -1284,6 +1317,8 @@ func _refresh_maps_drawer() -> void:
 		var current: bool = id == scene_name
 		var cs := _card()
 		var card: PanelContainer = cs[0]
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.visible = maps_filter == "All" or info.get("category", "") == maps_filter
 		if current:
 			(cs[1] as StyleBoxFlat).bg_color = Color(0.2, 0.3, 0.45, 0.9)
 		var row := HBoxContainer.new()
@@ -1294,11 +1329,14 @@ func _refresh_maps_drawer() -> void:
 		row.add_child(text)
 		var title := Label.new()
 		title.text = "%s  %s" % [info["icon"], info["title"]]
-		title.add_theme_font_size_override("font_size", 20)
+		title.add_theme_font_size_override("font_size", 18)
+		title.clip_text = true
 		text.add_child(title)
 		var sub := Label.new()
-		sub.text = "%s\nChaos: %s" % [info["tag"], info["chaos"]]
-		sub.add_theme_font_size_override("font_size", 13)
+		var exps: Array = info.get("expansions", []).map(func(e): return String(e["title"]))
+		sub.text = "%s · %s\nChaos: %s%s" % [info.get("category", ""), info["tag"], info["chaos"], ("\nExpansion: " + ", ".join(exps)) if not current and not exps.is_empty() else ""]
+		sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		sub.add_theme_font_size_override("font_size", 12)
 		sub.modulate = Color(1, 1, 1, 0.75)
 		text.add_child(sub)
 		if current:
@@ -1309,7 +1347,7 @@ func _refresh_maps_drawer() -> void:
 				tog.button_pressed = expansions_on.get(String(e["id"]), false)
 				tog.toggled.connect(func(on: bool): set_expansion(String(e["id"]), on))
 				text.add_child(tog)
-		var load_b := _button("Current map" if current else "Load Map", Vector2(150, 52))
+		var load_b := _button("Current" if current else "Load Map", Vector2(118, 52))
 		load_b.disabled = current
 		load_b.pressed.connect(func(): _travel(id))
 		row.add_child(load_b)

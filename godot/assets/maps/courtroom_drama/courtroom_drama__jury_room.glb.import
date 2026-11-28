@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cmy6xlp64kbmd"
-path="res://.godot/imported/retro_arcade__prize_lounge.glb-ff1867607ad16c67923a4835f570b9f9.scn"
+uid="uid://lo82b83x4jee"
+path="res://.godot/imported/courtroom_drama__jury_room.glb-c74b2ace39e43387de052f90cf1b37b6.scn"
 
 [deps]
 
-source_file="res://assets/maps/retro_arcade/retro_arcade__prize_lounge.glb"
-dest_files=["res://.godot/imported/retro_arcade__prize_lounge.glb-ff1867607ad16c67923a4835f570b9f9.scn"]
+source_file="res://assets/maps/courtroom_drama/courtroom_drama__jury_room.glb"
+dest_files=["res://.godot/imported/courtroom_drama__jury_room.glb-c74b2ace39e43387de052f90cf1b37b6.scn"]
 
 [params]
 

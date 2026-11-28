@@ -22,6 +22,8 @@ var _stages: Array = []
 var _idle: Array = []
 var _hidden: Array = []
 var _swarms := {}      # fx key -> MultiMeshInstance3D
+var _glow_dirty := false
+var _glow_dark: StandardMaterial3D
 
 func build() -> void:
 	var path := "res://assets/maps/%s/%s.glb" % [map_id, map_id]
@@ -120,7 +122,10 @@ func _reset(main: Node) -> void:
 	main.chaos_shake = 0.0
 	main.lowgrav = false
 	main.slippery = false
+	main.light_scale = 1.0
+	main.flash = 0.0
 	main.env.fog_enabled = false
+	_glow_dirty = false
 
 ## Called every studio step: rest pose, then every active FX in order.
 func chaos_tick(now: float, main: Node) -> void:
@@ -130,6 +135,12 @@ func chaos_tick(now: float, main: Node) -> void:
 	main.chaos_shake = 0.0
 	main.lowgrav = false
 	main.slippery = false
+	main.light_scale = 1.0
+	main.flash = 0.0
+	if _glow_dirty:
+		for mi in _glow_base:
+			(mi as MeshInstance3D).set_surface_override_material(0, _glow_base[mi])
+		_glow_dirty = false
 	var fog := false
 	var used_swarms := {}
 	for fx in _idle:
@@ -279,6 +290,33 @@ func _fx(fx: Dictionary, e: float, main: Node, used_swarms: Dictionary) -> bool:
 			for i in _glows.size():
 				var mi: MeshInstance3D = _glows[i]
 				mi.set_surface_override_material(0, Style.glow(Color(String(cols[(frame + i) % cols.size()]))))
+			_glow_dirty = true
+		"dim":
+			# blackout: the set goes dark; "stutter" lets the power cough back on now and then
+			var k := smoothstep(0.0, float(fx.get("fade", 0.3)), e)
+			var on := false
+			if fx.has("stutter"):
+				var ph := fposmod(e, float(fx["stutter"]))
+				on = ph < 0.08 or (ph > 0.16 and ph < 0.22)
+			var level := 1.0 if on else lerpf(1.0, float(fx.get("amount", 0.15)), k)
+			main.light_scale = minf(main.light_scale, level)
+			if fx.get("glows_off", false) and not on and k > 0.5:
+				if _glow_dark == null:
+					_glow_dark = Style.toon(Style.swatch("space_gray"))
+				for mi in _glows:
+					(mi as MeshInstance3D).set_surface_override_material(0, _glow_dark)
+				_glow_dirty = true
+		"flash":
+			# lightning: a double pulse every few seconds
+			var every := float(fx.get("every", 2.0))
+			var ph := fposmod(e, every)
+			var len := float(fx.get("length", 0.12))
+			var f := 0.0
+			if ph < len:
+				f = 1.0 - ph / len
+			elif ph > len * 1.8 and ph < len * 2.8:
+				f = 0.7 * (1.0 - (ph - len * 1.8) / len)
+			main.flash = maxf(main.flash, f * float(fx.get("strength", 1.0)))
 		"shake":
 			main.chaos_shake = maxf(main.chaos_shake, float(fx.get("amount", 0.4)))
 		"lowgrav":
@@ -311,6 +349,17 @@ func _swarm(key: String, fx: Dictionary, e: float) -> void:
 		mm_inst = MultiMeshInstance3D.new()
 		mm_inst.multimesh = mm
 		mm_inst.material_override = Style.toon(Color(String(fx.get("color", "#F5F2EB"))))
+		if fx.has("colors"):   # confetti: each piece its own palette colour
+			mm.use_colors = true
+			var palette: Array = fx["colors"]
+			mm.instance_count = 0
+			mm.use_colors = true
+			mm.instance_count = count
+			for i in count:
+				mm.set_instance_color(i, Style.snap(Color(String(palette[i % palette.size()]))))
+			var mat := Style.toon(Color.WHITE)
+			mat.vertex_color_use_as_albedo = true
+			mm_inst.material_override = mat
 		add_child(mm_inst)
 		_swarms[key] = mm_inst
 	var c: Array = fx.get("center", [0, 0])

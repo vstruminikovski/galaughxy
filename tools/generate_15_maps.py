@@ -666,13 +666,242 @@ def retro_arcade(m):
     m.spawns(STD_SPAWNS)
 
 
-def retro_arcade__prize_lounge(m):
-    # prize wall along the right side
-    m.box((4.3, 0.5, 2.2), (0.35, 0.5, 1.4), sw("bondi_blue"), 0.06)
-    m.box((4.75, 1.5, 2.2), (0.1, 0.5, 1.4), sw("space_gray"), 0.05)
-    for k, col in enumerate((sw("coral"), sw("mint"), sw("amber"), sw("bondi_blue"), sw("cream"))):
-        m.ell((4.3, 1.18, 1.1 + k * 0.55), (0.18, 0.18, 0.18), col)
-    m.glow_box((4.63, 2.15, 2.2), (0.012, 0.06, 1.3), sw("amber"))
+def retro_arcade__bowling_lane(m):
+    # one bowling lane down the right side, pins at the back (props), a ball at the front
+    m.box((3.9, 0.02, 1.0), (0.55, 0.02, 2.4), sw("amber", "light"), 0.01, prefix="Flat")
+    for s in (1, -1):
+        m.box((3.9 + s * 0.65, 0.03, 1.0), (0.1, 0.03, 2.4), sw("space_gray", "light"), 0.02, prefix="Flat")
+    m.glow_box((3.9, 0.05, 3.3), (0.5, 0.008, 0.02), sw("coral"))
+    rows = [(1, -0.95), (2, -1.1), (3, -1.25), (4, -1.4)]
+    for count, z in rows:
+        for i in range(count):
+            x = 3.9 + (i - (count - 1) / 2) * 0.13
+            j = m.prop("pins", (x, 0.04, z))
+            m.cap((x, 0.08, z), (x, 0.3, z), 0.045, sw("cream"), group=j, prefix="Part")
+            m.torus((x, 0.24, z), 0.04, 0.008, sw("coral"), group=j, prefix="Part")
+    j = m.prop("ball", (3.9, 0.04, 2.9))
+    m.ell((3.9, 0.15, 2.9), (0.11, 0.11, 0.11), sw("bondi_blue", "shade"), group=j, prefix="Part")
+
+
+# ── 12. The Express Dining Car ────────────────────────────────────────────────────
+def train_dining_car(m):
+    w, d, h = 12.0, 5.0, 2.8
+    m.floor(w, d, sw("coral", "shade"), sw("coral"), 0.5)
+    # back wall with four windows: low wall, high wall, and pillars between the windows
+    m.box((0, 0.5, -2.57), (6.1, 0.5, 0.07), sw("amber", "shade"), 0.04)
+    m.box((0, 2.35, -2.57), (6.1, 0.45, 0.07), sw("cream"), 0.04)
+    for (x0, x1) in ((-6.1, -4.3), (-2.9, -1.9), (-0.5, 0.5), (1.9, 2.9), (4.3, 6.1)):
+        m.box(((x0 + x1) / 2, 1.45, -2.57), ((x1 - x0) / 2, 0.45, 0.07), sw("cream"), 0.04)
+    for x in (-3.6, -1.2, 1.2, 3.6):
+        m.box((x, 1.02, -2.48), (0.72, 0.03, 0.06), sw("silver"), 0.02)          # window sills
+        m.box((x, 1.88, -2.48), (0.72, 0.03, 0.06), sw("silver"), 0.02)
+    for s in (1, -1):    # end walls
+        m.box((s * 6.07, h / 2, 0), (0.07, h / 2, 2.6), sw("cream"), 0.05)
+    m.box((0, 0.06, -2.48), (6.0, 0.06, 0.03), sw("amber"), 0.02)
+    # booths: a table between two benches at every window
+    for x in (-3.6, -1.2, 1.2, 3.6):
+        m.table(x, -1.6, 0.8, 0.9, 0.76, sw("cream"), sw("silver", "shade"))
+        for dx in (-0.62, 0.62):
+            m.box((x + dx, 0.24, -1.6), (0.2, 0.24, 0.5), sw("coral"), 0.06)
+            m.box((x + dx + (0.16 if dx > 0 else -0.16), 0.7, -1.6), (0.06, 0.3, 0.5), sw("coral"), 0.05)
+        for dz in (-0.2, 0.2):
+            j = m.prop("dishes", (x + dz, 0.76, -1.6 + dz))
+            m.cyl((x + dz, 0.77, -1.6 + dz), 0.12, 0.008, sw("cream"), group=j, prefix="Part", bevel=0.004)
+            m.cyl((x + dz + 0.06, 0.82, -1.6 + dz), 0.035, 0.05, sw("bondi_blue", "light"), group=j, prefix="Part", bevel=0.008)
+    # luggage rack above the windows with suitcases (props)
+    m.box((0, 2.12, -2.25), (5.9, 0.02, 0.24), sw("silver"), 0.01)
+    cols = (sw("amber"), sw("bondi_blue"), sw("mint"), sw("coral", "light"), sw("space_gray", "light"))
+    for i in range(9):
+        x = -5.0 + i * 1.25
+        j = m.prop("luggage", (x, 2.14, -2.25))
+        m.box((x, 2.32, -2.25), (0.3, 0.18, 0.16), cols[i % 5], 0.05, group=j, prefix="Part")
+        m.cap((x - 0.1, 2.53, -2.25), (x + 0.1, 2.53, -2.25), 0.018, sw("space_gray"), group=j, prefix="Part")
+    # scenery outside the windows (props: an idle conveyor scrolls them past)
+    for i in range(10):
+        x = -9.0 + i * 2.0
+        j = m.prop("scenery", (x, 0, -4.6 - (i % 2) * 0.8))
+        if i % 3 == 0:
+            m.ell((x, 0.6, -4.6 - (i % 2) * 0.8), (1.0, 1.1, 0.5), sw("mint", "shade"), group=j, prefix="Part")
+        else:
+            m.cyl((x, 0.8, -4.6 - (i % 2) * 0.8), 0.08, 0.8, sw("amber", "shade"), group=j, prefix="Part")
+            m.ell((x, 1.9, -4.6 - (i % 2) * 0.8), (0.45, 0.6, 0.45), sw("mint"), group=j, prefix="Part")
+    m.box((0, -0.3, -5.5), (14.0, 0.3, 2.4), sw("mint", "light"), 0.05, prefix="Flat")
+    m.spawns([(0.9, 0.6), (-0.9, 0.6), (2.4, 1.2), (-2.4, 1.2), (0.0, 1.6)])
+
+
+def train_dining_car__engine_cab(m):
+    # the locomotive cab at the right end of the car
+    m.box((5.2, 0.55, 0.6), (0.7, 0.55, 0.9), sw("space_gray"), 0.06)
+    for k in range(4):
+        m.glow_ell((4.85 + k * 0.22, 1.18, 0.1), (0.07, 0.07, 0.02), (sw("mint"), sw("amber"), sw("coral"), sw("bondi_blue"))[k])
+    for k in range(3):
+        m.cap((4.8 + k * 0.3, 1.1, 0.9), (4.8 + k * 0.3, 1.5, 1.05), 0.025, sw("silver"))
+        m.ell((4.8 + k * 0.3, 1.52, 1.06), (0.05, 0.05, 0.05), sw("coral"))
+    m.cyl((5.5, 1.5, 1.6), 0.35, 0.35, sw("space_gray", "light"), axis="z", bevel=0.05)
+    m.stool(4.6, 1.6, sw("coral"), sw("space_gray"))
+
+
+# ── 13. Judge Bot's Courtroom ─────────────────────────────────────────────────────
+def courtroom_drama(m):
+    m.floor(10, 8, sw("amber", "light"), sw("amber"), 1.0)
+    m.walls(10, 8, 3.4, sw("cream"), trim=sw("amber", "shade"))
+    m.box((0, 0.6, -3.88), (5.0, 0.6, 0.05), sw("amber", "shade"), 0.03)          # wainscot
+    m.glow_ell((0, 2.6, -3.86), (0.42, 0.42, 0.02), sw("amber"))                    # the seal
+    m.torus((0, 2.6, -3.84), 0.45, 0.04, sw("amber", "shade"), axis="z")
+    for s in (1, -1):    # columns
+        m.cyl((s * 2.2, 1.7, -3.6), 0.18, 1.7, sw("silver"), bevel=0.04)
+    # raised judge bench, chair behind
+    m.box((0, 0.2, -3.0), (2.2, 0.2, 0.8), sw("amber", "shade"), 0.05)
+    m.box((0, 0.95, -2.55), (1.8, 0.55, 0.3), sw("amber", "shade"), 0.06)
+    m.box((0, 1.52, -2.6), (1.9, 0.04, 0.38), sw("amber"), 0.03)
+    m.box((0, 1.3, -3.4), (0.45, 0.9, 0.12), sw("coral"), 0.12)
+    j = m.prop("gavel", (0.7, 1.56, -2.55))
+    m.cyl((0.7, 1.58, -2.55), 0.09, 0.025, sw("amber", "shade"), group=j, prefix="Part", bevel=0.01)
+    m.cyl((0.7, 1.68, -2.55), 0.05, 0.09, sw("amber", "shade"), group=j, prefix="Part", axis="x", bevel=0.015)
+    m.cap((0.7, 1.68, -2.55), (0.95, 1.7, -2.4), 0.018, sw("amber"), group=j, prefix="Part")
+    # witness stand (left) and evidence table (right)
+    m.box((-2.8, 0.55, -2.0), (0.6, 0.55, 0.5), sw("amber", "shade"), 0.05)
+    m.box((-2.8, 1.12, -2.0), (0.66, 0.03, 0.56), sw("amber"), 0.02)
+    m.table(2.8, -1.8, 1.4, 0.7, 0.8, sw("amber"), sw("amber", "shade"))
+    for k in range(5):
+        x = 2.4 + (k % 3) * 0.38
+        y = 0.8 + (k // 3) * 0.26
+        j = m.prop("evidence", (x, y, -1.8))
+        m.box((x, y + 0.12, -1.8), (0.17, 0.12, 0.15), sw("cream"), 0.03, group=j, prefix="Part")
+        m.box((x, y + 0.12, -1.64), (0.1, 0.05, 0.005), sw("coral"), 0.005, group=j, prefix="Part")
+    for k in range(4):
+        j = m.prop("papers", (2.4 + k * 0.25, 0.8, -1.45))
+        m.box((2.4 + k * 0.25, 0.81, -1.45), (0.1, 0.006, 0.13), sw("cream"), 0.004, group=j, prefix="Part")
+    # spectator pews down both sides, mirrored
+    for s in (1, -1):
+        for z in (0.2, 1.3, 2.4):
+            m.box((s * 3.6, 0.24, z), (0.9, 0.06, 0.24), sw("amber", "shade"), 0.04)
+            m.box((s * 3.6, 0.55, z + 0.22), (0.9, 0.3, 0.05), sw("amber", "shade"), 0.04)
+            for sx in (1, -1):
+                m.box((s * 3.6 + sx * 0.88, 0.2, z), (0.04, 0.2, 0.2), sw("amber", "shade"), 0.02)
+    m.spawns(STD_SPAWNS)
+
+
+def courtroom_drama__jury_room(m):
+    # the jury box, front right: a rail and two rows of seats
+    m.box((3.4, 0.12, 2.6), (1.2, 0.12, 0.9), sw("amber", "shade"), 0.03)
+    m.box((2.2, 0.55, 2.6), (0.05, 0.4, 0.9), sw("amber"), 0.03)
+    for k in range(3):
+        for row, (y, x) in enumerate(((0.24, 3.0), (0.24, 3.9))):
+            m.stool(x, 2.0 + k * 0.6, sw("bondi_blue"), sw("amber", "shade"))
+
+
+# ── 14. The Minimalist Museum ─────────────────────────────────────────────────────
+def art_gallery_heist(m):
+    m.floor(10, 8, sw("silver", "light"), sw("silver"), 2.0)
+    m.walls(10, 8, 3.6, sw("cream"), trim=sw("silver", "shade"))
+    for k, x in enumerate((-3.0, 0.0, 3.0)):   # paintings: palette blocks in frames
+        m.box((x, 2.0, -3.88), (0.75, 0.55, 0.04), sw("amber"), 0.03)
+        m.box((x, 2.0, -3.84), (0.65, 0.45, 0.01), sw("cream"), 0.01)
+        m.box((x - 0.25, 2.1, -3.82), (0.25, 0.2, 0.01), (sw("coral"), sw("bondi_blue"), sw("mint"))[k], 0.01)
+        m.ell((x + 0.25, 1.85, -3.82), (0.18, 0.18, 0.01), (sw("bondi_blue"), sw("amber"), sw("coral"))[k])
+    # plinths with vinyl sculptures (both props: the trapdoor drops them through the floor)
+    shapes = ("torus", "ball", "cone", "capsule")
+    for k, (x, z) in enumerate(((-2.4, -1.4), (-0.8, -0.4), (0.8, -0.4), (2.4, -1.4))):
+        j = m.prop("plinths", (x, 0, z))
+        m.box((x, 0.5, z), (0.3, 0.5, 0.3), sw("cream"), 0.03, group=j, prefix="Part")
+        j = m.prop("sculptures", (x, 1.0, z))
+        if shapes[k] == "torus":
+            m.torus((x, 1.32, z), 0.22, 0.08, sw("coral"), group=j, prefix="Part", axis="z")
+        elif shapes[k] == "ball":
+            m.ell((x, 1.25, z), (0.24, 0.24, 0.24), sw("bondi_blue"), group=j, prefix="Part")
+        elif shapes[k] == "cone":
+            m.cone((x, 1.28, z), 0.22, 0.02, 0.28, sw("amber"), group=j, prefix="Part")
+        else:
+            m.cap((x, 1.12, z), (x, 1.42, z), 0.12, sw("mint"), group=j, prefix="Part")
+        m.glow_ell((x, 3.4, z), (0.18, 0.05, 0.18), sw("amber", "light"))           # spotlights
+        for sx in (1, -1):    # velvet rope posts around each plinth
+            m.cyl((x + sx * 0.6, 0.45, z + 0.6), 0.03, 0.45, sw("amber"), bevel=0.01)
+            m.ell((x + sx * 0.6, 0.93, z + 0.6), (0.045, 0.045, 0.045), sw("amber"))
+        m.cap((x - 0.6, 0.85, z + 0.6), (x + 0.6, 0.85, z + 0.6), 0.02, sw("amber", "shade"))
+    # laser beams (props, glowing)
+    for k in range(5):
+        y = 0.35 + k * 0.22
+        j = m.prop("lasers", (0, y, 0.9))
+        m.cap((-4.8, y, 0.9 - k * 0.3), (4.8, y, 0.4 + k * 0.25), 0.012, sw("coral"), group=j, prefix="Part", emit=3.0)
+    # security shutters (hidden props; the alarm slams them down)
+    for x in (-3.0, 0.0, 3.0):
+        j = m.prop("shutters", (x, 3.0, -3.75))
+        m.box((x, 2.0, -3.75), (0.85, 1.0, 0.03), sw("space_gray", "light"), 0.02, group=j, prefix="Part")
+    m.spawns(STD_SPAWNS)
+
+
+def art_gallery_heist__skylight_vault(m):
+    # a round vault door in the right wall and a skylight frame glowing above
+    m.box((4.75, 1.3, 1.6), (0.2, 1.3, 1.1), sw("silver", "shade"), 0.06)
+    m.cyl((4.53, 1.3, 1.6), 0.85, 0.05, sw("silver"), axis="x", bevel=0.03)
+    m.torus((4.47, 1.3, 1.6), 0.7, 0.05, sw("amber"), axis="x")
+    for k in range(3):
+        a = k * 2 * math.pi / 3
+        m.cap((4.45, 1.3, 1.6), (4.42, 1.3 + math.cos(a) * 0.35, 1.6 + math.sin(a) * 0.35), 0.03, sw("space_gray"))
+    m.glow_box((0, 3.55, -1.0), (1.6, 0.02, 1.0), sw("bondi_blue", "light"))
+    m.box((0, 3.6, -1.0), (1.7, 0.04, 1.1), sw("silver", "shade"), 0.02)
+
+
+# ── 15. Dusty Clockwork Attic ─────────────────────────────────────────────────────
+def haunted_attic(m):
+    m.floor(10, 8, sw("amber", "shade"), sw("amber"), 0.5)
+    m.box((0, 1.8, -4.07), (5.1, 1.8, 0.07), sw("space_gray", "light"), 0.05)       # gable wall
+    m.glow_ell((0, 2.4, -4.0), (0.55, 0.55, 0.02), sw("bondi_blue", "light"))        # round moon window
+    m.torus((0, 2.4, -3.97), 0.58, 0.06, sw("amber", "shade"), axis="z")
+    m.cap((-0.58, 2.4, -3.96), (0.58, 2.4, -3.96), 0.03, sw("amber", "shade"))
+    m.cap((0, 1.82, -3.96), (0, 2.98, -3.96), 0.03, sw("amber", "shade"))
+    for s in (1, -1):    # slanted roof slabs and rafters, mirrored
+        g, name = m._grp("Set", "Set")
+        Char.box(m, g, name, bl((s * 2.65, 2.3, 0)), (2.9, 4.1, 0.08), 0.04, sw("space_gray", "light"), rot=(0, s * math.radians(27), 0))
+        for z in (-3.0, -1.6, -0.2, 1.2):
+            g, name = m._grp("Set", "Set")
+            Char.box(m, g, name, bl((s * 2.5, 2.25, z)), (2.95, 0.1, 0.12), 0.03, sw("amber", "shade"), rot=(0, s * math.radians(27), 0))
+    m.box((0, 3.62, 0), (0.14, 0.12, 4.2), sw("amber", "shade"), 0.03)                # ridge beam
+    # grandfather clock (prop) with its pendulum (prop)
+    j = m.prop("clock", (-3.2, 0, -3.3))
+    m.box((-3.2, 1.0, -3.3), (0.32, 1.0, 0.22), sw("amber", "shade"), 0.06, group=j, prefix="Part")
+    m.box((-3.2, 2.15, -3.3), (0.38, 0.22, 0.25), sw("amber", "shade"), 0.08, group=j, prefix="Part")
+    m.cyl((-3.2, 2.15, -3.04), 0.18, 0.01, sw("cream"), group=j, prefix="Part", axis="z", bevel=0.005)
+    m.cap((-3.2, 2.15, -3.02), (-3.2, 2.27, -3.02), 0.008, sw("space_gray"), group=j, prefix="Part")
+    m.cap((-3.2, 2.15, -3.02), (-3.12, 2.1, -3.02), 0.008, sw("space_gray"), group=j, prefix="Part")
+    j = m.prop("pendulum", (-3.2, 1.75, -3.06))
+    m.cap((-3.2, 1.75, -3.06), (-3.2, 1.15, -3.06), 0.01, sw("amber"), group=j, prefix="Part")
+    m.cyl((-3.2, 1.12, -3.06), 0.08, 0.012, sw("amber"), group=j, prefix="Part", axis="z", bevel=0.005)
+    # antique trunks (props, the poltergeist lifts them)
+    for k, (x, z) in enumerate(((1.6, -2.8), (2.7, -2.4), (-1.6, -2.6), (3.4, -0.6))):
+        j = m.prop("trunks", (x, 0, z))
+        col = (sw("coral", "shade"), sw("amber"), sw("bondi_blue", "shade"), sw("mint", "shade"))[k]
+        m.box((x, 0.25, z), (0.45, 0.25, 0.28), col, 0.05, group=j, prefix="Part")
+        m.cyl((x, 0.5, z), 0.28, 0.45, col, group=j, prefix="Part", axis="x", bevel=0.03)
+        for sx in (1, -1):
+            m.box((x + sx * 0.3, 0.38, z), (0.03, 0.38, 0.3), sw("silver", "shade"), 0.01, group=j, prefix="Part")
+    # sheet-covered furniture (ghostly lumps)
+    for (x, z, r) in ((-1.0, -1.4, 0.5), (0.4, -2.9, 0.45)):
+        m.ell((x, r * 0.8, z), (r, r * 0.9, r * 0.8), sw("cream"))
+    # cobweb chandeliers hanging from the ridge (props)
+    for z in (-1.6, 0.6):
+        j = m.prop("chandeliers", (0, 2.4, z))
+        m.cap((0, 3.55, z), (0, 2.6, z), 0.01, sw("space_gray"), group=j, prefix="Part")
+        m.torus((0, 2.5, z), 0.4, 0.03, sw("amber", "shade"), group=j, prefix="Part")
+        for k in range(4):
+            a = k * math.pi / 2
+            m.cyl((math.cos(a) * 0.4, 2.6, z + math.sin(a) * 0.4), 0.025, 0.07, sw("cream"), group=j, prefix="Part", bevel=0.008)
+            m.ell((math.cos(a) * 0.4, 2.71, z + math.sin(a) * 0.4), (0.02, 0.035, 0.02), sw("amber", "light"), group=j, prefix="Part", emit=2.5)
+            m.cap((math.cos(a) * 0.4, 2.5, z + math.sin(a) * 0.4), (math.cos(a) * 0.15, 2.2, z + math.sin(a) * 0.15), 0.006, sw("cream"), group=j, prefix="Part")
+    m.spawns(STD_SPAWNS)
+
+
+def haunted_attic__bell_tower(m):
+    # a ladder up through a hatch to the bell, front right
+    for s in (1, -1):
+        m.cap((3.6 + s * 0.22, 0.0, 1.8), (3.6 + s * 0.22, 3.3, 1.5), 0.03, sw("amber", "shade"))
+    for k in range(8):
+        y = 0.35 + k * 0.38
+        m.cap((3.38, y, 1.8 - k * 0.035), (3.82, y, 1.8 - k * 0.035), 0.022, sw("amber"))
+    m.cone((3.6, 3.05, 1.4), 0.38, 0.12, 0.3, sw("amber"))
+    m.ell((3.6, 2.72, 1.4), (0.07, 0.07, 0.07), sw("space_gray"))
+    m.cap((3.6, 3.35, 1.4), (3.6, 3.6, 1.4), 0.02, sw("space_gray"))
 
 
 MAPS = {
@@ -686,7 +915,11 @@ MAPS = {
     "mad_science_hospital": (mad_science_hospital, {"mri_room": mad_science_hospital__mri}),
     "corporate_office": (corporate_office, {"boardroom": corporate_office__boardroom}),
     "beach_boardwalk": (beach_boardwalk, {"arcade_shack": beach_boardwalk__arcade_shack}),
-    "retro_arcade": (retro_arcade, {"prize_lounge": retro_arcade__prize_lounge}),
+    "retro_arcade": (retro_arcade, {"bowling_lane": retro_arcade__bowling_lane}),
+    "train_dining_car": (train_dining_car, {"engine_cab": train_dining_car__engine_cab}),
+    "courtroom_drama": (courtroom_drama, {"jury_room": courtroom_drama__jury_room}),
+    "art_gallery_heist": (art_gallery_heist, {"skylight_vault": art_gallery_heist__skylight_vault}),
+    "haunted_attic": (haunted_attic, {"bell_tower": haunted_attic__bell_tower}),
 }
 
 
