@@ -198,6 +198,8 @@ func _ready() -> void:
 				_: hud.set_box(what, true)
 	if args.has("--aim"):
 		builder.begin(String(args[args.find("--aim") + 1]))
+	if args.has("--clean"):
+		set_clean_hud(true)
 	if args.has("--shot"):
 		var wait := float(args[args.find("--wait") + 1]) if args.has("--wait") else 1.5
 		_shot_and_quit(String(args[args.find("--shot") + 1]), wait)

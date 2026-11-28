@@ -77,6 +77,7 @@ var look_target: Label
 var look_style := {}
 var look_toggles := {}
 var mood_grid: GridContainer
+var caption_btns := {}
 # cast / director
 var cast_cards: Array = []
 var cast_filter := "All"
@@ -751,6 +752,19 @@ func _build_look(lk: VBoxContainer) -> void:
 		row.add_child(tog)
 		look_toggles[kid] = tog
 	lk.add_child(row)
+	var crow := HBoxContainer.new()
+	crow.add_theme_constant_override("separation", 8)
+	var cg := ButtonGroup.new()
+	for cs in [["shorts", "💬 Captions: Shorts (word by word)"], ["classic", "📝 Captions: Classic subtitle"]]:
+		var b := btn(String(cs[1]), Vector2(0, 40))
+		b.toggle_mode = true
+		b.button_group = cg
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var cid := String(cs[0])
+		b.pressed.connect(func(): set_caption_style(cid))
+		crow.add_child(b)
+		caption_btns[cid] = b
+	lk.add_child(crow)
 	lk.add_child(small("Illustrated Ink: flat colour under a warm key light with cool shadows, ink that follows the light, hatching in the shadows, a painted sky, haze, depth of field and grain. Studio Vinyl: the Mac Studio cel look. While an episode is open, a mood click belongs to the current shot (💾 Save in the Timeline keeps it). F6 = next mood."))
 	main.art.changed.connect(refresh_look)
 	refresh_look()
@@ -764,6 +778,8 @@ func refresh_look() -> void:
 		var tog: CheckButton = look_toggles[k]
 		tog.set_pressed_no_signal(main.art.toggles[k])
 		tog.disabled = not Look.illustrated()
+	for c in caption_btns:
+		(caption_btns[c] as Button).set_pressed_no_signal(c == caption_style)
 	var now: Dictionary = main.art.moods.get(main.art.mood_id, {})
 	look_target.text = "%s   ·   now: %s %s" % [main.art.target_text(), now.get("icon", ""), now.get("name", "")]
 	for c in mood_grid.get_children():

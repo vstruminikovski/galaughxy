@@ -108,7 +108,7 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 
 - **Grease pencil is outline-only.** The drawn pass inks silhouettes and boils them. It never changes fill colours, adds paper tint, or adds grain. The project contains no bitmap assets (no PNG/JPG/GLB); every surface is procedural geometry and colour.
 
-## 12. VECTOR ONLY (current rule — overrides earlier raster notes)
+## 12. VECTOR ONLY (superseded by section 24: the Illustrated Ink look uses depth of field, bloom, haze and grain)
 - **No raster in the pipeline.** Removed: screen-space ink, depth of field, bloom, grain, vignette, tone mapping. Nothing samples pixels, and no bitmap/texture/image assets exist in the repo.
 - **Ink is vector geometry.** `src/engine/vectorInk.ts` builds each object's outer edges (each edge keeps the two faces it touches). `src/engine/VoxelInk.tsx` draws them as fat-line geometry. The GPU keeps an edge only if one face points toward the camera and the other away (silhouette), and wobbles it 12 times a second. Width scales with output height.
 - Block outlines (every edge) are on while painting or with Show block edges on.
@@ -178,7 +178,7 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 - **Android export:** non-resource files must be listed in the preset's `include_filter` (`data/*.json, data/episodes/*.json`), or the APK starts without characters, maps and episodes.
 - **Tests:** `--test` covers 80+ checks, including scrub determinism and overdub merging. Run it once without `--headless` as well: only real audio output exercises the spectrum lip-sync check (`assets/audio/_selftest/babble.wav`).
 
-## 20. STUDIO VINYL — THE ONE STYLE (hard rule, current)
+## 20. STUDIO VINYL — THE ALTERNATE STYLE (was the one style; Illustrated Ink in section 24 is now the default)
 - **Palette:** only the seven Mac Studio colours (`#E5E7EB` silver, `#2C2E33` space gray, `#F5F2EB` cream, `#4A90E2` Bondi blue, `#FF5F56` coral, `#FFBD2E` amber, `#27C93F` mint), each in three values: light (42 % toward white), base, shade (32 % darker). `godot/scripts/Style.gd` snaps every SDF vertex colour, every imported material and every scatter colour to these 21 swatches, so nothing off-palette can appear. Pick swatches deliberately (`Style.swatch("coral", "light")`); never rely on snapping a gradient.
 - **Shading:** cel (toon) diffuse + toon specular + soft rim on every lit material (`Style.toon`). Glow = `Style.glow`. Lighting: ambient 0.62 white + sun 0.40, so lit faces sit on the swatch and shadow faces one value darker; skies are palette tints.
 - **Surfaces:** flat swatch areas only: no speckle, noise, gradients or textures. Two-tone banding (e.g. darker cap on the frog's back) is fine.
@@ -221,3 +221,59 @@ When `Studio Mode` is toggled on, provide clean, non-overlapping drawers (ideall
 - **Enough segments for a smooth silhouette.** Every round primitive has at least 32 segments (up to 64), cylinders and cones at least 40, torus tubes 16; small dark details were jagged at 16/20.
 - **Calm ink on dark parts.** `Ink.calm()` gives outlines on very dark materials (luminance < 0.2) no boil, an even width and a 1.8 px line: on black, the dark line merges with the body and any wobble reads as a jagged edge. Global boil is 0.35 px with 85–100 % width variation.
 - Check any new model in a close-up render (a `--cam` shot at 1080p) before committing; the octopus tentacle close-up is the reference case.
+
+## 24. ILLUSTRATED INK — THE DEFAULT LOOK (current; supersedes the raster ban in 12 and makes 20 the alternate)
+- **Target:** hand-inked, flat-coloured illustration at dusk, as in illustrated story Shorts. Elements: flat colour, near-black ink of varying weight, sparse hatching in the shadows, a warm key light over cool blue-violet shadows, a warm rim where the light grazes edges, aerial haze, shallow depth of field and fine grain. Original characters only: borrow the style, never someone's characters.
+- **Two looks, one click:** World ▸ Look ▸ ✏️ Illustrated Ink (default) / 🧸 Studio Vinyl (section 20, unchanged). `Look.style` is read before any material is made. It is saved as `[look] style` in `user://settings.cfg` and can be forced with `--look illustrated|vinyl`. Switching rebuilds the map and cast (`Main.rebuild_look`).
+- **Palette:** models stay authored in the 21 Mac Studio swatches. `Style.ILL` maps each swatch to an illustration counterpart of the same family and value: Bondi → denim `#6E8DD3`, coral → vermilion `#E2583E`, mint → olive `#93A845`, silver → cool white, space gray → navy. Lights lean warm and shades lean cool. `Style.snap` also recognises illustrated swatches, so snapping twice is stable.
+- **Materials** go only through `Style.toon(color, vertex, opts)`, `Style.glow(color, energy)` and `Style.restyle(node, kind)`. Use `Style.color_of / is_glow / is_clear` instead of reading StandardMaterial3D fields: in Illustrated Ink, lit surfaces are ShaderMaterials.
+  - `opts`: `kind` (`character` / `prop` / `set` / `flat`), `double`, `alpha`, `gloss`, `hatch`, `texture`, `stroke`.
+  - Map pieces named `Flat_*` / `Prop_*` pick their own kind.
+- **Surface shader** (`shaders/illustrated.gdshader`, custom `light()`):
+  - Lit side = albedo × mood `light`; shadow side = albedo × mood `shadow`, via the ambient. Terminator and cast shadows are crisp.
+  - Warm rim on edges that face the key light, strongest when back-lit.
+  - Toon gloss on dark parts only.
+  - Vertex colours are treated as sRGB.
+- **Hatching** (in the same shader):
+  - Object-space stroke planes, so strokes never swim.
+  - About 11 px apart at any distance: stroke families an octave apart fade into each other, so there is no moiré far away and no blow-up close in.
+  - Strokes gather in the band just inside the terminator, thin out in deep shadow, and appear only rarely on lit cloth (`texture`). Sets and floors get no lit-side strokes.
+  - Cross-hatching only in the deepest shadow on characters.
+  - Keep it sparse: dense or cross-hatched fields read as netting.
+- **Ink** (`ink_contour.gdshader` with `light_weight` / `rim_line` / `use_global_ink`):
+  - Near-black mood ink, 3.2 px at 1080p.
+  - Swells up to ×1.3 on the side turned away from the light, thins ×0.72 where light hits, and thins further with distance.
+  - Silhouettes that face a light behind the subject turn into a warm glowing line.
+  - Writes depth, so depth of field keeps it as sharp as its object.
+- **Moods** (`data/moods.json`): Blue Hour, Golden Hour, Daylight, Interior, Lamplight, Night, Underwater. Each holds:
+  - sun pitch/yaw and the `light` / `shadow` multipliers (sRGB; a white surface shows exactly these)
+  - rim colour and glow, ink
+  - sky colours (`horizon` toward the sun, `horizon_away`, zenith, clouds)
+  - depth fog, split-tone grade, depth of field, grain, vignette, bloom
+- **Choosing a mood:**
+  - Maps have a default `mood` in `maps.json`.
+  - A click (World ▸ Look, or F6 = next) holds for the map. While an episode is open it is written into the current shot as `"mood"` (💾 Save keeps it), and the Director applies it whenever that shot plays.
+  - Stopping playback returns to the map's mood.
+- **Environment** (`scripts/Look.gd`):
+  - Painted sky shader `illustrated_sky.gdshader`: two-sided horizon, sun glow and disc, big two-tone clouds that drift with the studio clock.
+  - Ambient from colour, no reflections, linear tonemap.
+  - Depth fog for aerial haze; chaos and ability fog call `main.art.add_fog()`, which is exponential and lasts one step.
+  - Bloom only above 1.0 (glows and the sun).
+  - Orthographic directional shadows.
+  - `CameraAttributesPractical` depth of field auto-focused on the Director's subject or the controlled character, eased.
+  - Finishing pass on CanvasLayer 0, under the HUD (`illustrated_post.gdshader`): split-tone grade, vignette, 12 fps monochrome grain.
+  - Global shader parameters are declared in `project.godot` `[shader_globals]`: `ill_sun_dir`, `ill_ink`, `ill_rim`, `ill_rim_color`, `ill_hatch`, `ill_time`, `ill_boil`.
+- **Toggles** (World ▸ Look, saved): Hatching, Rim light, Depth of field, Film grain.
+- **Profiling:** `--fx-off shadows,dof,post,glow,hatch`. Measured on the M5 at 1080p with 20 characters and the kitchen: 59 fps illustrated, 99 fps vinyl. Depth of field is the largest cost (bokeh quality is set to low).
+- **Captions** (`scripts/ui/Captions.gd`, Poppins ExtraBold, OFL licence in `assets/fonts/`):
+  - Shorts-style yellow words with a dark outline, 1–3 words at a time.
+  - Timed in proportion to characters across the line, with a pop-in computed from the clock, so they are deterministic.
+  - World ▸ Look switches Shorts / Classic; the setting is `[look] captions`.
+  - `Main.say` → `hud.show_line(speaker, text, until)`. Non-dialogue messages still use `show_subtitle`.
+- **Clean renders:** `--clean` hides the HUD, for screenshots (`--shot`) and Movie Maker.
+- **Free asset scout (2026-11-28; all curl-fetchable):**
+  - Montserrat Black (OFL) as an alternative caption font.
+  - Quaternius modular humans on Poly Pizza: CC0 GLBs, flat colours, modelled faces, 62-joint rigs. Licence is per model; one is CC-BY.
+  - Universal Animation Library 1+2 (CC0, OpenGameArt) for humanoid clips.
+  - Kenney interface pops and swishes (CC0) for caption sounds.
+  - Using any of them needs a decision first: humans need skeletal playback and retargeting next to `Puppet.gd`.
